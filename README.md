@@ -1,3 +1,41 @@
+# BillBook Frontend  
+  
+## 초기 세팅 관련 참고사항  
+- https://velog.io/@my_suwan/프론트엔드-개인프로젝트-및-협업시-초기세팅  
+  
+### gitignore 파일 생성하기  
+- https://www.toptal.com/developers/gitignore/  
+  
+### 폴더 구조 예시  
+```
+my-app/
+├─ public/              --> 정적 파일 및 HTML 파일이 저장되는 폴더
+├─ src/                 --> 앱의 소스코드가 저장되는 폴더
+│   ├─ api/             --> API 요청과 관련된 코드를 저장하는 폴더
+│   ├─ assets/          --> 이미지, CSS, 글꼴과 같은 리소스를 저장하는 폴더
+│   │   ├─ images/  
+│   │   └─ css/      
+│   ├─ components/      --> 리액트 컴포넌트가 저장되는 폴더 
+│   │   ├─ App/         --> 앱 전체 레이아웃 또는 주요 뷰 컴포넌트
+│   │   ├─ Navbar/      --> 네비게이션 바 컴포넌트
+│   │   └─ Footer/      --> 푸터 컴포넌트
+│   ├─ containers/      --> 상태관리와 같은 로직이 포함된 컨테이너 컴포넌트 저장
+│   ├─ hooks/           --> 사용자 정의 Custom Hook 저장
+│   ├─ pages/           --> 각 페이지에 대한 레이아웃 및 로직 담당
+│   ├─ utils/           --> 유틸리티 함수 등 자주 쓰이는 코드 저장
+│   ├─ routes/          --> 라우팅 정보 저장
+│   └─ store/           --> 상태 관리(Redux, MobX 등) 관련 코드 저장
+│       ├─ actions/
+│       ├─ reducers/
+│       └─ types/
+├─ .env
+├─ .gitignore
+├─ package.json
+└─ README.md
+```
+    
+  
+  
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -71,39 +109,3 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
   
     
       
-# BillBook Frontend  
-  
-## 초기 세팅 관련 참고사항  
-- https://velog.io/@my_suwan/프론트엔드-개인프로젝트-및-협업시-초기세팅  
-  
-### gitignore 파일 생성하기  
-- https://www.toptal.com/developers/gitignore/  
-  
-### 폴더 구조 예시  
-```
-my-app/
-├─ public/              --> 정적 파일 및 HTML 파일이 저장되는 폴더
-├─ src/                 --> 앱의 소스코드가 저장되는 폴더
-│   ├─ api/             --> API 요청과 관련된 코드를 저장하는 폴더
-│   ├─ assets/          --> 이미지, CSS, 글꼴과 같은 리소스를 저장하는 폴더
-│   │   ├─ images/  
-│   │   └─ css/      
-│   ├─ components/      --> 리액트 컴포넌트가 저장되는 폴더 
-│   │   ├─ App/         --> 앱 전체 레이아웃 또는 주요 뷰 컴포넌트
-│   │   ├─ Navbar/      --> 네비게이션 바 컴포넌트
-│   │   └─ Footer/      --> 푸터 컴포넌트
-│   ├─ containers/      --> 상태관리와 같은 로직이 포함된 컨테이너 컴포넌트 저장
-│   ├─ hooks/           --> 사용자 정의 Custom Hook 저장
-│   ├─ pages/           --> 각 페이지에 대한 레이아웃 및 로직 담당
-│   ├─ utils/           --> 유틸리티 함수 등 자주 쓰이는 코드 저장
-│   ├─ routes/          --> 라우팅 정보 저장
-│   └─ store/           --> 상태 관리(Redux, MobX 등) 관련 코드 저장
-│       ├─ actions/
-│       ├─ reducers/
-│       └─ types/
-├─ .env
-├─ .gitignore
-├─ package.json
-└─ README.md
-```
-  
