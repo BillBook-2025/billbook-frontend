@@ -1,21 +1,37 @@
-# BillBook Frontend  
-  
-## 초기 세팅 관련 참고사항  
-- https://velog.io/@my_suwan/프론트엔드-개인프로젝트-및-협업시-초기세팅  
-  
-### gitignore 파일 생성하기  
-- https://www.toptal.com/developers/gitignore/  
-  
-### 폴더 구조 예시  
+# BillBook Frontend
+
+---
+
+## 📚 [노션 바로가기](https://www.notion.so/the-books-1d471c958f918010babede90e64da0dd?pvs=4)
+
+## 📘 [API 명세서](./docs/api.md)
+
+## 🏷️ [커밋 메시지 유의사항](./docs/type.md)
+
+---
+
+## 초기 세팅 관련 참고사항
+
+- https://velog.io/@my_suwan/프론트엔드-개인프로젝트-및-협업시-초기세팅
+
+### gitignore 파일 생성하기
+
+- https://www.toptal.com/developers/gitignore/
+
+---
+
+### 폴더 구조 예시
+
 ```
 my-app/
+├─ docs/                --> 읽기 전용 문서 저장되는 폴더
 ├─ public/              --> 정적 파일 및 HTML 파일이 저장되는 폴더
 ├─ src/                 --> 앱의 소스코드가 저장되는 폴더
 │   ├─ api/             --> API 요청과 관련된 코드를 저장하는 폴더
 │   ├─ assets/          --> 이미지, CSS, 글꼴과 같은 리소스를 저장하는 폴더
-│   │   ├─ images/  
-│   │   └─ css/      
-│   ├─ components/      --> 리액트 컴포넌트가 저장되는 폴더 
+│   │   ├─ images/
+│   │   └─ css/
+│   ├─ components/      --> 리액트 컴포넌트가 저장되는 폴더
 │   │   ├─ App/         --> 앱 전체 레이아웃 또는 주요 뷰 컴포넌트
 │   │   ├─ Navbar/      --> 네비게이션 바 컴포넌트
 │   │   └─ Footer/      --> 푸터 컴포넌트
@@ -33,79 +49,59 @@ my-app/
 ├─ package.json
 └─ README.md
 ```
-    
-  
-  
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+# Create React App으로 시작하기
 
-In the project directory, you can run:
+이 프로젝트는 [Create React App](https://github.com/facebook/create-react-app)을 사용해 초기화되었습니다.
+
+## 사용 가능한 스크립트
+
+프로젝트 디렉토리에서 다음 명령어들을 실행할 수 있습니다:
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+앱을 개발 모드로 실행합니다.  
+[http://localhost:3000](http://localhost:3000) 에서 브라우저로 확인할 수 있습니다.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+코드를 수정하면 페이지가 자동으로 새로고침됩니다.  
+콘솔에서 린트 오류도 확인할 수 있습니다.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+테스트 러너를 대화형 감시 모드로 실행합니다.  
+자세한 내용은 [테스트 실행 문서](https://facebook.github.io/create-react-app/docs/running-tests)를 참고하세요.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+앱을 프로덕션용으로 `build` 폴더에 빌드합니다.  
+React가 프로덕션 모드로 번들링되며, 최적화를 통해 성능이 향상됩니다.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+빌드는 압축되고, 파일 이름에는 해시가 포함됩니다.  
+앱을 배포할 준비가 완료됩니다!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+자세한 내용은 [배포 문서](https://facebook.github.io/create-react-app/docs/deployment)를 참고하세요.
 
 ### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+⚠️ **주의: `eject`는 한 번 실행하면 되돌릴 수 없습니다!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+빌드 도구 및 설정에 만족하지 않을 경우 `eject`를 실행하여 모든 설정 파일을 프로젝트로 꺼낼 수 있습니다.  
+webpack, Babel, ESLint 등 모든 의존성이 프로젝트 안으로 복사되며, 모든 설정을 직접 제어할 수 있습니다.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+단, `eject`는 선택 사항이며 대부분의 경우 필요하지 않습니다.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 더 알아보기
 
-## Learn More
+- [Create React App 공식 문서](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React 공식 문서](https://reactjs.org/)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 기타 문서
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-  
-    
-      
+- [코드 분할(Code Splitting)](https://facebook.github.io/create-react-app/docs/code-splitting)
+- [번들 크기 분석](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- [PWA 만들기](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- [고급 설정](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- [배포](https://facebook.github.io/create-react-app/docs/deployment)
+- [`npm run build` 축소 실패 문제 해결](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
