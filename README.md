@@ -2,11 +2,13 @@
 
 ---
 
-## 📚 [노션 바로가기](https://www.notion.so/the-books-1d471c958f918010babede90e64da0dd?pvs=4)
+## 📚 [노션 바로가기](https://www.notion.so/1-200e30acf87080928957d39468e6caba)
 
 ## 📘 [API 명세서](./docs/api.md)
 
 ## 🏷️ [커밋 메시지 유의사항](./docs/type.md)
+
+## 🔧 [유즈케이스 명세 기반 와이어플로우](./docs/wireflow.md)
 
 ---
 
