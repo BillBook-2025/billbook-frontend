@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Start() {
   const navigate = useNavigate();
+  // 버튼 누르면 로그인 페이지로 이동
   const handleStartClick = () => {
     navigate('/login');
   };
