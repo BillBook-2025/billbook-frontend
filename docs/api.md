@@ -47,13 +47,15 @@
   │       ├── /new [POST]
   │       ├── /existing [POST]
   │       └── /{book_id} [PATCH, DELETE]
+  │           ├── /upload-images [POST]
+  │           └── /borrow [POST]
   ├── /my
   │   ├── [GET, PATCH]
   │   ├── /register [GET]
   │   ├── /borrow [GET]
   │   ├── /like [GET]
   │   ├── /point [GET, POST]
-  │   ├── /temporature [GET]
+  │   ├── /temperature [GET]
   │   ├── /boards [GET]
   │   ├── /profile-image [POST]
   │   ├── /follower [GET]
@@ -61,7 +63,7 @@
   ├── /profile/{user_id}
   │   ├── [GET]
   │   ├── /follow [GET, POST, DELETE]
-  │   ├── /temporature [GET, POST]
+  │   ├── /temperature [GET, POST]
   │   ├── /borrow [GET]
   │   ├── /register [GET]
   │   └── /history [GET]
@@ -113,8 +115,7 @@
 
 - `/api/auth/find/password`  
   - `POST`: 비밀번호 찾기 요청  
-  - `/choice`  
-    `POST`: 본인인증 API 요청  
+  
   - `/change`  
     `POST`: 비밀번호 변경
 
@@ -132,14 +133,19 @@
 - `/api/books/{book_id}`  
   `GET`: 책 상세 정보  
   `PATCH`: 게시글 수정  
+  `DELETE`: 등록된 책 게시물 삭제
+  - `/return`
+    `POST`: 책 반납 처리
+  - `/existing`
+    `POST`: 반납 완료 후 게시물 자동 생성
+  - `/upload-images`
+    `POST`: 등록할 책 사진 업로드
   - `/chatroom`  
     `POST`: 채팅방 생성  
   - `/like`  
-    `GET`: 좋아요 개수  
-    `POST`: 좋아요 누르기  
-    `DELETE`: 좋아요 취소  
-  - `/upload-images`  
-    `POST`: 사진 업로드  
+    `GET`: 책 좋아요 개수  
+    `POST`: 책 좋아요 누르기  
+    `DELETE`: 좋아요 취소   
   - `/borrow`  
     `POST`: 책 대출하기
 
@@ -147,22 +153,15 @@
   `GET`: 책 검색  
   - `/history`  
     `GET`: 검색 기록 조회  
-    `DELETE`: 검색 기록 삭제  
+    `DELETE`: 전체 검색 기록 삭제  
     - `/{history_id}`  
-      `DELETE`: 특정 기록 삭제
+      `DELETE`: 전체 검색 기록 삭제
 
 - `/api/books/register`  
+  - `/openAPI`
+    `GET`: 도서 openAPI를 이용한 정보 조회
   - `/new`  
     `POST`: 책 등록하기  
-  - `/existing`  
-    `POST`: 반납 완료 후 자동 게시글 생성  
-  - `/{book_id}`  
-    `PATCH`: 게시글 수정  
-    `DELETE`: 등록된 책 취소  
-    - `/upload-images`  
-      `POST`: 사진 업로드  
-    - `/borrow`  
-      `POST`: 책 대출하기
 
 ---
 
@@ -172,32 +171,32 @@
 - `PATCH`: 개인정보 수정
 
 - `/register`  
-  `GET`: 등록한 책 목록
+  `GET`: 내가 등록한 책 목록 불러오기
 
 - `/borrow`  
-  `GET`: 빌린 책 목록
+  `GET`: 내가 빌린 책 목록 불러오기
 
 - `/like`  
-  `GET`: 좋아요한 책 목록
+  `GET`: 내가 좋아요 누른 책 목록 불러오기
 
 - `/point`  
   `GET`: 마이포인트 조회  
   `POST`: 포인트 충전
 
-- `/temporature`  
+- `/temperature`  
   `GET`: 매너온도 조회
 
 - `/boards`  
-  `GET`: 내가 쓴 게시물
+  `GET`: 내가 쓴 게시물 조회
 
 - `/profile-image`  
   `POST`: 프로필 이미지 등록
 
 - `/follower`  
-  `GET`: 내 팔로워 목록
+  `GET`: 내 팔로워 목록 조회
 
 - `/following`  
-  `GET`: 내 팔로잉 목록
+  `GET`: 내 팔로잉(내가 팔로우하는) 목록 조회
 
 ---
 
@@ -206,11 +205,11 @@
 - `GET`: 유저 프로필 조회
 
 - `/follow`  
-  `GET`: 팔로워 조회  
-  `POST`: 팔로우 하기  
-  `DELETE`: 팔로우 취소
+  `GET`: 해당 유저의 팔로워 조회  
+  `POST`: 내가 해당 유저를 팔로우 하기  
+  `DELETE`: 내가 해당 유저를 팔로우 취소
 
-- `/temporature`  
+- `/temperature`  
   `GET`: 매너온도  
   `POST`: 매너평가
 

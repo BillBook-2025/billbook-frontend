@@ -8,13 +8,16 @@ export default function Login() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  // 로딩 중 여부 설정하는거,,, 중복요청 방지용으로! 없어도됨!!
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify({userId, password}),
@@ -23,14 +26,26 @@ export default function Login() {
       // 로그인 실패했을때
       if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.message || '로그인 실패');
+        
+         switch (response.status) {
+          case 400:
+            setError('입력값을 확인해주세요.');
+            break;
+          case 409:
+            setError(errorData.message || '아이디 또는 비밀번호가 틀렸습니다.');
+            break;
+          default:
+            setError(errorData.message || '로그인 실패');
+        }
+
+        setIsLoading(false);
         return;
       }
 
       const data = await response.json();
-      // 로컬에 토큰 설정하고
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+
+      // 로그인 성공 시 사용자 정보 저장 (예: 로컬스토리지)
+      localStorage.setItem('userInfo', JSON.stringify(data));
 
       // 로그인 성공하면 홈화면으로 이동
       navigate('/home');
@@ -39,6 +54,9 @@ export default function Login() {
     catch (error) {
       setError('네트워크 오류 발생');
       console.error(error);
+    }
+    finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +85,7 @@ export default function Login() {
           <button
           type="submit"
           className='bg-white hover:bg-pistachio font-bold'>
-            로그인
+            {isLoading ? '로그인 중...' : '로그인'}
           </button>
 
         </form>

@@ -8,47 +8,21 @@ export default function Signup() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [userName, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
 
-    try {
-      const response = await fetch('/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', },
-        body: JSON.stringify({userId, password, email}),
-      });
-/*
-      // 같은 아이디가 있는 경우 오류! 재입력요청
-      if(userId = ) {
-        const errorData = await response.json();
-        setError(errorData.message || '이미 존재하는 아이디');
-        return;
-      }
-      // 같은 이메일이 있는 경우 오류!
-      if(email = ) {
-        const errorData = await response.json();
-        setError(errorData.message || '이미 존재하는 이메일');
-        return;
-      }
-*/
-      // 그냥 실패했을때
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || '회원가입 실패');
-        return;
-      }
-
-      // 회원가입 성공하면 로그인 화면으로 이동
-      navigate('/login');
+    // 입력받은 값을 본인인증페이지로 넘겨서 인증 진행 후 회원가입 성공하도록
+    if (!userId || !password || !email || !userName) {
+      setError('모든 필드를 입력해주세요.');
+      return;
     }
-    // 오류난경우
-    catch (error) {
-      setError('네트워크 오류 발생');
-      console.error(error);
-    }
+    navigate('/verification', {
+      state: { userId, password, email, userName }
+    });
   };
 
   return (
@@ -76,17 +50,24 @@ export default function Signup() {
         <input
           type="email"
           placeholder="Email:"
-          value={userId}
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+          className="bg-pistachio p-3 border border-gray-300 rounded"
+        />
+        <input
+          type="text"
+          placeholder="Name:"
+          value={userName}
+          onChange={(e) => setName(e.target.value)}
           required
           className="bg-pistachio p-3 border border-gray-300 rounded"
         />
           <button
           type="submit"
           className='bg-white hover:bg-pistachio font-bold'>
-            회원가입
+            본인인증 진행하기
           </button>
-
         </form>
         
         {error && <p className="text-red-500 mb-4">{error}</p>}
