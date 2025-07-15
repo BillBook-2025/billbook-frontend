@@ -1,4 +1,4 @@
-// src/pages/FindPassword.jsx
+// src/pages/auth/FindPassword.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

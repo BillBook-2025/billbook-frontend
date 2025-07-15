@@ -1,4 +1,4 @@
-// src/pages/Start.jsx
+// src/pages/auth/Start.jsx
 import { useNavigate } from 'react-router-dom';
 
 export default function Start() {

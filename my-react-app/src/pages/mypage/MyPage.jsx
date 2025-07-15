@@ -1,4 +1,4 @@
-// src/pages/MyPage.jsx
+// src/pages/mypage/MyPage.jsx
 export default function MyPage() {
   return <h1>마이페이지</h1>;
 }

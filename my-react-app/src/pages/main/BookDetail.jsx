@@ -1,4 +1,4 @@
-// src/pages/BookDetail.jsx
+// src/pages/main/BookDetail.jsx
 export default function BookDetail() {
   return <h1>책 상세 페이지</h1>;
 }

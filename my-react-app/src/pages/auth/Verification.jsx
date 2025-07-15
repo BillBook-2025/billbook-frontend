@@ -1,4 +1,4 @@
-// src/pages/Verification.jsx
+// src/pages/auth/Verification.jsx
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 

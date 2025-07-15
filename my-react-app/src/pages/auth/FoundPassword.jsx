@@ -1,4 +1,4 @@
-// src/pages/FoundPassword.jsx
+// src/pages/auth/FoundPassword.jsx
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function FoundPassword() {
