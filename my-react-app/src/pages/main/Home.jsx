@@ -11,6 +11,7 @@ export default function Home() {
   const [showRecent, setShowRecent] = useState(false);
   const [books, setBooks] = useState([]);
 
+  // 카테고리는 걍 예시임
   const categories = ['과학', '문화', '사회', '역사'];
 
   useEffect(() => {
@@ -21,7 +22,8 @@ export default function Home() {
           const data = await res.json();
           setBooks(data);
         }
-      } catch (e) {
+      } 
+      catch (e) {
         console.error('책 목록 로드 실패', e);
       }
     }
@@ -41,7 +43,7 @@ export default function Home() {
 
   return (
     <div>
-      {/* 🔍 상단 검색창 */}
+      {/* 상단 검색창 */}
       <div className="sticky top-0 z-10 bg-white px-4 pt-4 pb-2 shadow">
         <div className="relative w-full max-w-md mx-auto">
           <input
@@ -80,7 +82,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 📚 카테고리 리스트 */}
+      {/* 카테고리 리스트 */}
       <div className="category-list flex justify-around mt-4">
         {categories.map(cat => (
           <button
@@ -93,7 +95,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 📖 책 리스트 */}
+      {/* 책 리스트 */}
       <div className="book-list grid grid-cols-2 gap-4 px-4 py-6">
         {books.map(book => (
           <div
@@ -112,14 +114,6 @@ export default function Home() {
           </div>
         ))}
       </div>
-
-      {/* ➕ 플로팅 버튼 (책 추가 버튼임) */}
-      <button
-        className="floating-add-btn fixed bottom-24 right-4 bg-pistachio text-white text-3xl w-12 h-12 rounded-full shadow-lg"
-        onClick={() => navigate('/postUpload')}
-      >
-        +
-      </button>
     </div>
   );
 }
