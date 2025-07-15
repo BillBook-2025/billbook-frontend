@@ -1,3 +1,4 @@
+// /src/layouts/MainLayout.jsx 
 /* colors: {
         pistachio: '#CDE8A6',
         'pistachio-dark': '#B0D99A', // hover
