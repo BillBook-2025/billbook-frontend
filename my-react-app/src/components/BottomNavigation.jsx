@@ -16,6 +16,7 @@ export default function BottomNavigation() {
   const location = useLocation();
 
   // 현재 경로를 기준으로 active 아이콘 색상 설정
+  // 현재 위치(location.pathname)와 각 버튼의 경로(path)를 비교해서 현재 페이지인지 여부를 판단
   const isActive = (path) => location.pathname === path;
 
   return (
