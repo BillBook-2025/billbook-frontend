@@ -1,4 +1,12 @@
 // src/pages/main/Home.jsx
+/* ### 홈 화면
+
+- [검색창] - 누르면 max 5개 최근 검색기록 나옴
+- [검색 버튼] - 누르면 검색됨
+- 카테고리 - [과학][문화][사회][역사] 등등… - 카테고리별 상세페이지로 연결
+- 거래 글 리스트
+- 하단 바 - [홈화면][추천도서][커뮤니티][채팅][마이페이지] - 각각 클릭 시 리다이렉트
+*/
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
