@@ -103,8 +103,6 @@ export default function Home() {
   // 책 상태 점수 -> 단어 변환하는 함수
   const getBookCondition = (point) => {
     switch (point) {
-     case 5: return '사용감 없음';
-     case 4: return '좋음';
      case 3: return '양호';
      case 2: return '보통';
      case 1: return '나쁨';
