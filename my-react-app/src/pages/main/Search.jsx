@@ -4,6 +4,7 @@
   ├ 상단에 [입력창 + 돋보기 버튼]
   ├ 최근 검색어 내역
   └ [돋보기 버튼] 누르면 → SearchResult 페이지로 이동
+  [전체 삭제]버튼 누르면 최근 검색어 전체삭제
  */
 
 import { useState } from 'react';
@@ -14,11 +15,32 @@ import { Search } from 'lucide-react';
 export default function Search() {
   const [keyword, setKeyword] = useState('');
   const navigate = useNavigate();
+  const [recentSearches, setRecentSearches] = useState([]);
+
+  // localStorage에서 최근 검색어 불러오기
+   useEffect(() => {
+    const stored = localStorage.getItem('recentKeywords');
+    if (stored) {
+      setRecentKeywords(JSON.parse(stored));
+    }
+  }, []);
 
   const handleSearch = () => {
-    if (keyword.trim() === '') return;
+    const trimmed = keyword.trim();
+    if (!trimmed) return;
     // 검색 결과 페이지로 이동하면서 검색어 전달
-    navigate(`/searchresult?query=${encodeURIComponent(keyword)}`);
+
+    const newRecent = [trimmed, ...recentSearches.filter((s) => s !== trimmed)].slice(0, 5);
+    setRecentSearches(newRecent);
+    localStorage.setItem('recentSearches', JSON.stringify(newRecent));
+
+    navigate(`/searchresult?query=${encodeURIComponent(trimmed)}`);
+  };
+
+  // 전체 삭제
+  const handleClearAll = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
   };
 
    return (
@@ -26,49 +48,52 @@ export default function Search() {
       <h1 className="text-xl font-bold mb-4">검색 페이지</h1>
 
       {/* 검색창 */}
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         <input
           type="text"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           placeholder="검색어를 입력하세요"
-          style={{
-            width: '100%',
-            paddingRight: '40px', // 아이콘 공간 확보
-            height: '40px',
-            fontSize: '16px',
-            boxSizing: 'border-box',
-          }}
+          className="w-full h-10 px-4 pr-10 border rounded text-base"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSearch();
           }}
         />
         <button
           onClick={handleSearch}
-          style={{
-            position: 'absolute',
-            right: '8px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer',
-          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
           aria-label="검색"
         >
           <Search size={24} />
         </button>
       </div>
 
-      {/* 최근 검색어 예시 */}
-      <div className="mt-6">
-        <h3 className="font-semibold mb-2">최근 검색어</h3>
-        <ul className="list-disc list-inside text-gray-700">
-          <li>해리포터</li>
-          <li>자바스크립트</li>
-        </ul>
-      </div>
+      {/* 최근 검색어 목록 */}
+      {recentKeywords.length > 0 && (
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-lg font-semibold">최근 검색어</h2>
+            <button
+              onClick={handleClearAll}
+              className="text-sm text-red-500 hover:underline"
+            >
+              검색 기록 전체 삭제
+            </button>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {recentKeywords.map((word, index) => (
+              <li key={index}>
+                <button
+                  onClick={() => setKeyword(word)}
+                  className="px-3 py-1 bg-gray-200 rounded-full hover:bg-gray-300"
+                >
+                  {word}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
-}
+};
