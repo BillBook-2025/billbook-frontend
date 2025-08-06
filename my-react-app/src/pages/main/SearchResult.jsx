@@ -10,53 +10,82 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function SearchResult() {
-  const [searchParams] = useSearchParams(); // ?query=책이름&type=...
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("query") || "");
-  const [region, setRegion] = useState("전체"); // 지역 기본값
+  const [region, setRegion] = useState("전체");
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 검색어(query)나 지역(region)이 바뀌면 fetch 다시
     if (query) {
-      fetch(`/api/search?query=${query}&region=${region}`)
-        .then(res => res.json())
-        .then(data => setResults(data))
-        .catch(err => console.error("검색 실패", err));
+      // 쿼리 파라미터 인코딩 및 API 호출
+      const encodedQuery = encodeURIComponent(query);
+      const encodedRegion = encodeURIComponent(region === "전체" ? "" : region);
+
+      fetch(`/api/books/search?query=${encodedQuery}&region=${encodedRegion}`, {
+        headers: {
+          // 인증이 필요하다면 추가
+          // 'Authorization': 'Bearer 토큰값'
+        }
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("서버 응답 오류");
+          return res.json();
+        })
+        .then((data) => {
+          // API 명세에 맞게 books 배열만 추출
+          setResults(data.data.books || []);
+        })
+        .catch((err) => {
+          console.error("검색 실패:", err);
+          setResults([]);
+        });
+    } else {
+      setResults([]);
     }
   }, [query, region]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // 쿼리 URL 반영
-    navigate(`/search?query=${query}`);
+    // 검색어가 빈 값이면 이동 안함
+    if (!query.trim()) return;
+
+    navigate(`/searchresult?query=${encodeURIComponent(query)}`);
   };
 
   return (
-    <div>
-      <h1>검색 결과</h1>
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold mb-4">검색 결과</h1>
 
       {/* 검색창 */}
-      <form onSubmit={handleSearchSubmit}>
+      <form onSubmit={handleSearchSubmit} className="flex gap-2 mb-4">
         <input
           type="text"
           value={query}
           placeholder="책 제목을 입력하세요"
           onChange={(e) => setQuery(e.target.value)}
+          className="flex-grow border rounded px-3 py-2"
+          aria-label="책 제목 검색 입력"
         />
-        <button type="submit">검색</button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          aria-label="검색 버튼"
+        >
+          검색
+        </button>
       </form>
 
-      {/* 지역 설정 버튼들 */}
-      <div style={{ marginTop: "10px" }}>
+      {/* 지역 설정 버튼 */}
+      <div className="mb-4 flex gap-2">
         {["전체", "서울", "부산", "대구", "광주"].map((r) => (
           <button
             key={r}
-            style={{
-              marginRight: "5px",
-              backgroundColor: region === r ? "#ddd" : "#fff",
-            }}
             onClick={() => setRegion(r)}
+            className={`px-3 py-1 rounded border ${
+              region === r ? "bg-gray-300" : "bg-white"
+            }`}
+            aria-pressed={region === r}
           >
             {r}
           </button>
@@ -66,23 +95,32 @@ export default function SearchResult() {
       <hr />
 
       {/* 검색 결과 리스트 */}
-      <ul>
-        {results.length === 0 ? (
-          <p>검색 결과가 없습니다.</p>
-        ) : (
-          results.map((item) => (
+      {results.length === 0 ? (
+        <p className="mt-4 text-center text-gray-500">검색 결과가 없습니다.</p>
+      ) : (
+        <ul className="space-y-4 mt-4">
+          {results.map((item) => (
             <li
-              key={item.boardId}
-              style={{ borderBottom: "1px solid #ccc", padding: "10px" }}
-              onClick={() => navigate(`/posts/${item.boardId}`)}
+              key={item.book_id}
+              onClick={() => navigate(`/posts/${item.book_id}`)} // post id 대신 book_id 사용 중
+              className="cursor-pointer border rounded p-3 flex items-center gap-4 hover:bg-gray-100"
+              aria-label={`${item.title} 상세 보기`}
             >
-              <h3>{item.title}</h3>
-              <p>{item.bookTitle} · {item.region}</p>
-              <img src={item.bookImageUrl} alt="책 이미지" width="100" />
+              <img
+                src={item.book_pic}
+                alt={`${item.title} 표지`}
+                className="w-16 h-20 object-cover rounded"
+              />
+              <div>
+                <h3 className="font-semibold text-lg">{item.title}</h3>
+                <p className="text-sm text-gray-600">{item.author}</p>
+                <p className="text-sm text-gray-500">{item.locate?.address || "지역 정보 없음"}</p>
+                <p className="text-sm text-gray-400">좋아요 {item.like_count}개</p>
+              </div>
             </li>
-          ))
-        )}
-      </ul>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
