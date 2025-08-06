@@ -9,6 +9,8 @@
 ## 🏷️ [커밋 메시지 유의사항](./docs/type.md)
 
 ## 🔧 [유즈케이스 명세 기반 와이어플로우](./docs/wireflow.md)
+  
+## 📚 [구글북스 api 사용법](./docs/googlebooksAPI.md)   
 
 ---
 ## 메인 색상:  #CDE8A6   
