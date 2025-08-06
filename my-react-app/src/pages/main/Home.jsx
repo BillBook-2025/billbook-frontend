@@ -87,7 +87,9 @@ export default function BottomNavigation() {
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// 돋보기 아이콘
 import { Search } from 'lucide-react';
+
 
 export default function Home() {
   const navigate = useNavigate();
@@ -140,44 +142,15 @@ export default function Home() {
 
   return (
     <div>
-      {/* 상단 검색창 */}
-      <div className="sticky top-0 z-10 bg-white px-4 pt-4 pb-2 shadow">
-        <div className="relative w-full max-w-md mx-auto">
-          <input
-            type="text"
-            placeholder="검색어를 입력하세요"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onFocus={() => setShowRecent(true)}
-            onBlur={() => setTimeout(() => setShowRecent(false), 200)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-            className="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pistachio"
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-pistachio-dark"
-            onClick={handleSearch}
-          >
-            <Search className="w-5 h-5" />
-          </button>
-
-          {showRecent && recentSearches.length > 0 && (
-            <ul className="absolute top-full left-0 right-0 bg-white border rounded-md mt-1 max-h-40 overflow-y-auto shadow z-20">
-              {recentSearches.map((term, idx) => (
-                <li
-                  key={idx}
-                  className="px-3 py-1 hover:bg-pistachio cursor-pointer"
-                  onMouseDown={() => {
-                    setSearchTerm(term);
-                    handleSearch();
-                  }}
-                >
-                  {term}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      {/* 검색창처럼 보이는 버튼 */}
+      <button
+        onClick={() => navigate('/search')}
+        className="w-full max-w-md mx-auto flex items-center justify-between px-4 py-2 border rounded-md text-gray-700 hover:border-pistachio hover:text-pistachio cursor-pointer"
+        type="button"
+      >
+        검색하기
+        <Search className="w-5 h-5" />
+      </button>
 
       {/* 카테고리 리스트 */}
       <div className="category-list flex justify-around mt-4">
@@ -192,7 +165,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 책 리스트 */}
+      {/* 지금 거래가능한 책 리스트 */}
       <div className="book-list grid grid-cols-2 gap-4 px-4 py-6">
         {books.map(book => (
           <div

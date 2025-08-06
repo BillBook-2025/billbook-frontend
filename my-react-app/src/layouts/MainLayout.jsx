@@ -6,7 +6,7 @@
 */
 
 import { Outlet } from "react-router-dom";
-import BottomNavigation from "../components/BottomNavigation.jsx"; // 경로는 실제 위치에 맞게 조정
+import BottomNavigation from "src/components/BottomNavigation.jsx"; 
 
 export default function MainLayout() {
   return (

@@ -16,6 +16,7 @@ import FoundPassword from '../pages/auth/FoundPassword';
 // 메인 관련 (/main)
 import Home from '../pages/main/Home';
 import SearchResult from '../pages/main/SearchResult';
+import Search from '../pages/main/Search';
 import Recommend from '../pages/main/Recommend';
 import BookDetail from '../pages/main/BookDetail';
 import Post from '../pages/main/Post';
@@ -45,7 +46,6 @@ import NotFound from '../pages/NotFound';
 // 폴더 세분화할지 고민해봐야겠다~ 일단은 굳이?
 export default function Router() {
   return (
-   
       <Routes>
         {/* 인증(레이아웃 없이 사용 ㅇㅇ) */}
         <Route path="/" element={<Start />} />
@@ -60,9 +60,10 @@ export default function Router() {
           {/* 메인 */}
           <Route path="/home" element={<Home />} />
           <Route path="/searchResult" element={<SearchResult />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/recommend" element={<Recommend />} />
-          <Route path="/bookDetail" element={<BookDetail />} />
-          <Route path="/post" element={<Post />} />
+          <Route path="/bookDetail/:bookId" element={<BookDetail />} />
+          <Route path="/post/:postId" element={<Post />} />
           <Route path="/postUpload" element={<PostUpload />} />
           <Route path="/postEdit" element={<PostEdit />} />
           <Route path="/chatroom" element={<Chatroom />} />
