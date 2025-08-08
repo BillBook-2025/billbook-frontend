@@ -1,3 +1,8 @@
+/*
+이걸로 경로 변수화 하려했는데
+그냥 더 복잡해지는거같아서 일단 하드코딩으로.....
+
+
 // src/api/endpoints.js
 
 // 백엔드 API 경로 주소를 모아놓는 파일
@@ -105,3 +110,5 @@ export const WEBSOCKET = {
   APP_CHAT_SEND: `${API_BASE_URL}/websocket/app/chat.send`, // WS 메시지 보내기
   TOPIC_CHATROOM: (chatroomId) => `${API_BASE_URL}/websocket/topic/${chatroomId}`, // WS 구독 주소
 };
+
+*/
