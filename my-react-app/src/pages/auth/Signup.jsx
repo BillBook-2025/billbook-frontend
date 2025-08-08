@@ -1,4 +1,5 @@
 // src/pages/auth/Signup.jsx
+
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -8,7 +9,7 @@ export default function Signup() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [userName, setName] = useState('');
+  const [username, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleSignup = async (e) => {
@@ -16,12 +17,21 @@ export default function Signup() {
     setError('');
 
     // 입력받은 값을 본인인증페이지로 넘겨서 인증 진행 후 회원가입 성공하도록
-    if (!userId || !password || !email || !userName) {
+    if (!userId.trim() || !password.trim() || !email.trim() || !username.trim()) {
       setError('모든 필드를 입력해주세요.');
       return;
     }
+
+    // 이메일 형식 체크!!
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('유효한 이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    // 본인인증 페이지로 이동ㅋ
     navigate('/verification', {
-      state: { userId, password, email, userName }
+      state: { userId, password, email, username }
     });
   };
 
@@ -33,7 +43,7 @@ export default function Signup() {
         <form onSubmit={handleSignup} className="flex flex-col gap-4 mb-8 max-w-xs mx-auto w-fill">
           <input
           type="text"
-          placeholder="ID:"
+          placeholder="아이디 입력"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           required
@@ -41,7 +51,7 @@ export default function Signup() {
         />
           <input
           type="password"
-          placeholder="PW:"
+          placeholder="비밀번호 입력"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -49,7 +59,7 @@ export default function Signup() {
         />
         <input
           type="email"
-          placeholder="Email:"
+          placeholder="이메일 입력"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -57,7 +67,7 @@ export default function Signup() {
         />
         <input
           type="text"
-          placeholder="Name:"
+          placeholder="이름 입력"
           value={userName}
           onChange={(e) => setName(e.target.value)}
           required

@@ -1,5 +1,7 @@
 // src/api/books.js
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+
 // 내부용: fetch 호출에 쓰는 함수
 // 이거 안쓰면 다 일일히 export const 어쩌고~ 형태로 써얗함
 async function fetchWithAuth(url, options = {}, token) {
@@ -36,8 +38,7 @@ export async function fetchBookDetail(bookId, token) {
 
 // /books/{bookId}/chatroom - 채팅방 생성 (POST)
 export async function createChatroom(bookId, token) {
-  return fetchWithAuth(
-    `/api/books/${bookId}/chatroom`,
+  return fetchWithAuth( `/api/books/${bookId}/chatroom`,
     { method: 'POST' },
     token
   );
@@ -55,8 +56,7 @@ export async function likeBook(bookId, token) {
 
 // /books/{bookId}/like - 좋아요 취소 (DELETE)
 export async function unlikeBook(bookId, token) {
-  return fetchWithAuth(
-    `/api/books/${bookId}/like`,
+  return fetchWithAuth( `/api/books/${bookId}/like`,
     { method: 'DELETE' },
     token
   );
@@ -65,8 +65,7 @@ export async function unlikeBook(bookId, token) {
 // /books/{bookId}/upload-images - 책 사진 업로드 (POST)
 // 이미지 파일은 JSON이 아니라 FormData 형태로 보내야함
 export async function uploadBookImages(bookId, formData, token) {
-  return fetchWithAuth(
-    `/api/books/${bookId}/upload-images`,
+  return fetchWithAuth( `/api/books/${bookId}/upload-images`,
     {
       method: 'POST',
       body: formData,
@@ -77,8 +76,7 @@ export async function uploadBookImages(bookId, formData, token) {
 
 // /books/{bookId}/borrow - 책 대출하기 (POST)
 export async function borrowBook(bookId, data, token) {
-  return fetchWithAuth(
-    `/api/books/${bookId}/borrow`,
+  return fetchWithAuth( `/api/books/${bookId}/borrow`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -88,11 +86,12 @@ export async function borrowBook(bookId, data, token) {
   );
 }
 
-// /books/search - 책 검색 (GET)
-export async function searchBooks(params, token) {
+// /books/search - 거래글 검색 (GET)
+export async function searchPosts(params, token) {
   const queryString = new URLSearchParams(params).toString();
   return fetchWithAuth(`/api/books/search?${queryString}`, {}, token);
 }
+
 /* 검색기록 관련을 프론트에서 로컬스토리지로 처리하면 얘네 필요없
 // /books/search/history - 검색 기록 불러오기 (GET)
 export async function fetchSearchHistory(token) {
@@ -112,8 +111,7 @@ export async function deleteSearchHistoryById(historyId, token) {
 
 // /books/register/new - 새 책 거래 게시물 등록 (POST)
 export async function registerNewBook(data, token) {
-  return fetchWithAuth(
-    `/api/books/register/new`,
+  return fetchWithAuth( `/api/books/register/new`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -125,8 +123,7 @@ export async function registerNewBook(data, token) {
 
 // /books/register/existing - 반납 완료 후 게시물 자동 생성 (POST) */
 export async function registerExistingBook(token) {
-  return fetchWithAuth(
-    `/api/books/register/existing`,
+  return fetchWithAuth( `/api/books/register/existing`,
     { method: 'POST' },
     token
   );
@@ -134,8 +131,7 @@ export async function registerExistingBook(token) {
 
 // /books/register/{bookId} - 등록된 책 정보 수정 (PATCH)
 export async function updateRegisteredBook(bookId, data, token) {
-  return fetchWithAuth(
-    `/api/books/register/${bookId}`,
+  return fetchWithAuth( `/api/books/register/${bookId}`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -147,8 +143,7 @@ export async function updateRegisteredBook(bookId, data, token) {
 
 // /books/register/{bookId} - 등록된 책 게시물 삭제 (DELETE)
 export async function deleteRegisteredBook(bookId, token) {
-  return fetchWithAuth(
-    `/api/books/register/${bookId}`,
+  return fetchWithAuth( `/api/books/register/${bookId}`,
     { method: 'DELETE' },
     token
   );
@@ -156,8 +151,7 @@ export async function deleteRegisteredBook(bookId, token) {
 
 // /books/register/{bookId}/upload-images - 책 사진 업로드 (POST)
 export async function uploadRegisteredBookImages(bookId, data, token) {
-  return fetchWithAuth(
-    `/api/books/register/${bookId}/upload-images`,
+  return fetchWithAuth( `/api/books/register/${bookId}/upload-images`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -169,8 +163,7 @@ export async function uploadRegisteredBookImages(bookId, data, token) {
 
 // /books/register/{bookId}/borrow - 책 대출하기 (POST)
 export async function borrowRegisteredBook(bookId, data, token) {
-  return fetchWithAuth(
-    `/api/books/register/${bookId}/borrow`,
+  return fetchWithAuth( `/api/books/register/${bookId}/borrow`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

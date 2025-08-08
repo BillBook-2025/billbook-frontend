@@ -1,13 +1,15 @@
 // src/pages/auth/Verification.jsx
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { signup } from '../../api/auth'; // 회원가입 api 함수
 
 export default function Verification() {
   const location = useLocation();
   const navigate = useNavigate();
 
   // 회원가입 페이지에서 넘어온 아이디, 비번, 이메일, 이름 받기
-  const { userId, password, email, userName } = location.state || {};
+  const { userId, password, email, username } = location.state || {};
 
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -22,17 +24,16 @@ export default function Verification() {
       // 아니면 간편로그인?
 
       // 본인인증 성공했다고 가정하고 회원가입 API 호출
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, password, email, userName }),
-      });
+      const result = await signup(userId, password, email, username);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || '회원가입 실패');
+      alert(result.message || '회원가입 완료');
+      navigate('/login');
+    } 
+    catch (error) {
+      // error.message에 서버에서 보내는 메시지가 들어있긔
+      const status = error.message.match(/HTTP (\d+):/)?.[1];
 
-        switch (response.status) {
+        switch (status) {
           case 400:
             setError('입력값을 확인해주세요.');
             break;
@@ -47,25 +48,11 @@ export default function Verification() {
         }
 
         setIsVerifying(false);
-        return;
-      }
-
-      // 회원가입 성공하면 로그인 페이지로 이동
-      const result = await response.json();
-      alert(result.message || '회원가입 완료');
-      navigate('/login');
-
-      
-    } 
-    catch (e) {
-      console.error(e);
-      setError('네트워크 오류 발생');
-      setIsVerifying(false);
-    }
+    }      
   };
 
   // 만약 location.state가 없으면 (직접 접속 등) 경고
-  if (!userId || !password || !email || !userName) {
+  if (!userId || !password || !email || !username) {
     return (
       <div className="relative min-h-screen bg-ivory flex flex-col items-center justify-center px-6 text-center">
         <p className="text-red-500 text-lg font-bold">

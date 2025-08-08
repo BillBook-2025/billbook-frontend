@@ -11,7 +11,7 @@ import Login from '../pages/auth/Login';
 import Signup from '../pages/auth/Signup';
 import Verification from '../pages/auth/Verification';
 import FindPassword from '../pages/auth/FindPassword';
-import FoundPassword from '../pages/auth/FoundPassword';
+import ResetPassword from '../pages/auth/ResetPassword';
 
 // 메인 관련 (/main)
 import Home from '../pages/main/Home';
@@ -53,7 +53,7 @@ export default function Router() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/verification" element={<Verification />} />
         <Route path="/findPassword" element={<FindPassword />} />
-        <Route path="/foundPassword" element={<FoundPassword />} />
+        <Route path="/resetPassword" element={<ResetPassword />} />
 
         {/* 공통 레이아웃 적용되는 페이지들 */}
         <Route element={<MainLayout />}>

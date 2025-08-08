@@ -1,6 +1,9 @@
 // src/pages/auth/Login.jsx
+
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+
+import { login } from '../../api/auth'; // 회원가입 api 함수
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,47 +20,30 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', },
-        body: JSON.stringify({userId, password}),
-      });
+      const result = await login(userId, password); // 로그인함수갖다씀
 
-      // 로그인 실패했을때
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-         switch (response.status) {
-          case 400:
-            setError('입력값을 확인해주세요.');
-            break;
-          case 409:
-            setError(errorData.message || '아이디 또는 비밀번호가 틀렸습니다.');
-            break;
-          default:
-            setError(errorData.message || '로그인 실패');
-        }
-
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      // 로그인 성공 시 사용자 정보 저장 (예: 로컬스토리지)
+      // 로그인 성공 시 사용자 정보 저장 (로컬스토리지)
       localStorage.setItem('userInfo', JSON.stringify(data));
 
       // 로그인 성공하면 홈화면으로 이동
       navigate('/home');
     }
-    // 오류난경우
     catch (error) {
-      setError('네트워크 오류 발생');
-      console.error(error);
+      const status = error.message.match(/HTTP (\d+):/)?.[1];
+
+      switch (status) {
+          case 400:
+            setError('입력값을 확인해주세요.');
+            break;
+          case 409: // 인증 실패
+            setError('아이디 또는 비밀번호가 틀렸습니다.');
+            break;
+          default:
+            setError('로그인 실패');
+        }
     }
-    finally {
-      setIsLoading(false);
-    }
+     finally { setIsLoading(false); }
+    
   };
 
   return (
@@ -68,7 +54,7 @@ export default function Login() {
         <form onSubmit={handleLogin} className="flex flex-col gap-4 mb-8 max-w-xs mx-auto w-fill">
           <input
           type="text"
-          placeholder="ID:"
+          placeholder="아이디 입력"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           required
@@ -76,7 +62,7 @@ export default function Login() {
         />
           <input
           type="password"
-          placeholder="PW:"
+          placeholder="비밀번호 입력"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

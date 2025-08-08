@@ -1,6 +1,9 @@
 // src/pages/auth/FindPassword.jsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { findPassword } from '../../api/auth' // 비밀번호 찾기 함수
 
 export default function FindPassword() {
   const navigate = useNavigate();
@@ -8,33 +11,33 @@ export default function FindPassword() {
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleFindPassword = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
 
     if (!userId.trim() || !email.trim()) {
       setError('아이디와 이메일을 모두 입력해주세요.');
       return;
     }
 
-    try {
-      const response = await fetch('/api/auth/find/password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, email }),
-      });
+    // 이메일 형식 체크!!
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('유효한 이메일 주소를 입력해주세요.');
+      return;
+    }
 
-      if (response.ok) {
-        const data = await response.json();
-        // data.password가 기존 비밀번호라고 가정
-        navigate('/foundPassword', { state: { password: data.password } });
-      } 
-      else {
-        const errorData = await response.json();
-        switch (response.status) {
+    try {
+      await findPassword(userId, email);
+
+      // 성공 시 ResetPassword 페이지로 이동하면서 userId, email 전달
+      navigate('/resetPassword', { state: { userId, email } });
+    }
+    catch (error) {
+      const status = error.message.match(/HTTP (\d+):/)?.[1];
+
+      switch (status) {
           case 400:
             setError('입력값을 확인해주세요.');
             break;
@@ -45,12 +48,8 @@ export default function FindPassword() {
             setError('해당 이메일을 가진 계정을 찾을 수 없습니다.');
             break;
           default:
-            setError(errorData.message || '알 수 없는 오류가 발생했습니다.');
+            setError('알 수 없는 오류가 발생했습니다.');
         }
-      }
-    } catch (err) {
-      console.error(err);
-      setError('네트워크 오류가 발생했습니다.');
     }
   };
 
@@ -76,12 +75,11 @@ export default function FindPassword() {
           className="bg-pistachio p-3 border border-gray-300 rounded"
         />
         <button type="submit" className="bg-white hover:bg-pistachio font-bold">
-          찾기
+          비밀번호 재설정
         </button>
       </form>
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
-      {success && <p className="text-green-600 mt-4">{success}</p>}
 
       <div className="mt-6">
         <button
