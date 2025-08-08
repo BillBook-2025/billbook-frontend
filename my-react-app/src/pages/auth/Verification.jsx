@@ -19,6 +19,7 @@ export default function Verification() {
 
     try {
       // 여기에 본인인증 api라던가... 본인인증 과정 넣기
+      // 아니면 간편로그인?
 
       // 본인인증 성공했다고 가정하고 회원가입 API 호출
       const response = await fetch('/api/auth/signup', {

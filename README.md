@@ -10,8 +10,6 @@
 
 ## 🔧 [유즈케이스 명세 기반 와이어플로우](./docs/wireflow.md)
   
-## 📚 [구글북스 api 사용법](./docs/googlebooksAPI.md)   
-
 ---
 ## 메인 색상:  #CDE8A6   
 ## 강조 색상:  #FF8A00

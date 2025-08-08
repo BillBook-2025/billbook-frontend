@@ -16,6 +16,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
 
+  // 
   // 카테고리는 걍 예시임
   const categories = ['과학', '문화', '사회', '역사'];
 

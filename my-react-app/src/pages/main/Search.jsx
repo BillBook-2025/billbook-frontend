@@ -16,6 +16,7 @@ export default function Search() {
   const navigate = useNavigate();
   const [recentSearches, setRecentSearches] = useState([]);
 
+  // 인기검색어 하려면 최근검색어 저장?하는게 백에 잇어야함
   // localStorage에서 최근 검색어 불러오기
   useEffect(() => {
     const stored = localStorage.getItem('recentSearches');

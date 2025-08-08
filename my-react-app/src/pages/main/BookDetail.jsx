@@ -13,8 +13,8 @@ export default function BookDetail() {
   const navigate = useNavigate();
 
   // BookDetail 컴포넌트에서 bookId(또는 검색 키워드 등)를 받아서
-  // 구글 북스 API 요청해서 상세 정보 받아오기
-  
+  // 백에서 인터파크api 받아와서 구현해놨다고 하니까 그걸 받아서 쓰기만하면됨
+
   useEffect(() => {
     if (!bookId) return;
 
