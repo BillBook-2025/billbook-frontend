@@ -8,6 +8,17 @@
 import { Outlet } from "react-router-dom";
 import BottomNavigation from "src/components/BottomNavigation.jsx"; 
 
+import React from 'react';
+/* 리액트 lucide 아이콘 라이브러리 쓸것임!! */
+import {
+  Book,
+  Trophy,
+  Users,
+  MessageCircle,
+  User,
+  Plus
+} from 'lucide-react';
+
 export default function MainLayout() {
   return (
     <div className="relative min-h-screen bg-gray-50">
