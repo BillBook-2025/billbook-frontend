@@ -40,7 +40,6 @@ export async function findId(email) {
     body: JSON.stringify({ email }),
   });
 }
-
 /*
 얘 안쓸듯
 
@@ -53,7 +52,7 @@ export async function findPassword(userId, email) {
     body: JSON.stringify({ userId, email }),
   });
 }
-*/
+  */
 
 // 비밀번호 변경
 // 204 No Content를 반환할 가능성 있어서 fetchWithAuth함수 안쓰고 걍 정통으로 예외처리
