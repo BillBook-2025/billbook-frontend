@@ -24,7 +24,6 @@ import PostUpload from '../pages/main/PostUpload';
 import PostEdit from '../pages/main/PostEdit';
 import Chatroom from '../pages/main/Chatroom';
 import ChatList from '../pages/main/ChatList';
-import RentManage from '../pages/main/RentManage';
 import Category from '../pages/main/Category';
 
 // 커뮤니티 관련 (/community)
@@ -69,7 +68,6 @@ export default function Router() {
           <Route path="/postEdit" element={<PostEdit />} />
           <Route path="/chatroom" element={<Chatroom />} />
           <Route path="/chatList" element={<ChatList />} />
-          <Route path="/rentManage" element={<RentManage />} />
           <Route path="/category/:categoryName" element={<Category />} />
 
           {/* 커뮤니티 */}

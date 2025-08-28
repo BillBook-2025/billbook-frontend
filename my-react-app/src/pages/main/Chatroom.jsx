@@ -10,8 +10,36 @@
 - [전송]
 - [+] - 캘린더, 사진, 송금
  */
+/**
+ * 1. “책 대출하기” 버튼 표시
 
-import { useEffect, useState } from "react";
+대출 버튼은 거래 참여자(빌리는 유저, 빌려주는 유저) 모두에게 표시 가능
+→ 대출 가능한 상태(chatData.isActive === true)인 책만 표시.
+
+클릭 시 API 호출로 대출 처리.
+
+2. 거래 완료 처리
+
+거래 완료(거래글 상태: 비활성화) 버튼은 책을 올린 사람(빌려주는 유저)만 표시.
+
+완료 시:
+
+책 상태 비활성화
+
+팝업: “완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요”
+
+자동으로 반납 후 다시 게시물 생성 가능 → registerExistingBook 호출
+
+3. 대출 → 반납 → 재게시
+
+빌린 책을 반납하면:
+
+기존 거래글이 다시 활성화 상태로 전환
+
+registerExistingBook 또는 borrowRegisteredBook 호출로 게시물 새로 등록
+ */
+
+import { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 // 아이콘
 import { Plus, Send, Calendar, Image, DollarSign } from "lucide-react";
@@ -22,6 +50,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { fetchProfile } from '../../api/profile';
 import { getChatroomDetail, getChats, sendChat, sendPicture, sendDeal, getDeadline, setDeadline } from '../../api/chatrooms';
 import { connectWebSocket, subscribeChatroom, sendMessage, disconnectWebSocket } from "../../api/websocket";
+import { borrowRegisteredBook, registerExistingBook } from '../../api/books';
 
 export default function Chatroom() {
   const { chatId } = useParams();
@@ -120,6 +149,43 @@ export default function Chatroom() {
     }
   };
 
+  // 책 대출하기
+  const handleBorrowBook = async () => {
+    if (!chatData) return;
+    if (!window.confirm("이 책을 대출하시겠습니까?")) return;
+
+    try {
+      await borrowBook(chatData.bookId, { borrowerId: chatData.myId }, token);
+      alert("대출 완료! 마이페이지에서 대여 상태를 확인할 수 있습니다.");
+
+      // 상태 업데이트: 더 이상 대여 불가로 표시
+      setChatData(prev => ({ ...prev, isActive: false }));
+      setMenuOpen(false);
+    } 
+    catch (err) {
+    console.error("대출 실패", err);
+    }
+  };
+
+  // 거래 완료 (책 빌려준 사람만 가능)
+  const handleCompleteDeal = async () => {
+    if (!chatData) return;
+    if (!window.confirm("거래를 완료하시겠습니까?")) return;
+
+    try {
+      // API 호출 - 거래글 상태 활성화
+      await setPostStatusComplete(chatData.bookId, token); 
+      alert("완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요");
+
+      // 상태 업데이트
+      setChatData(prev => ({ ...prev, isActive: true }));
+      setMenuOpen(false);
+    } 
+    catch (err) {
+      console.error("거래 완료 실패", err);
+    }
+  };
+
   // 새로운 채팅 메시지가 추가될 때 자동으로 스크롤을 맨 아래로 내려주는 기능
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -157,6 +223,7 @@ export default function Chatroom() {
           <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-full hover:bg-gray-200">
             <Plus />
           </button>
+          
           {menuOpen && (
             <div className="absolute bottom-12 left-0 bg-white shadow-lg rounded-lg p-3 flex flex-col gap-3 w-40">
               {/* 캘린더 */}
@@ -172,15 +239,37 @@ export default function Chatroom() {
                   설정
                 </button>
               </div>
+              
               {/* 사진 */}
               <label className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded cursor-pointer">
                 <Image size={18} /> 사진
                 <input type="file" accept="image/*" className="hidden" onChange={handleSendPicture} />
               </label>
+              
               {/* 송금 */}
               <button onClick={handleSendDeal} className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded">
                 <DollarSign size={18} /> 송금
               </button>
+              
+              {/* 책 대출하기 (모두) */}
+              {chatData.isActive && (
+                <button
+                  onClick={handleBorrowBook}
+                  className="bg-green-500 text-white w-full py-1 rounded hover:bg-green-600"
+                >
+                  책 대출하기
+                </button>
+              )}
+
+              {/* 거래 완료 (올린 사람만) */}
+              {chatData.isActive && chatData.myId === chatData.sellerId && (
+                <button
+                  onClick={handleCompleteDeal}
+                  className="bg-yellow-500 text-white w-full py-1 rounded hover:bg-yellow-600"
+                >
+                  거래 완료
+                </button>
+              )}
             </div>
           )}
         </div>
