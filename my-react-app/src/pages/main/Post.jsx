@@ -17,7 +17,7 @@
 // src/pages/main/Post.jsx
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-// 하트 아이콘
+// 하트(좋아요) 아이콘
 import { Heart } from "lucide-react"; 
 // API 함수
 import { fetchRegisteredBookDetail, deleteRegisteredBook, likeBook, unlikeBook, fetchLikeCount, createChatroom } from '../../api/books';
@@ -42,7 +42,8 @@ export default function Post() {
         const likeData = await fetchLikeCount(bookId, token);
         setLikeCount(likeData.count);
         setLiked(likeData.likedByMe);
-      } catch (err) {
+      } 
+      catch (err) {
         console.error("게시글 로드 실패", err);
       }
     }
@@ -52,38 +53,43 @@ export default function Post() {
   if (!post) return <div>로딩 중...</div>;
 
   const handleDelete = async () => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    if (!window.confirm("삭제하시겠습니까?")) return;
 
     try {
       await deleteRegisteredBook(bookId, token);
-      alert("삭제 완료!");
+      alert("삭제 완료");
       window.location.href = "/";
-    } catch (err) {
+    } 
+    catch (err) {
       console.error(err);
       alert("삭제 실패");
     }
   };
 
+  // 좋아요 누르기
   const handleLike = async () => {
     try {
       if (liked) {
         await unlikeBook(bookId, token);
-        setLikeCount(prev => prev - 1);
+        setLikeCount(prev => prev - 1); //좋아요 취소
       } else {
         await likeBook(bookId, token);
-        setLikeCount(prev => prev + 1);
+        setLikeCount(prev => prev + 1); // 좋아요 추가
       }
       setLiked(!liked);
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("좋아요 실패", err);
     }
   };
 
+  // 채팅하기
   const handleChat = async () => {
     try {
       const data = await createChatroom(bookId, token);
       window.location.href = `/chat/${data.chatroomId}`;
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("채팅방 생성 실패", err);
     }
   };
