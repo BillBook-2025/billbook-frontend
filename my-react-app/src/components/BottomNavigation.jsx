@@ -5,7 +5,7 @@ import React from 'react';
 import {
   Book,
   Trophy,
-  Users,
+  House,
   MessageCircle,
   User,
   Plus
@@ -21,6 +21,7 @@ export default function BottomNavigation() {
 
   return (
     <nav className="fixed bottom-0 left-0 w-full h-16 bg-white border-t border-gray-200 flex justify-around items-center z-50">
+      {/**홈화면으로 이동 */}
       <button
         onClick={() => navigate('/home')}
         className={`flex flex-col items-center ${
@@ -30,6 +31,7 @@ export default function BottomNavigation() {
         <Book className="w-6 h-6" />
       </button>
 
+      {/**추천도서로 이동 */}
       <button
         onClick={() => navigate('/recommend')}
         className={`flex flex-col items-center ${
@@ -39,15 +41,17 @@ export default function BottomNavigation() {
         <Trophy className="w-6 h-6" />
       </button>
 
+      {/**커뮤니티로 이동 */}
       <button
         onClick={() => navigate('/community')}
         className={`flex flex-col items-center ${
           isActive('/community') ? 'text-pistachio' : 'text-gray-600'
         } hover:text-pistachio-dark`}
       >
-        <Users className="w-6 h-6" />
+        <House className="w-6 h-6" />
       </button>
 
+      {/**채팅목록으로 이동 */}
       <button
         onClick={() => navigate('/chatList')}
         className={`flex flex-col items-center ${
@@ -57,6 +61,7 @@ export default function BottomNavigation() {
         <MessageCircle className="w-6 h-6" />
       </button>
 
+      {/**마이페이지로 이동 */}
       <button
         onClick={() => navigate('/mypage')}
         className={`flex flex-col items-center ${

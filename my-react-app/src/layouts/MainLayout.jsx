@@ -13,7 +13,7 @@ import React from 'react';
 import {
   Book,
   Trophy,
-  Users,
+  House,
   MessageCircle,
   User,
   Plus
