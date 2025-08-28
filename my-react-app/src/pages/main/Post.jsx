@@ -4,7 +4,7 @@
 /**### 거래글(보는 입장)
 
 - 책 정보
-- [찜하기]
+- [좋아요]
 - [채팅하기] - 제공자(빌려주는사람)-빌리는사람(대여자)간의 채팅 화면으로 연결
 - 이 게시글 [신고하기]
  */
@@ -14,108 +14,102 @@
 - [수정]
 - [삭제]
  */
+// src/pages/main/Post.jsx
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+// 하트 아이콘
+import { Heart } from "lucide-react"; 
+// API 함수
+import { fetchRegisteredBookDetail, deleteRegisteredBook, likeBook, unlikeBook, fetchLikeCount, createChatroom } from '../../api/books';
 
 export default function Post() {
-  // return <h1>게시글 보기 페이지</h1>;
-  const { postId } = useParams();
+  const { bookId } = useParams();
   const [post, setPost] = useState(null);
-  const [myId, setMyId] = useState(null);   // 내 아이디
-  const [isOwner, setIsOwner] = useState(false); // 내가 쓴 글인지 확인
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
 
+  const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+
+  // 게시글 로드 + 좋아요 상태
   useEffect(() => {
-    // 1. 내 정보 불러오기
-    fetch("/api/my")
-      .then(res => res.json())
-      .then(data => setMyId(data.userId))
-      .catch(err => console.error("내 정보 로드 실패", err));
+    if (!token) return;
 
-    // 2. 게시글 정보 불러오기
-    fetch(`/api/boards/${postId}`)
-      .then(res => res.json())
-      .then(data => setPost(data))
-      .catch(err => console.error("게시글 로드 실패", err));
-  }, [postId]);
+    async function loadData() {
+      try {
+        const data = await fetchRegisteredBookDetail(bookId, token);
+        setPost(data);
 
-  useEffect(() => {
-    if (post && myId !== null) {
-      setIsOwner(post.userId === myId);
+        const likeData = await fetchLikeCount(bookId, token);
+        setLikeCount(likeData.count);
+        setLiked(likeData.likedByMe);
+      } catch (err) {
+        console.error("게시글 로드 실패", err);
+      }
     }
-  }, [post, myId]);
+    loadData();
+  }, [bookId, token]);
 
   if (!post) return <div>로딩 중...</div>;
 
-  return (
-    <div>
-      <h1>{post.title}</h1>
-      <p>책 제목: {post.bookTitle}</p>
-      <p>작성자: {post.username}</p>
-      <img src={post.bookImageUrl} alt="책 이미지" width="200" />
+  const handleDelete = async () => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
-      {isOwner ? ( // 본인이 올린 게시물이면
-        <div>
-          <button onClick={() => handleEdit(post.id)}>수정</button>
-          <button onClick={() => handleDelete(post.id)}>삭제</button>
-        </div>
-      ) : ( // 남이 올린 게시물이면
-        <div>
-          <button onClick={() => handleLike(post.bookId)}>찜하기</button>
-          <button onClick={() => handleChat(post.bookId)}>채팅하기</button>
-          <button onClick={() => handleReport(post.id)}>신고하기</button>
-        </div>
-      )}
+    try {
+      await deleteRegisteredBook(bookId, token);
+      alert("삭제 완료!");
+      window.location.href = "/";
+    } catch (err) {
+      console.error(err);
+      alert("삭제 실패");
+    }
+  };
+
+  const handleLike = async () => {
+    try {
+      if (liked) {
+        await unlikeBook(bookId, token);
+        setLikeCount(prev => prev - 1);
+      } else {
+        await likeBook(bookId, token);
+        setLikeCount(prev => prev + 1);
+      }
+      setLiked(!liked);
+    } catch (err) {
+      console.error("좋아요 실패", err);
+    }
+  };
+
+  const handleChat = async () => {
+    try {
+      const data = await createChatroom(bookId, token);
+      window.location.href = `/chat/${data.chatroomId}`;
+    } catch (err) {
+      console.error("채팅방 생성 실패", err);
+    }
+  };
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold mb-2">{post.title}</h1>
+      <p>작성자: {post.username}</p>
+      <img src={post.bookImageUrl || '/default_book.png'} alt={post.title} className="w-full h-60 object-cover rounded mb-2" />
+
+      <div className="flex items-center gap-4 mb-2">
+        <button onClick={handleLike} className="flex flex-col items-center">
+          <Heart color={liked ? "red" : "gray"} fill={liked ? "red" : "none"} />
+          <span className="text-sm">{likeCount}</span>
+        </button>
+        <button onClick={handleChat} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          채팅하기
+        </button>
+        <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          삭제
+        </button>
+      </div>
+
+      <p className="text-gray-700 mt-2">{post.description}</p>
+      <p className="text-gray-500 mt-1">위치: {post.locate?.address || "없음"}</p>
+      <p className="text-gray-500 mt-1">상태: {post.bookPoint}</p>
     </div>
   );
-}
-
-function handleEdit(postId) {
-  window.location.href = `/edit/${postId}`;
-}
-
-function handleDelete(postId) {
-  if (window.confirm("정말 삭제할까요?")) {
-    fetch(`/api/boards/${postId}`, {
-      method: "DELETE",
-    })
-      .then(res => {
-        if (res.ok) {
-          alert("삭제 완료!");
-          window.location.href = "/boards";
-        } else {
-          alert("삭제 실패!");
-        }
-      })
-      .catch(err => console.error("삭제 실패", err));
-  }
-}
-
-function handleLike(bookId) {
-  fetch(`/api/books/${bookId}/like`, {
-    method: "POST",
-  })
-    .then(res => {
-      if (res.ok) {
-        alert("찜 완료!");
-      } else {
-        alert("찜 실패!");
-      }
-    })
-    .catch(err => console.error("찜 실패", err));
-}
-
-function handleChat(bookId) {
-  fetch(`/api/books/${bookId}/chatroom`, {
-    method: "POST",
-  })
-    .then(res => res.json())
-    .then(data => {
-      const chatroomId = data.chatroomId;
-      window.location.href = `/chat/${chatroomId}`;
-    })
-    .catch(err => console.error("채팅방 생성 실패", err));
-}
-
-function handleReport(postId) {
-  alert(`신고 기능은 아직 구현되지 않았습니다. (게시글 ID: ${postId})`);
 }

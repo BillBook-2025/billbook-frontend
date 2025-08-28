@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { findPassword } from '../../api/auth' // 비밀번호 찾기 함수
+import { changePassword } from '../../api/auth' // 비밀번호 변경 함수
 
 export default function FindPassword() {
   const navigate = useNavigate();
@@ -29,8 +29,8 @@ export default function FindPassword() {
     }
 
     try {
-      await findPassword(userId, email);
-
+      // await findPassword(userId, email);
+      // 여기서 바로 changePassword 호출은 안되고, 실제 백엔드가 userId+email 확인 후 토큰 발급 -> 비밀번호 변경 절차를 거쳐야 함
       // 성공 시 ResetPassword 페이지로 이동하면서 userId, email 전달
       navigate('/resetPassword', { state: { userId, email } });
     }

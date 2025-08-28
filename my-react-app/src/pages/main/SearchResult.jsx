@@ -8,6 +8,8 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+// API 함수
+import { searchBooks } from "../../api/books";
 
 export default function SearchResult() {
   const [searchParams] = useSearchParams();
@@ -17,33 +19,24 @@ export default function SearchResult() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (query) {
-      // 쿼리 파라미터 인코딩 및 API 호출
-      const encodedQuery = encodeURIComponent(query);
-      const encodedRegion = encodeURIComponent(region === "전체" ? "" : region);
-
-      fetch(`/api/books/search?query=${encodedQuery}&region=${encodedRegion}`, {
-        headers: {
-          // 인증이 필요하다면 추가
-          // 'Authorization': 'Bearer 토큰값'
-        }
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("서버 응답 오류");
-          return res.json();
-        })
-        .then((data) => {
-          // API 명세에 맞게 books 배열만 추출
-          setResults(data.data.books || []);
-        })
-        .catch((err) => {
-          console.error("검색 실패:", err);
-          setResults([]);
-        });
-    } else {
+    if (!query.trim()) {
       setResults([]);
+      return;
     }
-  }, [query, region]);
+
+    async function fetchResults() {
+      try {
+        const res = await searchBooks({ query, region: region === "전체" ? "" : region }, token);
+        setResults(res.data.books || []);
+      } 
+      catch (err) {
+        console.error("검색 실패:", err);
+        setResults([]);
+      }
+    }
+
+    fetchResults();
+  }, [query, region, token]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -78,7 +71,7 @@ export default function SearchResult() {
 
       {/* 지역 설정 버튼 */}
       <div className="mb-4 flex gap-2">
-        {["전체", "서울", "부산", "대구", "광주"].map((r) => (
+        {["전체", "서울", "부산", "대구", "광주", "인천", "경기도", "경상도", "전라도", "강원도", "충청도", "제주도", "울릉도","독도"].map((r) => (
           <button
             key={r}
             onClick={() => setRegion(r)}

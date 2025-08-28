@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // 돋보기 아이콘
 import { Search } from 'lucide-react';
+// AI 추천 API
+import { fetchRecommendedBooks } from '../../api/recommendations';
 
 
 export default function Home() {
@@ -34,11 +36,13 @@ export default function Home() {
   useEffect(() => {
     async function fetchBooks() {
       try {
-        const res = await fetch('/api/books', { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setBooks(data);
-        }
+         // 로컬스토리지에서 token 가져오기
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const token = userInfo?.token;
+
+        // AI 추천 책 불러오기
+        const data = await fetchRecommendedBooks(token); 
+        setBooks(data);
       } 
       catch (e) {
         console.error('책 목록 로드 실패', e);
