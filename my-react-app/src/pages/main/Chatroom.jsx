@@ -151,9 +151,6 @@ export default function Chatroom() {
 
   // 책 대출하기
   const handleBorrowBook = async () => {
-    if (!chatData) return;
-    if (!window.confirm("이 책을 대출하시겠습니까?")) return;
-
     try {
       await borrowBook(chatData.bookId, { borrowerId: chatData.myId }, token);
       alert("대출 완료! 마이페이지에서 대여 상태를 확인할 수 있습니다.");
@@ -169,9 +166,6 @@ export default function Chatroom() {
 
   // 거래 완료 (책 빌려준 사람만 가능)
   const handleCompleteDeal = async () => {
-    if (!chatData) return;
-    if (!window.confirm("거래를 완료하시겠습니까?")) return;
-
     try {
       // API 호출 - 거래글 상태 활성화
       await setPostStatusComplete(chatData.bookId, token); 

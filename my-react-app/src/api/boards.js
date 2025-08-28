@@ -92,7 +92,7 @@ export async function deleteComment(boardId, commentId, token) {
     }, token);
 }
 
-/* 대댓글 추가 */
+// 대댓글 추가 
 export async function addReply(boardId, commentId, data, token) {
   return fetchWithAuth(`/boards/${boardId}/comments/${commentId}/replies`, 
     {
@@ -102,7 +102,7 @@ export async function addReply(boardId, commentId, data, token) {
     }, token);
 }
 
-/* 책 추천 목록 */
+// 책 추천 목록 
 export async function getRecommendations(token) {
   return fetchWithAuth('/recommendations', {}, token);
 }
