@@ -12,3 +12,13 @@ async function fetchWithAuth(url, options = {}, token) {
   }
   return response.json();
 }
+
+// AI 추천 책 목록 불러오기
+export async function fetchRecommendedBooks(token) {
+  return fetchWithAuth(`/api/recommendations/books`, {}, token);
+}
+
+// AI 추천 게시글 목록 불러오기
+export async function fetchRecommendedBoards(token) {
+  return fetchWithAuth(`/api/recommendations/boards`, {}, token);
+}

@@ -17,6 +17,7 @@ async function fetchWithAuth(url, options = {}, token) {
 }
 
 // 개인정보 조회
+// fetch()의 기본 옵션은 { method: 'GET' }이라서 get일때는 메소드 종류 안써도되~
 export async function myInfo(userId, token) {
   return fetchWithAuth(`/api/${userId}/my`, {}, token);
 }

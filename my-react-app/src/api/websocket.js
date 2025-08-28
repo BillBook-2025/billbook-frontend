@@ -1,14 +1,38 @@
 // src/api/websocket.js
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+import { Stomp } from '@stomp/stompjs';
 
-async function fetchWithAuth(url, options = {}, token) {
-  const headers = options.headers ? { ...options.headers } : {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const response = await fetch(API_BASE_URL + url, { ...options, headers });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
+let stompClient = null;
+
+// 웹소켓 연결
+export function connectWebSocket(onConnectCallback) {
+  const socket = new WebSocket('ws://localhost:8080/websocket/ws-chat');
+  stompClient = Stomp.over(socket);
+  
+  stompClient.connect({}, () => {
+    console.log('WebSocket connected');
+    if (onConnectCallback) onConnectCallback();
+  });
+}
+
+// 채팅방 구독
+export function subscribeChatroom(chatroomId, onMessageReceived) {
+  if (!stompClient) return;
+  stompClient.subscribe(`/topic/${chatroomId}`, (message) => {
+    if (onMessageReceived) onMessageReceived(JSON.parse(message.body));
+  });
+}
+
+// 메시지 보내기
+export function sendMessage(chatroomId, message) {
+  if (!stompClient) return;
+  stompClient.send('/app/chat.send', {}, JSON.stringify({ chatroomId, ...message }));
+}
+
+// 웹소켓 종료
+export function disconnectWebSocket() {
+  if (stompClient) {
+    stompClient.disconnect(() => console.log('WebSocket disconnected'));
+    stompClient = null;
   }
-  return response.json();
 }
