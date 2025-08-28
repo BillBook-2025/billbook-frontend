@@ -11,21 +11,18 @@ import { useNavigate } from 'react-router-dom';
 // 돋보기 아이콘
 import { Search } from 'lucide-react';
 // AI 추천 API
-import { fetchRecommendedBooks } from '../../api/recommendations';
+import { fetchAvailablePosts } from "../../api/posts";
 
 
 export default function Home() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
-
-  // 
-  // 카테고리는 걍 예시임
-  const categories = ['과학', '문화', '사회', '역사'];
+  const [categories, setCategories] = useState([]);
 
   // 책 상태 점수 -> 단어 변환하는 함수
   const getBookCondition = (point) => {
     switch (point) {
-     case 3: return '양호';
+     case 3: return '좋음';
      case 2: return '보통';
      case 1: return '나쁨';
       default: return '알 수 없음';
@@ -34,25 +31,29 @@ export default function Home() {
 
 
   useEffect(() => {
-    async function fetchBooks() {
+    async function fetchPosts() {
       try {
          // 로컬스토리지에서 token 가져오기
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const token = userInfo?.token;
 
-        // AI 추천 책 불러오기
-        const data = await fetchRecommendedBooks(token); 
-        setBooks(data);
+        // 현재 거래 가능한 글 불러오기
+        const data = await fetchAvailablePosts(token); 
+        setPosts(data);
+
+        // 거래글에서 카테고리 추출 (중복 제거, null 제거)
+        const uniqueCategories = Array.from(new Set(data.map(post => post.category))).filter(Boolean);
+        setCategories(uniqueCategories);
       } 
       catch (e) {
-        console.error('책 목록 로드 실패', e);
+        console.error('거래글 목록 로드 실패', e);
       }
     }
-    fetchBooks();
+    fetchPosts();
   }, []);
 
   return (
-    <div>
+    <div className="pb-20"> {/* 하단 바 공간 확보 */}
       {/* 검색창처럼 보이는 버튼(서치 페이지로 이동 ㅋ) */}
       <button
         onClick={() => navigate('/search')}
@@ -81,7 +82,7 @@ export default function Home() {
         {books.map(book => (
           <div
             key={book.id}
-            onClick={() => navigate(`/bookDetail/${book.id}`)}
+            onClick={() => navigate(`/bookDetail/${post.bookId}`)}
             className="border rounded-md p-2 cursor-pointer hover:shadow"
           >
             <img
