@@ -6,9 +6,12 @@
 */
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+// API 함수
+import { fetchBookDetail } from "../../api/books";
 
 export default function BookDetail() {
-  const { bookId } = useParams(); // URL param으로 책 ID 받는다고 가정
+  const { bookId } = useParams(); 
+  const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
   const [book, setBook] = useState(null);
   const navigate = useNavigate();
 
@@ -16,31 +19,29 @@ export default function BookDetail() {
   // 백에서 인터파크api 받아와서 구현해놨다고 하니까 그걸 받아서 쓰기만하면됨
 
   useEffect(() => {
-    if (!bookId) return;
+    if (!bookId || !token) return;
 
-    fetch(`https://www.googleapis.com/books/v1/volumes/${bookId}`)
-      .then((res) => res.json())
+    fetchBookDetail(bookId, token)
       .then((data) => {
-        // 구글 북스 API 응답 구조에 맞게 필요한 정보만 추출
-        const volumeInfo = data.volumeInfo || {};
+        // 서버 API 응답 구조에 맞게 필요한 정보만 추출
         setBook({
-          title: volumeInfo.title,
-          authors: volumeInfo.authors?.join(", "),
-          description: volumeInfo.description,
-          thumbnail: volumeInfo.imageLinks?.thumbnail,
-          categories: volumeInfo.categories?.join(", "),
-          publishedDate: volumeInfo.publishedDate,
-          // 필요시 더 추가
+          title: data.title,
+          authors: data.authors?.join(", "),
+          description: data.description,
+          thumbnail: data.thumbnailUrl,
+          categories: data.categories?.join(", "),
+          publishedDate: data.publishedDate,
         });
       })
       .catch((err) => {
         console.error("책 정보 로드 실패:", err);
         setBook(null);
       });
-  }, [bookId]);
+  }, [bookId, token]);
 
   if (!book) return <p>책 정보를 불러오는 중입니다...</p>;
 
+  // // 책 제목을 검색어로 사용해서 SearchResult 페이지로 이동
   const handleRent = () => {
     navigate(`/searchresult?query=${encodeURIComponent(book.title)}`);
   };
@@ -62,7 +63,7 @@ export default function BookDetail() {
 
       <button
         onClick={handleRent}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        className="px-4 py-2 bg-pistachio text-gray-800 rounded hover:bg-pistachio-dark"
       >
         대여하기
       </button>
