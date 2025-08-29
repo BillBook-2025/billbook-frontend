@@ -28,35 +28,27 @@ export async function fetchFollowings(userId, token) {
   return fetchWithAuth(`/api/profile/${userId}/following`, {}, token);
 }
 
-// 팔로잉 추가
+// 팔로우 추가
+// 상대 유저 아이디 경로 파라미터로,,,
 export async function addFollowing(userId, followUserId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/following`, 
-    {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: followUserId }),
-    }, 
-    token);
+  return fetchWithAuth(`/api/profile/${userId}/following/${followUserId}`, 
+    { method: 'POST' }, token);
 }
 
-// 팔로잉 삭제
+// 팔로우 취소
+// 상대 유저 아이디 경로 파라미터로,,,
 export async function removeFollowing(userId, followUserId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/following`, 
-    {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: followUserId }),
-    }, 
-    token);
+  return fetchWithAuth(`/api/profile/${userId}/following/${followUserId}`, 
+    { method: 'DELETE' }, token);
 }
 
-// 매너 온도 변화
-export async function changeTemperature(userId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/temperature`, 
-    {
-        method: 'POST',
-    }, 
-    token);
+// 매너온도
+export async function changeTemperature(userId, data, token) {
+  return fetchWithAuth(`/api/profile/${userId}/temperature`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data), // 예: { score: 5 }
+  }, token);
 }
 
 /**
@@ -90,13 +82,13 @@ export async function userBoards(userId, token, params = {}) {
   return fetchWithAuth(url, {}, token);
 }
 
-// 프로필 사진 등록
-export async function uploadProfileImage(userId, profilePicUrl, token) {
+// 프로필 이미지 등록
+export async function uploadProfileImage(userId, formData, token) {
   return fetchWithAuth(`/api/profile/${userId}/image`, 
     {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profilePic: profilePicUrl }),
-    }, 
-    token);
+      method: 'POST',
+      body: formData, // formData에 파일 포함
+    },
+    token
+  );
 }

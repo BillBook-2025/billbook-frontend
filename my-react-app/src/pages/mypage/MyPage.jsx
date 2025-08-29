@@ -14,7 +14,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
-import { myInfo, editMyInfo, uploadProfileImage, mySell, myBuy, myLikes, myBoards, myPoints } from "../../api/my";
+import { myInfo, editMyInfo, myLikes, myPoints } from "../../api/my";
+import { fetchProfile, uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFollowers, fetchFollowings } from "../../api/profile";
 
 export default function MyPage() {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -29,8 +30,8 @@ export default function MyPage() {
 
   const [points, setPoints] = useState(0);
   const [likedBooks, setLikedBooks] = useState([]);
-  const [mySells, setMySells] = useState([]);
-  const [myBuys, setMyBuys] = useState([]);
+  const [myBorrows, setMyBorrows] = useState([]);
+  const [myRegisters, setMyRegister] = useState([]);
   const [myBoardsList, setMyBoardsList] = useState([]);
 
   const fileInputRef = useRef(null);
@@ -52,13 +53,17 @@ export default function MyPage() {
     myLikes(userId, token).then(setLikedBooks);
 
     // 내가 올린 책
-    mySell(userId, token).then(setMySells);
+    registeredBooks(userId, token).then(setMyRegister);
 
     // 내가 빌린 책
-    myBuy(userId, token).then(setMyBuys);
+    borrowedBooks(userId, token).then(setMyBorrows);
 
     // 내가 쓴 커뮤니티 글
     myBoards(userId, token).then(setMyBoardsList);
+
+    // 팔로워, 팔로잉
+    fetchFollowers(userId, token).then(setFollowers);
+    fetchFollowings(userId, token).then(setFollowings);
   }, [token, userId]);
 
   // 프로필 수정
@@ -184,6 +189,13 @@ export default function MyPage() {
             <li key={b.boardId}>{b.title}</li>
           ))}
         </ul>
+      </section>
+
+      {/* 팔로워/팔로잉 */}
+      <section className="border p-4 rounded-lg">
+        <h3 className="font-semibold mb-2">팔로워 ({followers.length}) / 팔로잉 ({followings.length})</h3>
+        <p>팔로워: {followers.map(f => f.nickname).join(", ")}</p>
+        <p>팔로잉: {followings.map(f => f.nickname).join(", ")}</p>
       </section>
     </div>
   );

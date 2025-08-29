@@ -33,37 +33,11 @@ export async function editMyInfo(userId, data, token) {
     token);
 }
 
-// 프로필 이미지 등록
-export async function uploadProfileImage(userId, formData, token) {
-  return fetchWithAuth(`/api/${userId}/my/image`, 
-    {
-      method: 'POST',
-      body: formData, // formData에 파일 포함
-    },
-    token
-  );
-}
-
-// 내가 올린 거래글 목록 조회
-export async function mySell(userId, token) {
-  return fetchWithAuth(`/api/${userId}/my/sell`, {}, token);
-}
-
-// 내가 빌린 책 
-export async function myBuy(userId, token) {
-  return fetchWithAuth(`/api/${userId}/my/buy`, {}, token);
-}
-
 // 내가 좋아요 누른 거래글 목록 조회
 export async function myLikes(userId, token, params = {}) {
   const queryString = new URLSearchParams(params).toString();
   const url = queryString ? `/api/${userId}/my/like?${queryString}` : `/api/${userId}/my/like`;
   return fetchWithAuth(url, {}, token);
-}
-
-// 내가 작성한 커뮤니티 글
-export async function myBoards(userId, token) {
-  return fetchWithAuth(`/api/${userId}/my/boards`, {}, token);
 }
 
 // 내가 가진 포인트 조회
