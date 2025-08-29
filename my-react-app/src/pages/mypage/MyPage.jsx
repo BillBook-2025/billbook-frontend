@@ -11,13 +11,14 @@
 - 팔로워 / 팔로잉 조회
  * 
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
 import { myInfo, editMyInfo, myLikes, myPoints } from "../../api/my";
-import { fetchProfile, uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFollowers, fetchFollowings } from "../../api/profile";
+import { uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFollowers, fetchFollowings } from "../../api/profile";
 
 export default function MyPage() {
+  const navigate = useNavigate();
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.token;
   const userId = userInfo?.userId;
@@ -31,8 +32,11 @@ export default function MyPage() {
   const [points, setPoints] = useState(0);
   const [likedBooks, setLikedBooks] = useState([]);
   const [myBorrows, setMyBorrows] = useState([]);
-  const [myRegisters, setMyRegister] = useState([]);
+  const [myRegisters, setMyRegisters] = useState([]);
   const [myBoardsList, setMyBoardsList] = useState([]);
+  const [followers, setFollowers] = useState([]);
+  const [followings, setFollowings] = useState([]);
+
 
   const fileInputRef = useRef(null);
 
@@ -53,13 +57,13 @@ export default function MyPage() {
     myLikes(userId, token).then(setLikedBooks);
 
     // 내가 올린 책
-    registeredBooks(userId, token).then(setMyRegister);
+    registeredBooks(userId, token).then(setMyRegisters);
 
     // 내가 빌린 책
     borrowedBooks(userId, token).then(setMyBorrows);
 
     // 내가 쓴 커뮤니티 글
-    myBoards(userId, token).then(setMyBoardsList);
+    userBoards(userId, token).then(setMyBoardsList);
 
     // 팔로워, 팔로잉
     fetchFollowers(userId, token).then(setFollowers);
@@ -153,7 +157,7 @@ export default function MyPage() {
 
       {/* 내가 좋아요 누른 책 */}
       <section className="border p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">찜한 책</h3>
+        <h3 className="font-semibold mb-2">좋아요한 책</h3>
         <ul className="space-y-1">
           {likedBooks.map((b) => (
             <li key={b.bookId}>{b.title}</li>
@@ -165,8 +169,18 @@ export default function MyPage() {
       <section className="border p-4 rounded-lg">
         <h3 className="font-semibold mb-2">등록한 책</h3>
         <ul className="space-y-1">
-          {mySells.map((b) => (
-            <li key={b.bookId}>{b.title}</li>
+          {myRegisters.map((b) => (
+            <li key={b.bookId} className="flex justify-between items-center">
+              <span>{b.title}</span>
+              {b.status === "완료" && (
+                <button
+                  className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                  onClick={() => navigate("./Manner", { state: { book: b, isLender: true } })}
+                >
+                  매너 평가
+                </button>
+              )}
+            </li>
           ))}
         </ul>
       </section>
@@ -175,8 +189,18 @@ export default function MyPage() {
       <section className="border p-4 rounded-lg">
         <h3 className="font-semibold mb-2">빌린 책</h3>
         <ul className="space-y-1">
-          {myBuys.map((b) => (
-            <li key={b.bookId}>{b.title}</li>
+          {myBorrows.map((b) => (
+            <li key={b.bookId} className="flex justify-between items-center">
+              <span>{b.title}</span>
+              {b.status === "완료" && (
+                <button
+                  className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                  onClick={() => navigate("./Manner", { state: { book: b } })}
+                >
+                  매너 평가
+                </button>
+              )}
+            </li>
           ))}
         </ul>
       </section>
