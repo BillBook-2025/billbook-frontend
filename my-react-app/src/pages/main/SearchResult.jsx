@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 // API 함수
-import { searchBooks } from "../../api/books";
+import { searchBook } from "../../api/books";
 
 export default function SearchResult() {
   const [searchParams] = useSearchParams();
@@ -26,7 +26,7 @@ export default function SearchResult() {
 
     async function fetchResults() {
       try {
-        const res = await searchBooks({ query, region: region === "전체" ? "" : region }, token);
+        const res = await searchBook({ query, region: region === "전체" ? "" : region });
         setResults(res.data.books || []);
       } 
       catch (err) {
@@ -34,9 +34,8 @@ export default function SearchResult() {
         setResults([]);
       }
     }
-
     fetchResults();
-  }, [query, region, token]);
+  }, [query, region]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

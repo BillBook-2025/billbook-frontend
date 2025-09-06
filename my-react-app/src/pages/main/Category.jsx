@@ -5,7 +5,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 // API 함수
-import { searchPosts } from "../../api/books";
+import { searchBook } from "../../api/books";
 
 export default function Category() {
   const { categoryName } = useParams();
@@ -28,9 +28,11 @@ export default function Category() {
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
         const token = userInfo?.token;
 
-        const data = await searchPosts(token);
-        const filtered = data.filter(post => post.category === categoryName);
-        setPosts(filtered);
+        // 카테고리로 필터링 한 검색결과
+        const params = { category: categoryName };
+        const data = await searchBook(params, token);
+        // 검색 결과를 posts 상태로 저장
+        setPosts(data);
       } 
       catch (e) {
         console.error("카테고리 글 로드 실패", e);

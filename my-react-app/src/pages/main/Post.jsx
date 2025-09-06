@@ -15,20 +15,32 @@
 - [삭제]
  */
 // src/pages/main/Post.jsx
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 // 하트(좋아요) 아이콘
 import { Heart } from "lucide-react"; 
 // API 함수
-import { fetchBookDetail, deleteRegisteredBook, likeBook, unlikeBook, fetchLikeCount, createChatroom } from '../../api/books';
+import { bookDetail, deleteBook, likeBook, likeCount, createChatroom } from '../../api/books';
 
 export default function Post() {
   const { bookId } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
-  const [likeCount, setLikeCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(0);
   const [liked, setLiked] = useState(false);
 
-  const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+  const token = localStorage.getItem("token");
+
+  const userId = userInfo?.userId;
+
+  const getBookCondition = (point) => {
+    switch (point) {
+      case 3: return '좋음';
+      case 2: return '보통';
+      case 1: return '나쁨';
+      default: return '알 수 없음';
+    }
+  };
 
   // 게시글 로드 + 좋아요 상태
   useEffect(() => {
@@ -36,11 +48,11 @@ export default function Post() {
 
     async function loadData() {
       try {
-        const data = await fetchBookDetail(bookId, token);
+        const data = await bookDetail(bookId, token);
         setPost(data);
 
-        const likeData = await fetchLikeCount(bookId, token);
-        setLikeCount(likeData.count);
+        const likeData = await likeCount(bookId, token);
+        setLikesCount(likeData.count);
         setLiked(likeData.likedByMe);
       } 
       catch (err) {
@@ -52,13 +64,17 @@ export default function Post() {
 
   if (!post) return <div>로딩 중...</div>;
 
+  // 게시자인지 아닌지 확인
+  const isOwner = userId === post.sellerId;
+
+  // 게시자이면 글 삭제 가능
   const handleDelete = async () => {
     if (!window.confirm("삭제하시겠습니까?")) return;
 
     try {
-      await deleteRegisteredBook(bookId, token);
+      await deleteBook(bookId, token);
       alert("삭제 완료");
-      window.location.href = "/";
+      navigate("/");
     } 
     catch (err) {
       console.error(err);
@@ -69,25 +85,24 @@ export default function Post() {
   // 좋아요 누르기
   const handleLike = async () => {
     try {
-      if (liked) {
-        await unlikeBook(bookId, token);
-        setLikeCount(prev => prev - 1); //좋아요 취소
-      } else {
-        await likeBook(bookId, token);
-        setLikeCount(prev => prev + 1); // 좋아요 추가
-      }
-      setLiked(!liked);
+      await likeBook(bookId, token);
+      setLikesCount(prev => {
+        if (liked) return prev - 1;
+        else return prev + 1;
+      });
+      setLiked(prev => !prev);
     } 
     catch (err) {
       console.error("좋아요 실패", err);
     }
   };
 
-  // 채팅하기
+  // 채팅 생성
+  /**이미 존재하는 채팅방이면 그 방으로 바로 연결되도록 API 구현 확인 필요 */
   const handleChat = async () => {
     try {
       const data = await createChatroom(bookId, token);
-      window.location.href = `/chat/${data.chatroomId}`;
+      navigate(`/chat/${data.chatroomId}`);
     } 
     catch (err) {
       console.error("채팅방 생성 실패", err);
@@ -97,25 +112,54 @@ export default function Post() {
   return (
     <div className="p-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-2">{post.title}</h1>
-      <p>작성자: {post.username}</p>
-      <img src={post.bookImageUrl || '/default_book.png'} alt={post.title} className="w-full h-60 object-cover rounded mb-2" />
+      <p>작성자: {post.username || post.sellerId}</p>
+      <img 
+        src={post.bookPic || '/default_book.png'} 
+        alt={`책 이미지: ${post.title}`} 
+        className="w-full h-60 object-cover rounded mb-2" 
+      />
+      <p className="text-gray-500 mt-1">상태: {getBookCondition(post.bookPoint)}</p>
 
       <div className="flex items-center gap-4 mb-2">
-        <button onClick={handleLike} className="flex flex-col items-center">
-          <Heart color={liked ? "red" : "gray"} fill={liked ? "red" : "none"} />
-          <span className="text-sm">{likeCount}</span>
-        </button>
-        <button onClick={handleChat} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          채팅하기
-        </button>
-        <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-          삭제
-        </button>
+        {isOwner ? (
+          <>
+            <button 
+              onClick={() => navigate(`/edit/${bookId}`)} 
+              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            >
+              수정
+            </button>
+            <button 
+              onClick={handleDelete} 
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              삭제
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={handleLike} className="flex flex-col items-center">
+              <Heart color={liked ? "red" : "gray"} fill={liked ? "red" : "none"} />
+              <span className="text-sm">{likesCount}</span>
+            </button>
+            <button 
+              onClick={handleChat} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              채팅하기
+            </button>
+            <button 
+              onClick={() => alert("신고 기능 준비 중입니다.")} 
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              신고하기
+            </button>
+          </>
+        )}
       </div>
 
       <p className="text-gray-700 mt-2">{post.description}</p>
       <p className="text-gray-500 mt-1">위치: {post.locate?.address || "없음"}</p>
-      <p className="text-gray-500 mt-1">상태: {post.bookPoint}</p>
     </div>
   );
 }

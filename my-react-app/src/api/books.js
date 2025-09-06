@@ -37,6 +37,38 @@ export async function bookDetail(bookId, token) {
   return fetchWithAuth(`/api/books/${bookId}`, {}, token);
 }
 
+// 등록된 책 정보 수정
+export async function modifyBook(bookId, data, deleteImages, newImages, token) {
+  const formData = new FormData();
+  formData.append('book', JSON.stringify(data));
+
+  // 이미지 삭제
+  if (deleteImages && deleteImages.length > 0) {
+    formData.append('deleteImages', JSON.stringify(deleteImages));
+  }
+
+  // 이미지 추가
+  if (newImages && newImages.length > 0) {
+    newImages.forEach(file => {
+      formData.append('newImages', file);
+    });
+  }
+
+  return fetchWithAuth(`/api/books/${bookId}`, {
+    method: 'PATCH',
+    body: formData,
+  }, token);
+}
+
+
+// 등록된 책 게시물 삭제
+export async function deleteBook(bookId, token) {
+  return fetchWithAuth( `/api/books/${bookId}`,
+    { method: 'DELETE' },
+    token
+  );
+}
+
 // 채팅방 생성
 export async function createChatroom(bookId, token) {
   return fetchWithAuth( `/api/books/${bookId}/chatroom`,
@@ -50,17 +82,9 @@ export async function likeCount(bookId, token) {
   return fetchWithAuth(`/api/books/${bookId}/like`, {}, token);
 }
 
-// 좋아요 누르기
+// 좋아요 토글
 export async function likeBook(bookId, token) {
   return fetchWithAuth(`/api/books/${bookId}/like`, { method: 'POST' }, token);
-}
-
-// 좋아요 취소
-export async function unlikeBook(bookId, token) {
-  return fetchWithAuth( `/api/books/${bookId}/like`,
-    { method: 'DELETE' },
-    token
-  );
 }
 
 // 거래글 사진 업로드
@@ -98,6 +122,14 @@ export async function borrowBook(bookId, data, token) {
   );
 }
 
+//  반납 완료 후 게시물 자동 생성 
+export async function returnBook(token) {
+  return fetchWithAuth( `/api/books/register/existing`,
+    { method: 'POST' },
+    token
+  );
+}
+
 // 거래글 검색
 export async function searchBook(params, token) {
   const queryString = new URLSearchParams(params).toString();
@@ -130,37 +162,3 @@ export async function fetchBookInfo(keyword, token) {
   return fetchWithAuth(`/api/books/register/new/info?${queryString}`, {}, token);
 }
 
-//  반납 완료 후 게시물 자동 생성 
-export async function returnBook(token) {
-  return fetchWithAuth( `/api/books/register/existing`,
-    { method: 'POST' },
-    token
-  );
-}
-
-// 등록된 책 정보 수정
-export async function modifyBook(bookId, data, images, token) {
-  const formData = new FormData();
-  formData.append('book', JSON.stringify(data));
-
-  if (images && images.length > 0) {
-    images.forEach(file => {
-      formData.append('images', file);
-    });
-  }
-  return fetchWithAuth( `/api/books/register/${bookId}`,
-    {
-      method: 'PATCH',
-      body: formData,
-    },
-    token
-  );
-}
-
-// 등록된 책 게시물 삭제
-export async function deleteBook(bookId, token) {
-  return fetchWithAuth( `/api/books/register/${bookId}`,
-    { method: 'DELETE' },
-    token
-  );
-}

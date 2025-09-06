@@ -13,51 +13,54 @@
  */
 // PostUpload 랑 거의 동일한데 기존 게시글 데이터 불러오는거만 추가하면됨
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 // API 함수
-import { getPostDetail, updatePost, searchBooks } from "../../api/books";
+import {  bookDetail, modifyBook, searchBook } from '../../api/books';
 
 export default function PostEdit({ token }) {
-  const { postId } = useParams();
+  const { bookId } = useParams();
   const navigate = useNavigate();
 
-  const [bookSearch, setBookSearch] = useState("");
+  const token = localStorage.getItem("token");
+
+  const [bookSearch, setBookSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+  const [content, setContent] = useState('');
+  const [location, setLocation] = useState('');
   const [images, setImages] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 기존 게시글 데이터 불러오기
   useEffect(() => {
     async function fetchPost() {
       try {
-        const post = await getPostDetail(postId, token);
-        setSelectedBook(post.book);
-        setDescription(post.description);
+        const post = await bookDetail(bookId, token);
+        setSelectedBook(post);
+        setContent(post.content);
         setLocation(post.location);
-      } 
-      catch (err) {
-        setError("게시글 로드 실패");
+        setBookSearch(post.title);
+      } catch (err) {
+        setError('게시글 로드 실패');
       }
     }
     fetchPost();
-  }, [postId, token]);
+  }, [bookId, token]);
 
   // 책 검색
   const handleSearch = async () => {
     if (!bookSearch.trim()) return;
     try {
-      const results = await searchBooks({ query: bookSearch }, token);
+      const results = await searchBook({ keyword: bookSearch }, token);
       setSearchResults(results);
     } catch (err) {
-      setError("책 검색 실패");
+      setError('책 검색 실패');
     }
   };
 
+  // 책 선택한 후 정보 반영
   const handleSelectBook = (book) => {
     setSelectedBook(book);
     setBookSearch(`${book.title} - ${book.author}`);
@@ -66,23 +69,27 @@ export default function PostEdit({ token }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedBook) return setError("책을 선택해주세요");
+    if (!selectedBook) return setError('책을 선택해주세요');
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("bookId", selectedBook.id);
-      formData.append("description", description);
-      formData.append("location", location);
-      images.forEach((img) => formData.append("images", img));
+      formData.append('bookId', selectedBook.id);
+      formData.append('content', content);
+      formData.append('location', location);
+      images.forEach((img) => formData.append('images', img));
 
-      await updatePost(postId, formData, token);
-      alert("게시글 수정 완료");
-      navigate(`/post/${postId}`);
-    } 
-    catch (err) {
-      setError("수정 실패");
-    } 
-    finally {
+      await modifyBook( bookId,
+        { bookId: selectedBook.id, content, location },
+        [],       // 삭제할 이미지 없으면 빈 배열
+        images,   // 새로 업로드할 이미지
+        token
+      );
+
+      alert('게시글 수정 완료');
+      navigate(`/post/${bookId}`);
+    } catch (err) {
+      setError('수정 실패');
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -99,7 +106,9 @@ export default function PostEdit({ token }) {
         onChange={(e) => setBookSearch(e.target.value)}
         className="w-full p-2 border rounded mb-2"
       />
-      <button type="button" onClick={handleSearch}>검색</button>
+      <button type="button" onClick={handleSearch}>
+        검색
+      </button>
 
       {searchResults.length > 0 && (
         <ul className="border mt-2">
@@ -117,8 +126,8 @@ export default function PostEdit({ token }) {
       {/* 설명 */}
       <textarea
         placeholder="상세 설명"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
         className="w-full p-2 border rounded mb-2"
       />
 
@@ -132,12 +141,20 @@ export default function PostEdit({ token }) {
       />
 
       {/* 이미지 업로드 */}
-      <input type="file" multiple onChange={(e) => setImages(Array.from(e.target.files))} />
+      <input
+        type="file"
+        multiple
+        onChange={(e) => setImages(Array.from(e.target.files))}
+      />
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <button type="submit" disabled={isSubmitting} className="mt-4 p-2 bg-pistachio rounded">
-        {isSubmitting ? "수정 중..." : "수정 완료"}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="mt-4 p-2 bg-pistachio rounded"
+      >
+        {isSubmitting ? '수정 중...' : '수정 완료'}
       </button>
     </form>
   );

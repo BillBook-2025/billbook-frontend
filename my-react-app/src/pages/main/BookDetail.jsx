@@ -7,11 +7,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 // API 함수
-import { fetchBookDetail } from "../../api/books";
+import { bookDetail } from "../../api/books";
 
 export default function BookDetail() {
   const { bookId } = useParams(); 
-  const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
+  const token = localStorage.getItem("token");
+
   const [book, setBook] = useState(null);
   const navigate = useNavigate();
 
@@ -21,16 +22,16 @@ export default function BookDetail() {
   useEffect(() => {
     if (!bookId || !token) return;
 
-    fetchBookDetail(bookId, token)
+    bookDetail(bookId, token)
       .then((data) => {
         // 서버 API 응답 구조에 맞게 필요한 정보만 추출
         setBook({
           title: data.title,
-          authors: data.authors?.join(", "),
-          description: data.description,
-          thumbnail: data.thumbnailUrl,
-          categories: data.categories?.join(", "),
-          publishedDate: data.publishedDate,
+          author: data.author,
+          content: data.content,
+          thumbnail: data.bookPic,
+          category: data.category,
+          time: data.time,
         });
       })
       .catch((err) => {
@@ -49,9 +50,9 @@ export default function BookDetail() {
   return (
     <div className="p-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-2">{book.title}</h1>
-      <p className="text-sm text-gray-600 mb-1">저자: {book.authors}</p>
-      <p className="text-sm text-gray-600 mb-1">카테고리: {book.categories}</p>
-      <p className="text-sm text-gray-600 mb-1">출판일: {book.publishedDate}</p>
+      <p className="text-sm text-gray-600 mb-1">저자: {book.author}</p>
+      <p className="text-sm text-gray-600 mb-1">카테고리: {book.category}</p>
+      <p className="text-sm text-gray-600 mb-1">출판일: {book.time}</p>
       {book.thumbnail && (
         <img
           src={book.thumbnail}
@@ -59,7 +60,7 @@ export default function BookDetail() {
           className="w-40 h-52 object-cover rounded mb-4"
         />
       )}
-      <p className="mb-4">{book.description}</p>
+      <p className="mb-4">{book.content}</p>
 
       <button
         onClick={handleRent}

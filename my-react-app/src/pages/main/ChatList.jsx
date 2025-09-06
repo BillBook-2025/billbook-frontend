@@ -10,7 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { getChatrooms, leaveChatroom } from "../../api/chatrooms";
 
 export default function ChatList() {
-  const token = JSON.parse(localStorage.getItem("userInfo"))?.token;
+  const token = localStorage.getItem("token");
+
   const [chatrooms, setChatrooms] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState([]);

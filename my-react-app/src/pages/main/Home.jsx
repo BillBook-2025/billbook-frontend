@@ -10,8 +10,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // 돋보기 아이콘
 import { Search } from 'lucide-react';
-// AI 추천 API
-import { searchPosts } from "../../api/books";
+// api 함수
+import { bookList } from "../../api/books";
 
 
 export default function Home() {
@@ -29,7 +29,6 @@ export default function Home() {
    }
   };
 
-
   useEffect(() => {
     async function fetchPosts() {
       try {
@@ -38,11 +37,13 @@ export default function Home() {
         const token = userInfo?.token;
 
         // 현재 거래 가능한 글 불러오기
-        const data = await fetchAvailablePosts(token); 
-        setPosts(data);
+        const data = await bookList(token); 
+        setBooks(data);
 
         // 거래글에서 카테고리 추출 (중복 제거, null 제거)
-        const uniqueCategories = Array.from(new Set(data.map(post => post.category))).filter(Boolean);
+        const uniqueCategories = Array.from(
+          new Set(data.map(post => post.category))
+        ).filter(Boolean);
         setCategories(uniqueCategories);
       } 
       catch (e) {
@@ -81,8 +82,9 @@ export default function Home() {
       <div className="book-list grid grid-cols-2 gap-4 px-4 py-6">
         {books.map(book => (
           <div
-            key={book.id}
-            onClick={() => navigate(`/bookDetail/${post.bookId}`)}
+            key={book.bookId}
+            // book 클릭 시 book.bookId 참조
+            onClick={() => navigate(`/bookDetail/${book.bookId}`)}
             className="border rounded-md p-2 cursor-pointer hover:shadow"
           >
             <img

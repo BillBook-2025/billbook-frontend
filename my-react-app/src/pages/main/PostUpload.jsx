@@ -11,10 +11,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
-import { searchBooks, uploadPost } from "../../api/books";
+import { registerBook, searchBook } from "../../api/books";
 
 export default function PostUpload() {
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("token"); // 토큰 가져오기
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -25,14 +27,12 @@ export default function PostUpload() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const token = localStorage.getItem("token"); // 토큰 가져오기
-
   // 책 검색
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     try {
       // 이름 기준으로 검색, API에서 이름 정확도 순으로 정렬
-      const books = await searchBooks({ query: searchQuery }, token);
+      const books = await searchBook({ keyword: searchQuery }, token);
       setSearchResults(books);
     } 
     catch (err) {
@@ -80,7 +80,11 @@ export default function PostUpload() {
 
       images.forEach((img) => formData.append("images", img));
 
-      await uploadPost(formData, token);
+      await registerBook(
+        { bookId: selectedBook.id, title: selectedBook.title, description, location },
+        images,
+        token
+      );
       alert("게시글 등록 완료");
       navigate("/home");
     } 

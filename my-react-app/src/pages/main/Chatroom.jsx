@@ -28,7 +28,7 @@
 
 팝업: “완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요”
 
-자동으로 반납 후 다시 게시물 생성 가능 → registerExistingBook 호출
+자동으로 반납 후 다시 게시물 생성 가능 → returnBook 호출
 
 3. 대출 → 반납 → 재게시
 
@@ -36,13 +36,13 @@
 
 기존 거래글이 다시 활성화 상태로 전환
 
-registerExistingBook 또는 borrowRegisteredBook 호출로 게시물 새로 등록
+returnBook 호출로 게시물 새로 등록
  */
 
 import { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 // 아이콘
-import { Plus, Send, Calendar, Image, DollarSign } from "lucide-react";
+import { Plus, Send, Image, DollarSign } from "lucide-react";
 // 리액트 date picker(캘린더)
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -50,15 +50,17 @@ import "react-datepicker/dist/react-datepicker.css";
 import { fetchProfile } from '../../api/profile';
 import { getChatroomDetail, getChats, sendChat, sendPicture, sendDeal, getDeadline, setDeadline } from '../../api/chatrooms';
 import { connectWebSocket, subscribeChatroom, sendMessage, disconnectWebSocket } from "../../api/websocket";
-import { borrowRegisteredBook, registerExistingBook } from '../../api/books';
+import { borrowBook, returnBook } from '../../api/books';
 
 export default function Chatroom() {
   const { chatId } = useParams();
-  const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+  const token = localStorage.getItem("token");
+
   const [chatData, setChatData] = useState(null);
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState("");
   const [partner, setPartner] = useState(null);
+  const menuRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);  // + 버튼 눌렀을때 나오는 메뉴
   const [selectedDate, setSelectedDate] = useState(null);
   const clientRef = useRef(null);
@@ -164,11 +166,11 @@ export default function Chatroom() {
     }
   };
 
-  // 거래 완료 (책 빌려준 사람만 가능)
+  // 거래 완료 (= 반납 완료, 책 빌려준 사람만 가능)
   const handleCompleteDeal = async () => {
     try {
-      // API 호출 - 거래글 상태 활성화
-      await setPostStatusComplete(chatData.bookId, token); 
+      //거래글 상태 재활성화
+      await returnBook(chatData.bookId, token); 
       alert("완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요");
 
       // 상태 업데이트
@@ -184,6 +186,25 @@ export default function Chatroom() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chats]);
+
+   // 메뉴 바깥 클릭 감지 (누르면 메뉴 창 닫힘)
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
 
   if (!chatData || !partner) return <div>로딩 중...</div>;
 
