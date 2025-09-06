@@ -199,4 +199,14 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Vite cache
+node_modules/.vite/
+
+# Tailwind CSS cache
+.tailwindcache
+
+# 빌드 결과물
+dist/
+
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode,node,react
