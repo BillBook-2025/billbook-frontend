@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 // 하트(좋아요) 아이콘
 import { Heart } from "lucide-react"; 
 // API 함수
-import { fetchRegisteredBookDetail, deleteRegisteredBook, likeBook, unlikeBook, fetchLikeCount, createChatroom } from '../../api/books';
+import { fetchBookDetail, deleteRegisteredBook, likeBook, unlikeBook, fetchLikeCount, createChatroom } from '../../api/books';
 
 export default function Post() {
   const { bookId } = useParams();
@@ -36,7 +36,7 @@ export default function Post() {
 
     async function loadData() {
       try {
-        const data = await fetchRegisteredBookDetail(bookId, token);
+        const data = await fetchBookDetail(bookId, token);
         setPost(data);
 
         const likeData = await fetchLikeCount(bookId, token);

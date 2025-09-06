@@ -18,7 +18,7 @@ export function connectWebSocket(token, onConnectCallback) {
       console.log('WebSocket 연결됨');
       if (onConnectCallback) onConnectCallback();
     },
-    onDisconnect: () => console.log('❌ WebSocket 연결 종료'),
+    onDisconnect: () => console.log('WebSocket 연결 종료'),
   });
 
   stompClient.activate();

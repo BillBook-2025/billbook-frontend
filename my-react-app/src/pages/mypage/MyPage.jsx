@@ -19,6 +19,7 @@ import { uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFo
 
 export default function MyPage() {
   const navigate = useNavigate();
+  // 유저 정보 불러오기
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.token;
   const userId = userInfo?.userId;
@@ -218,8 +219,26 @@ export default function MyPage() {
       {/* 팔로워/팔로잉 */}
       <section className="border p-4 rounded-lg">
         <h3 className="font-semibold mb-2">팔로워 ({followers.length}) / 팔로잉 ({followings.length})</h3>
-        <p>팔로워: {followers.map(f => f.nickname).join(", ")}</p>
-        <p>팔로잉: {followings.map(f => f.nickname).join(", ")}</p>
+        <div className="flex gap-4">
+          {/* 팔로워 리스트 */}
+          {/**max-h-24 overflow-y-auto로 세로 스크롤 가능 */}
+          <div className="flex-1 max-h-24 overflow-y-auto border p-2 rounded">
+            {followers.data.map((f) => (
+              <p key={f.userId} className="text-sm">
+                {f.nickname}
+              </p>
+            ))}
+          </div>
+
+          {/* 팔로잉 리스트 */}
+          <div className="flex-1 max-h-24 overflow-y-auto border p-2 rounded">
+            {followings.data.map((f) => (
+              <p key={f.userId} className="text-sm">
+                {f.nickname}
+              </p>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

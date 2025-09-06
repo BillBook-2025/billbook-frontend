@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search as SearchIcon } from 'lucide-react';
 
 export default function Search() {
   const [keyword, setKeyword] = useState('');
@@ -66,7 +66,7 @@ export default function Search() {
           className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
           aria-label="검색"
         >
-          <Search size={24} />
+          <SearchIcon size={24} />
         </button>
       </div>
 

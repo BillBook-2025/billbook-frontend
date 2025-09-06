@@ -5,7 +5,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 // API 함수
-import { fetchAvailablePosts } from "../../api/posts";
+import { searchPosts } from "../../api/books";
 
 export default function Category() {
   const { categoryName } = useParams();
@@ -28,7 +28,7 @@ export default function Category() {
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
         const token = userInfo?.token;
 
-        const data = await fetchAvailablePosts(token);
+        const data = await searchPosts(token);
         const filtered = data.filter(post => post.category === categoryName);
         setPosts(filtered);
       } 

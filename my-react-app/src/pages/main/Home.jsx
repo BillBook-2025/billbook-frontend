@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 // 돋보기 아이콘
 import { Search } from 'lucide-react';
 // AI 추천 API
-import { fetchAvailablePosts } from "../../api/posts";
+import { searchPosts } from "../../api/books";
 
 
 export default function Home() {
