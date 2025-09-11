@@ -12,19 +12,34 @@ async function fetchWithAuth(url, options = {}, token) {
    * token: 인증용 토큰 (없을 수도 있음)
    */
   const headers = options.headers ? { ...options.headers } : {};
-  // options 안에 headers가 있으면 복사하고 없으면 빈 객체 생성
 
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  // token이 있으면 HTTP 요청 헤더에 Authorization: Bearer 토큰값 추가
-  // 이게 서버에서 인증할 때 사용하는 방식
 
-  // 실제 fetch 호출
   const response = await fetch(API_BASE_URL + url, { ...options, headers });
+
+  // 응답이 ok가 아닐 경우
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
+    const text = await response.text();
+    let errorContent;
+    try {
+      errorContent = JSON.parse(text);
+    } 
+    catch {
+      errorContent = text || 'error';
+    }
+    throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorContent)}`);
   }
-  return response.json();
+
+  // 성공 응답 처리
+  // 바디가 없으면 null 반환, JSON 아니면 문자열 반환
+  const text = await response.text();
+  if (!text) return null; // body 없으면 걍냅둬
+  try {
+    return JSON.parse(text); // JSON이면 파싱
+  } 
+  catch {
+    return text; // 아니면 그냥 문자열 반환
+  }
 }
 
 // 등록된 책 목록 불러오기
