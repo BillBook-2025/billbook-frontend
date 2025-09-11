@@ -50,6 +50,8 @@ export async function getBoardLike(boardId, token) {
   return fetchWithAuth(`/api/boards/${boardId}/like`, {}, token);
 }
 
+// 좋아요 취소 로직 없음!!!!!!!!!!!!!
+
 // 좋아요 누르기
 export async function likeBoard(boardId, token) {
   return fetchWithAuth(`/api/boards/${boardId}/like`, 

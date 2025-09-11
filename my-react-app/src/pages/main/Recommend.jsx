@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
-import { fetchRecommendedBooks } from "../../api/recommendations";
+import { fetchRecommendedBooks } from "../../api/ml";
 
 export default function Recommend() {
   const [books, setBooks] = useState([]);

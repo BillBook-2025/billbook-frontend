@@ -20,7 +20,6 @@ export async function fetchFollowings(userId, token) {
 }
 
 // 팔로우 추가
-// 상대 유저 아이디 경로 파라미터로,,,
 export async function addFollowing(userId, followUserId, token) {
   return fetchWithAuth(`/api/profile/${userId}/following`, 
     { method: 'POST',
@@ -31,7 +30,6 @@ export async function addFollowing(userId, followUserId, token) {
 }
 
 // 팔로우 취소
-// 상대 유저 아이디 경로 파라미터로,,,
 export async function removeFollowing(userId, followUserId, token) {
   return fetchWithAuth(`/api/profile/${userId}/following`, 
     { method: 'DELETE',
