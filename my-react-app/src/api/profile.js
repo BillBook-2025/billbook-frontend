@@ -55,15 +55,23 @@ export async function fetchFollowings(userId, token) {
 // 팔로우 추가
 // 상대 유저 아이디 경로 파라미터로,,,
 export async function addFollowing(userId, followUserId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/following/${followUserId}`, 
-    { method: 'POST' }, token);
+  return fetchWithAuth(`/api/profile/${userId}/following`, 
+    { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: followUserId }),
+    }, token
+  );
 }
 
 // 팔로우 취소
 // 상대 유저 아이디 경로 파라미터로,,,
 export async function removeFollowing(userId, followUserId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/following/${followUserId}`, 
-    { method: 'DELETE' }, token);
+  return fetchWithAuth(`/api/profile/${userId}/following`, 
+    { method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: followUserId }),
+    }, token
+  );
 }
 
 // 매너온도
@@ -71,7 +79,7 @@ export async function changeTemperature(userId, data, token) {
   return fetchWithAuth(`/api/profile/${userId}/temperature`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data), // 예: { score: 5 }
+    body: JSON.stringify(data), // 예: {score: 5}
   }, token);
 }
 
@@ -83,21 +91,24 @@ export async function changeTemperature(userId, data, token) {
 // 해당 유저가 빌린 책 목록 조회
 export async function borrowedBooks(userId, token, params = {}) {
   const query = new URLSearchParams(params).toString();
-  const url = query ? `/api/profile/${userId}/borrow?${query}` : `/api/profile/${userId}/borrow`;
+  const url = query ? `/api/profile/${userId}/buy?${query}` : `/api/profile/${userId}/buy`;
   return fetchWithAuth(url, {}, token);
 }
 
 // 해당 유저가 등록한 책 목록 조회
 export async function registeredBooks(userId, token, params = {}) {
   const query = new URLSearchParams(params).toString();
-  const url = query ? `/api/profile/${userId}/register?${query}` : `/api/profile/${userId}/register`;
+  const url = query ? `/api/profile/${userId}/sell?${query}` : `/api/profile/${userId}/sell`;
   return fetchWithAuth(url, {}, token);
 }
 
 // 해당 유저와의 책 거래 횟수 조회
-export async function dealCount(userId, token) {
-  return fetchWithAuth(`/api/profile/${userId}/history`, {}, token);
+export async function dealCount(userId, params = {}, token) {
+  const query = new URLSearchParams(params).toString();
+  const url = query ? `/api/profile/${userId}/history?${query}` : `/api/profile/${userId}/history`;
+  return fetchWithAuth(url, {}, token);
 }
+
 
 // 유저가 쓴 게시글 조회
 export async function userBoards(userId, token, params = {}) {
@@ -107,12 +118,12 @@ export async function userBoards(userId, token, params = {}) {
 }
 
 // 프로필 이미지 등록
-export async function uploadProfileImage(userId, formData, token) {
+export async function uploadProfileImage(userId, imageUrl, token) {
   return fetchWithAuth(`/api/profile/${userId}/image`, 
     {
       method: 'POST',
-      body: formData, // formData에 파일 포함
-    },
-    token
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profilePic: imageUrl })
+    },token
   );
 }
