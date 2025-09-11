@@ -115,10 +115,12 @@ export async function uploadImage(bookId, formData, token) {
 }
 
 // 거래글 사진 삭제
-export async function deleteImage(bookId, token) {
+export async function deleteImage(bookId, filename, token) {
    return fetchWithAuth( `/api/books/${bookId}/upload-images`,
     {
       method: 'DELETE',
+      headers: {'Content-Type': 'application/json' },
+      body: JSON.stringify({filename})
     },
     token
   );
@@ -130,16 +132,16 @@ export async function borrowBook(bookId, data, token) {
   return fetchWithAuth( `/api/books/${bookId}/borrow`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json' },
       body: JSON.stringify(data), //자바스크립트 객체를 문자열 JSON으로 변환
     },
     token
   );
 }
 
-//  반납 완료 후 게시물 자동 생성 
-export async function returnBook(token) {
-  return fetchWithAuth( `/api/books/register/existing`,
+// 반납 완료 후 게시물 자동 생성 
+export async function returnBook(bookId, token) {
+  return fetchWithAuth( `/api/books/${bookId}/existing`,
     { method: 'POST' },
     token
   );
