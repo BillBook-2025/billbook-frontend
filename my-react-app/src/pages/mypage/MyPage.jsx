@@ -13,9 +13,13 @@
  */
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+// 프로필 기본 사진 용 아이콘
+import { User } from "lucide-react";
 // API 함수
 import { myInfo, editMyInfo, myLikes, myPoints } from "../../api/my";
 import { uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFollowers, fetchFollowings } from "../../api/profile";
+// 구글맵스 api
+import { Autocomplete, LoadScript } from "@react-google-maps/api";
 
 export default function MyPage() {
   const navigate = useNavigate();
@@ -40,8 +44,8 @@ export default function MyPage() {
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
 
-
   const fileInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -98,57 +102,87 @@ export default function MyPage() {
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 프로필 섹션 */}
-      <section className="border p-4 rounded-lg flex items-center gap-4">
-        <div>
-          <img
-            src={avatarFile ? URL.createObjectURL(avatarFile) : profile.avatarUrl}
-            alt="프로필"
-            className="w-20 h-20 rounded-full object-cover"
-          />
-          {editing && (
+      <section className="border p-4 rounded-lg flex items-start gap-4 relative">
+      {/* 왼쪽: 프로필 사진 */}
+      <div className="flex-shrink-0">
+       <img
+          src={avatarFile ? URL.createObjectURL(avatarFile) : profile.avatarUrl}
+          alt="프로필"
+          className="w-24 h-24 rounded-full object-cover"
+        />
+        {/* 프사 설정 안했으면 기본 아이콘 */}
+        {!avatarFile && !profile.avatarUrl && (
+          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+            <User className="w-12 h-12 text-gray-400" />
+          </div>
+        )}
+        {editing && (
+          <input
+           type="file"
+           ref={fileInputRef}
+           onChange={(e) => setAvatarFile(e.target.files[0])}
+           className="mt-2"
+         />
+        )}
+      </div>
+
+     {/* 가운데: 닉네임 + 지역 */}
+      <div className="flex-1 space-y-1">
+        {editing ? (
+          <>
             <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => setAvatarFile(e.target.files[0])}
-              className="mt-2"
+              type="text"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="닉네임"
+              className="border rounded px-2 py-1 w-full"
             />
-          )}
-        </div>
-        <div className="flex-1 space-y-2">
-          {editing ? (
-            <>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="닉네임"
-                className="border rounded px-2 py-1 w-full"
-              />
-              <input
-                type="text"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="지역"
-                className="border rounded px-2 py-1 w-full"
-              />
-            </>
-          ) : (
-            <>
-              <p className="font-bold text-lg">{profile.nickname}</p>
-              <p className="text-gray-600">{profile.region}</p>
-            </>
-          )}
-        </div>
-        <div>
-          {editing ? (
-            <button onClick={handleSaveProfile} className="bg-blue-500 text-white px-3 py-1 rounded">
-              저장
-            </button>
-          ) : (
-            <button onClick={() => navigate("/EditProfile.")} className="bg-gray-200 px-3 py-1 rounded">
-              프로필 수정
-            </button>
-          )}
+            {/* 구글맵스 API */}
+            <LoadScript googleMapsApiKey={apiKey} libraries={["places"]}>
+              <Autocomplete
+                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                onPlaceChanged={() => {
+                  const place = autocompleteRef.current.getPlace();
+                  const dong = place.address_components.find((c) =>
+                    c.types.includes("sublocality_level_1")
+                  );
+                  setRegion(dong ? dong.long_name : place.formatted_address);
+                }}
+              >
+                <input
+                  type="text"
+                  value={region}
+                  placeholder="지역 입력"
+                  className="border rounded px-2 py-1 w-full"
+                />
+              </Autocomplete>
+            </LoadScript>
+          </>
+        ) : (
+          <>
+            <p className="font-bold text-lg">{profile.nickname}</p>
+            <p className="text-gray-500 text-sm">{profile.region}</p>
+          </>
+        )}
+      </div>
+
+      {/* 오른쪽 아래: 버튼 */}
+      <div className="absolute bottom-2 right-2">
+        {editing ? (
+          <button
+            onClick={handleSaveProfile}
+            className="bg-blue-500 text-white px-3 py-1 rounded"
+          >
+            저장하기
+          </button>
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+            className="bg-gray-200 px-3 py-1 rounded"
+          >
+            프로필 수정
+          </button>
+         )}
         </div>
       </section>
 
