@@ -18,7 +18,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 // API 함수
 import {  bookDetail, modifyBook, searchBook } from '../../api/books';
 
-export default function PostEdit({ token }) {
+export default function PostEdit({}) {
   const { bookId } = useParams();
   const navigate = useNavigate();
 

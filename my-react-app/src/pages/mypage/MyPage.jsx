@@ -19,6 +19,8 @@ import { uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFo
 
 export default function MyPage() {
   const navigate = useNavigate();
+  // 구글맵 api
+  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_KEY;
   // 유저 정보 불러오기
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.token;
@@ -143,7 +145,7 @@ export default function MyPage() {
               저장
             </button>
           ) : (
-            <button onClick={() => setEditing(true)} className="bg-gray-200 px-3 py-1 rounded">
+            <button onClick={() => navigate("/EditProfile.")} className="bg-gray-200 px-3 py-1 rounded">
               프로필 수정
             </button>
           )}
