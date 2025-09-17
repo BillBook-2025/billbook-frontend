@@ -46,12 +46,12 @@ async function fetchWithAuth(url, options = {}, token) {
   }
 }
 
-// 등록된 책 목록 불러오기
+// 등록된 거래글 목록 불러오기
 export async function bookList(token) {
   return fetchWithAuth('/api/books', {}, token);
 }
 
-// 책 상세정보
+// 거래글 상세정보
 export async function bookDetail(bookId, token) {
   return fetchWithAuth(`/api/books/${bookId}`, {}, token);
 }

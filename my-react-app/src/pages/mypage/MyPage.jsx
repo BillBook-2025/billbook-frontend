@@ -203,43 +203,53 @@ export default function MyPage() {
       </section>
 
       {/* 내가 올린 책 */}
-      <section className="border p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">등록한 책</h3>
-        <ul className="space-y-1">
-          {myRegisters.map((b) => (
-            <li key={b.bookId} className="flex justify-between items-center">
-              <span>{b.title}</span>
-              {b.status === "완료" && (
-                <button
-                  className="bg-pistachio text-darkbrown px-2 py-1 rounded text-sm"
-                  onClick={() => navigate("./Manner", { state: { book: b, isLender: true } })}
-                >
-                  매너 평가
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* 내가 빌린 책 */}
+      {/* 내가 올린 거래글을 가로로 (최신순)3개까지 띄우고, 그 뒤에는 [더보기]버튼을 넣어서 이 버튼을 누르면 MyBookPost페이지로 이동 */}
+      {/* 등록한 책 (내 거래글) */}
       <section className="border p-4 rounded-lg bg-ivory">
-        <h3 className="font-semibold mb-2 text-darkbrown">빌린 책</h3>
-        <ul className="space-y-1">
-          {myBorrows.map((b) => (
-            <li key={b.bookId} className="flex justify-between items-center">
-              <span>{b.title}</span>
-              {b.status === "완료" && (
-                <button
-                  className="bg-pistachio text-darkbrown px-2 py-1 rounded text-sm"
-                  onClick={() => navigate("./Manner", { state: { book: b } })}
-                >
-                  매너 평가
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <h3 className="font-semibold mb-2 text-darkbrown">내 거래글</h3>
+
+        {/* 최신순 3개까지 */}
+        <div className="flex gap-4 overflow-x-auto">
+          {myRegisters.slice(0, 3).map((b) => {
+            const thumbnail = b.bookPic?.length > 0 ? b.bookPic[0].url : null;
+
+            return (
+              <div
+                key={b.bookId}
+               className="min-w-[150px] border rounded-lg bg-white shadow p-2 flex flex-col justify-between"
+             >
+               {/* 책 썸네일 */}
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={b.title}
+                    className="w-full h-32 object-cover rounded"
+                  />
+                ) : (
+                  <div className="w-full h-32 flex items-center justify-center bg-pistachio text-darkbrown rounded">
+                    {b.title?.slice(0, 1) || "?"}
+                  </div>
+                )}
+
+               {/* 책 제목 */}
+               <p className="mt-2 font-medium text-darkbrown truncate">{b.title}</p>
+
+                {/* 상태 표시 */}
+                <span className="text-sm text-gray-500">{b.status}</span>
+              </div>
+            );
+          })}
+
+          {/* 더보기 버튼 */}
+          {myRegisters.length > 3 && (
+           <button
+             onClick={() => navigate("/MyBookPost")}
+             className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
+           >
+             더보기
+           </button>
+         )}
+        </div>
       </section>
 
       {/* 내가 쓴 커뮤니티 글 */}
