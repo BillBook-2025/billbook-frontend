@@ -102,7 +102,7 @@ export default function MyPage() {
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 프로필 섹션 */}
-      <section className="border p-4 rounded-lg flex items-start gap-4 relative">
+      <section className="border p-4 rounded-lg flex items-start gap-4 bg-ivory relative">
       {/* 왼쪽: 프로필 사진 */}
       <div className="flex-shrink-0">
        <img
@@ -112,8 +112,8 @@ export default function MyPage() {
         />
         {/* 프사 설정 안했으면 기본 아이콘 */}
         {!avatarFile && !profile.avatarUrl && (
-          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-            <User className="w-12 h-12 text-gray-400" />
+          <div className="w-24 h-24 rounded-full bg-pistachio flex items-center justify-center">
+            <User className="w-12 h-12 text-darkbrown" />
           </div>
         )}
         {editing && (
@@ -160,25 +160,25 @@ export default function MyPage() {
           </>
         ) : (
           <>
-            <p className="font-bold text-lg">{profile.nickname}</p>
+            <p className="font-bold text-lg text-darkbrown">{profile.nickname}</p>
             <p className="text-gray-500 text-sm">{profile.region}</p>
           </>
         )}
       </div>
 
-      {/* 오른쪽 아래: 버튼 */}
+      {/* 저장, 수정 버튼 */}
       <div className="absolute bottom-2 right-2">
         {editing ? (
           <button
             onClick={handleSaveProfile}
-            className="bg-blue-500 text-white px-3 py-1 rounded"
+            className="bg-darkbrown text-white px-3 py-1 rounded"
           >
             저장하기
           </button>
         ) : (
           <button
             onClick={() => setEditing(true)}
-            className="bg-gray-200 px-3 py-1 rounded"
+            className="bg-darkbrown text-white px-3 py-1 rounded"
           >
             프로필 수정
           </button>
@@ -187,13 +187,13 @@ export default function MyPage() {
       </section>
 
       {/* 포인트 */}
-      <section className="border p-4 rounded-lg">
+      <section className="border p-4 rounded-lg bg-ivory">
         <h3 className="font-semibold mb-2">포인트</h3>
         <p>{points} P</p>
       </section>
 
       {/* 내가 좋아요 누른 책 */}
-      <section className="border p-4 rounded-lg">
+      <section className="border p-4 rounded-lg bg-ivory">
         <h3 className="font-semibold mb-2">좋아요한 책</h3>
         <ul className="space-y-1">
           {likedBooks.map((b) => (
@@ -211,7 +211,7 @@ export default function MyPage() {
               <span>{b.title}</span>
               {b.status === "완료" && (
                 <button
-                  className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                  className="bg-pistachio text-darkbrown px-2 py-1 rounded text-sm"
                   onClick={() => navigate("./Manner", { state: { book: b, isLender: true } })}
                 >
                   매너 평가
@@ -223,15 +223,15 @@ export default function MyPage() {
       </section>
 
       {/* 내가 빌린 책 */}
-      <section className="border p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">빌린 책</h3>
+      <section className="border p-4 rounded-lg bg-ivory">
+        <h3 className="font-semibold mb-2 text-darkbrown">빌린 책</h3>
         <ul className="space-y-1">
           {myBorrows.map((b) => (
             <li key={b.bookId} className="flex justify-between items-center">
               <span>{b.title}</span>
               {b.status === "완료" && (
                 <button
-                  className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                  className="bg-pistachio text-darkbrown px-2 py-1 rounded text-sm"
                   onClick={() => navigate("./Manner", { state: { book: b } })}
                 >
                   매너 평가
