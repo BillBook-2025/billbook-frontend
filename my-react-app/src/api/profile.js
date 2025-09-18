@@ -75,7 +75,7 @@ export async function dealCount(userId, params = {}, token) {
 }
 
 
-// 유저가 쓴 게시글 조회
+// 유저가 쓴 (커뮤)게시글 조회
 export async function userBoards(userId, token, params = {}) {
   const query = new URLSearchParams(params).toString();
   const url = query ? `/api/profile/${userId}/boards?${query}` : `/api/profile/${userId}/boards`;

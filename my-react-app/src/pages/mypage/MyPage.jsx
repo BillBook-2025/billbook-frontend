@@ -166,7 +166,7 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* 저장, 수정 버튼 */}
+      {/* 저장. 수정 버튼 */}
       <div className="absolute bottom-2 right-2">
         {editing ? (
           <button
@@ -253,13 +253,31 @@ export default function MyPage() {
       </section>
 
       {/* 내가 쓴 커뮤니티 글 */}
-      <section className="border p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">내 커뮤니티 글</h3>
-        <ul className="space-y-1">
-          {myBoardsList.map((b) => (
-            <li key={b.boardId}>{b.title}</li>
+      <section className="border p-4 rounded-lg bg-ivory">
+        <h3 className="font-semibold mb-2 text-darkbrown">내 커뮤니티 글</h3>
+        <div className="flex gap-4 overflow-x-auto">
+          {myBoardsList.slice(0, 3).map((b) => (
+            <div
+              key={b.boardId}
+              className="min-w-[150px] h-32 border rounded-lg bg-pistachio flex items-center justify-center p-2 cursor-pointer"
+              onClick={() => navigate(`/community/${b.boardId}`)} // CommunityPost 페이지로 이동
+            >
+              <p className="text-darkbrown font-medium text-center truncate">
+                {b.title}
+              </p>
+            </div>
           ))}
-        </ul>
+
+          {/* 더보기 버튼 */}
+          {myBoardsList.length > 3 && (
+            <button
+              onClick={() => navigate("/MyBoardPost")}
+              className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
+            >
+              더보기
+            </button>
+          )}
+        </div>
       </section>
 
       {/* 팔로워/팔로잉 */}
