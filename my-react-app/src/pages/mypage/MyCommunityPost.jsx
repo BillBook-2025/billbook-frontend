@@ -37,7 +37,7 @@ export default function MyBoardPost() {
       {boards.length === 0 ? (
         <p className="text-gray-500">등록한 게시글이 없습니다.</p>
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4 max-h-[600px] overflow-y-auto">
           {boards.map((b) => (
             <li
               key={b.boardId}
@@ -51,14 +51,14 @@ export default function MyBoardPost() {
               </h3>
 
               {/* 날짜, 댓글수, 좋아요수 */}
-              <div className="text-sm text-darkbrown flex justify-between">
-                <span>작성일: {new Date(b.createdAt).toLocaleDateString()}</span>
+              <div className="text-sm text-darkbrown truncate">
+                <span>작성일: {new Date(b.createdAt).toLocaleDateString("ko-KR")}</span>
                 <span>댓글: {b.commentsCount}</span>
                 <span>좋아요: {b.likeCount}</span>
               </div>
             </li>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
