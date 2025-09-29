@@ -29,6 +29,7 @@ import Category from '../pages/main/Category';
 // 커뮤니티 관련 (/community)
 import Community from '../pages/community/Community';
 import CommunityPost from '../pages/community/CommunityPost';
+import CommunityUpload from '../pages/community/CommunityUpload';
 import UserProfile from '../pages/community/UserProfile';
 
 // 마이페이지 관련 (/mypage)
@@ -73,6 +74,7 @@ export default function Router() {
           <Route path="/community" element={<Community />} />
           <Route path="/communityPost" element={<CommunityPost />} />
           <Route path="/userProfile" element={<UserProfile />} />
+          <Route path="/communityUpload" element={<CommunityUpload />} />
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPage />} />
