@@ -1,3 +1,4 @@
+// src/main.jsx
 /* 이 파일은 리액트 시작 스크립트 */
 
 import { StrictMode } from 'react';

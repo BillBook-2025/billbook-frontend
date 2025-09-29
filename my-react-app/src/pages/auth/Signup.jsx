@@ -85,9 +85,9 @@ export default function Signup() {
         <div className="flex justify-center gap-8">
         <button
           onClick={() => navigate('/login')}
-          className="underline text-black font-semibold hover:text-yellow-500"
+          className="hover:text-yellow-500"
         >
-          뒤로가기
+          로그인 페이지로 돌아가기
         </button>
       </div>
     </div>
