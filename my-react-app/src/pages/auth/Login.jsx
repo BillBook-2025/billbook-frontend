@@ -70,8 +70,8 @@ export default function Login() {
         />
           <button
           type="submit"
-          className='bg-white hover:bg-pistachio font-bold'>
-            {isLoading ? '로그인 중...' : '로그인'}
+          className="bg-yellow-200 hover:bg-orange-300 text-darkbrown font-semibold py-3 px-5 rounded-lg shadow-md transition">
+            {isLoading ? '로그인 중...' : '로그인 하기'}
           </button>
 
         </form>

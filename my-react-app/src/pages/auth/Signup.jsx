@@ -75,7 +75,7 @@ export default function Signup() {
         />
           <button
           type="submit"
-          className='bg-white hover:bg-pistachio font-bold'>
+          className="bg-yellow-200 hover:bg-orange-300 text-darkbrown font-semibold py-3 px-5 rounded-lg shadow-md transition">
             본인인증 진행하기
           </button>
         </form>
@@ -85,7 +85,7 @@ export default function Signup() {
         <div className="flex justify-center gap-8">
         <button
           onClick={() => navigate('/login')}
-          className="hover:text-yellow-500"
+          className="underline hover:text-yellow-500"
         >
           로그인 페이지로 돌아가기
         </button>

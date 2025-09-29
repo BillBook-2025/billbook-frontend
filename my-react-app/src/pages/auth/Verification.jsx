@@ -70,15 +70,15 @@ export default function Verification() {
 
   return (
     <div className="relative min-h-screen bg-ivory flex flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-4xl font-bold mb-4">본인인증</h1>
+      <h1 className="text-4xl text-pistachio-dark font-bold mb-4">본인인증</h1>
 
       {/* 실제 본인인증 UI/컴포넌트 자리 */}
-      <p className="mb-6">본인인증을 진행해주세요.</p>
+      <p className="mb-6 text-darkbrown">본인인증을 진행해주세요.</p>
 
       <button
         onClick={handleVerificationSuccess}
         disabled={isVerifying}
-        className="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-3 px-6 rounded-lg shadow-md transition"
+        className="bg-yellow-200 hover:bg-orange-300 text-darkbrown font-semibold py-3 px-5 rounded-lg shadow-md transition"
       >
         {isVerifying ? '인증 중...' : '본인인증 완료'}
       </button>
