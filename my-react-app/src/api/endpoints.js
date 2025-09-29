@@ -8,7 +8,7 @@
 // 백엔드 API 경로 주소를 모아놓는 파일
 // 실제로 요청 보내는 함수를 정의하는건 다른 파일들에서!~
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 export const AUTH = {
   LOGIN: `${API_BASE_URL}/auth/login`,

@@ -1,6 +1,6 @@
 // src/api/my.js
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 import {fetchWithAuth} from './books.js';
 
@@ -29,9 +29,9 @@ export async function myLikes(userId, token, params = {}) {
 }
 
 // 내가 가진 포인트 조회
-// export async function myPoints(userId, token) {
-//   return fetchWithAuth(`/api/${userId}/my/point`, {}, token);
-// }
+export async function myPoints(userId, token) {
+  return fetchWithAuth(`/api/${userId}/my/point`, {}, token);
+}
 
 // 포인트 변화 (보류 상태, 구현 전)
 // export async function changeMyPoints(userId, points, token) {

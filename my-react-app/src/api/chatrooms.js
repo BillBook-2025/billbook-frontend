@@ -1,6 +1,6 @@
 // src/api/chatrooms.js
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 import {fetchWithAuth} from './books.js';
 

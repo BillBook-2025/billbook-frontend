@@ -1,6 +1,6 @@
 // src/api/profile.js
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 import {fetchWithAuth} from './books.js';
 
@@ -30,7 +30,7 @@ export async function addFollowing(userId, followUserId, token) {
 }
 
 // 팔로우 취소
-export async function removeFollowing(userId, followUserId, token) {
+export async function unfollowUser(userId, followUserId, token) {
   return fetchWithAuth(`/api/profile/${userId}/following`, 
     { method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },

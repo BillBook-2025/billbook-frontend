@@ -33,7 +33,6 @@ import UserProfile from '../pages/community/UserProfile';
 
 // 마이페이지 관련 (/mypage)
 import MyPage from '../pages/mypage/MyPage';
-import EditProfile from '../pages/mypage/EditProfile';
 import Manner from '../pages/mypage/Manner';
 import MyCommunityPost from '../pages/mypage/MyCommunityPost';
 import MyBookPost from '../pages/mypage/MyBookPost';
@@ -77,7 +76,6 @@ export default function Router() {
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPage />} />
-          <Route path="/editProfile" element={<EditProfile />} />
           <Route path="/manner" element={<Manner />} />
           <Route path="/myCommunityPost" element={<MyCommunityPost />} />
           <Route path="/myBookPost" element={<MyBookPost />} />

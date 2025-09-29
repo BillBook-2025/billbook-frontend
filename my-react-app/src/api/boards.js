@@ -1,7 +1,7 @@
 // src/api/boards.js
 // 얘는 커뮤니티 기능 위한 거
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 import {fetchWithAuth} from './books.js';
 
