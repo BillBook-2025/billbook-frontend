@@ -9,7 +9,7 @@ export default function Signup() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [username, setName] = useState('');
+  const [userName, setName] = useState('');
   const [error, setError] = useState('');
 
   const handleSignup = async (e) => {
@@ -17,7 +17,7 @@ export default function Signup() {
     setError('');
 
     // 입력받은 값을 본인인증페이지로 넘겨서 인증 진행 후 회원가입 성공하도록
-    if (!userId.trim() || !password.trim() || !email.trim() || !username.trim()) {
+    if (!userId.trim() || !password.trim() || !email.trim() || !userName.trim()) {
       setError('모든 필드를 입력해주세요.');
       return;
     }
@@ -31,7 +31,7 @@ export default function Signup() {
 
     // 본인인증 페이지로 이동ㅋ
     navigate('/verification', {
-      state: { userId, password, email, username }
+      state: { userId, password, email, userName }
     });
   };
 

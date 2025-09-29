@@ -1,28 +1,35 @@
 // src/pages/community/UserProfile.jsx
 // 다른 유저의 프로필을 클릭했을때 들어가는 페이지
-import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 // 프로필 기본 사진 용 아이콘
-import { User } from "lucide-react";
+import { User } from 'lucide-react';
 // API 함수
-import { myInfo, editMyInfo, myLikes, myPoints } from "../../api/my";
-import { uploadProfileImage, borrowedBooks, registeredBooks, userBoards, fetchFollowers, fetchFollowings } from "../../api/profile";
+import { myInfo, editMyInfo, myLikes, myPoints } from '../../api/my';
+import {
+  uploadProfileImage,
+  borrowedBooks,
+  registeredBooks,
+  userBoards,
+  fetchFollowers,
+  fetchFollowings,
+} from '../../api/profile';
 // 구글맵스 api
-import { Autocomplete, LoadScript } from "@react-google-maps/api";
+import { Autocomplete, LoadScript } from '@react-google-maps/api';
 
 export default function MyPage() {
   const navigate = useNavigate();
   // 구글맵 api
   const apiKey = process.env.REACT_APP_GOOGLE_MAPS_KEY;
   // 유저 정보 불러오기
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
   const token = userInfo?.token;
   const userId = userInfo?.userId;
 
   const [profile, setProfile] = useState(null);
   const [editing, setEditing] = useState(false);
-  const [nickname, setNickname] = useState("");
-  const [region, setRegion] = useState("");
+  const [nickname, setNickname] = useState('');
+  const [region, setRegion] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
 
   const [points, setPoints] = useState(0);
@@ -42,8 +49,8 @@ export default function MyPage() {
     // 개인정보
     myInfo(userId, token).then((data) => {
       setProfile(data);
-      setNickname(data.nickname || "");
-      setRegion(data.region || "");
+      setNickname(data.nickname || '');
+      setRegion(data.region || '');
     });
 
     // 포인트
@@ -72,17 +79,16 @@ export default function MyPage() {
       await editMyInfo(userId, { nickname, region }, token);
       if (avatarFile) {
         const formData = new FormData();
-        formData.append("avatar", avatarFile);
+        formData.append('avatar', avatarFile);
         await uploadProfileImage(userId, formData, token);
       }
       const updated = await myInfo(userId, token);
       setProfile(updated);
       setEditing(false);
-      alert("프로필이 수정되었습니다!");
-    } 
-    catch (err) {
+      alert('프로필이 수정되었습니다!');
+    } catch (err) {
       console.error(err);
-      alert("프로필 수정 실패");
+      alert('프로필 수정 실패');
     }
   };
 
@@ -92,86 +98,92 @@ export default function MyPage() {
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 프로필 섹션 */}
       <section className="border p-4 rounded-lg flex items-start gap-4 bg-ivory relative">
-      {/* 왼쪽: 프로필 사진 */}
-      <div className="flex-shrink-0">
-       <img
-          src={avatarFile ? URL.createObjectURL(avatarFile) : profile.avatarUrl}
-          alt="프로필"
-          className="w-24 h-24 rounded-full object-cover"
-        />
-        {/* 프사 설정 안했으면 기본 아이콘 */}
-        {!avatarFile && !profile.avatarUrl && (
-          <div className="w-24 h-24 rounded-full bg-pistachio flex items-center justify-center">
-            <User className="w-12 h-12 text-darkbrown" />
-          </div>
-        )}
-        {editing && (
-          <input
-           type="file"
-           ref={fileInputRef}
-           onChange={(e) => setAvatarFile(e.target.files[0])}
-           className="mt-2"
-         />
-        )}
-      </div>
-
-     {/* 가운데: 닉네임 + 지역 */}
-      <div className="flex-1 space-y-1">
-        {editing ? (
-          <>
+        {/* 왼쪽: 프로필 사진 */}
+        <div className="flex-shrink-0">
+          <img
+            src={
+              avatarFile ? URL.createObjectURL(avatarFile) : profile.avatarUrl
+            }
+            alt="프로필"
+            className="w-24 h-24 rounded-full object-cover"
+          />
+          {/* 프사 설정 안했으면 기본 아이콘 */}
+          {!avatarFile && !profile.avatarUrl && (
+            <div className="w-24 h-24 rounded-full bg-pistachio flex items-center justify-center">
+              <User className="w-12 h-12 text-darkbrown" />
+            </div>
+          )}
+          {editing && (
             <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="닉네임"
-              className="border rounded px-2 py-1 w-full"
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => setAvatarFile(e.target.files[0])}
+              className="mt-2"
             />
-            {/* 구글맵스 API */}
-            <LoadScript googleMapsApiKey={apiKey} libraries={["places"]}>
-              <Autocomplete
-                onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-                onPlaceChanged={() => {
-                  const place = autocompleteRef.current.getPlace();
-                  const dong = place.address_components.find((c) =>
-                    c.types.includes("sublocality_level_1")
-                  );
-                  setRegion(dong ? dong.long_name : place.formatted_address);
-                }}
-              >
-                <input
-                  type="text"
-                  value={region}
-                  placeholder="지역 입력"
-                  className="border rounded px-2 py-1 w-full"
-                />
-              </Autocomplete>
-            </LoadScript>
-          </>
-        ) : (
-          <>
-            <p className="font-bold text-lg text-darkbrown">{profile.nickname}</p>
-            <p className="text-gray-500 text-sm">{profile.region}</p>
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* 저장. 수정 버튼 */}
-      <div className="absolute bottom-2 right-2">
-        {editing ? (
-          <button
-            onClick={handleSaveProfile}
-            className="bg-darkbrown text-white px-3 py-1 rounded"
-          >
-            저장하기
-          </button>
-        ) : (
-          <button
-            onClick={() => setEditing(true)}
-            className="bg-darkbrown text-white px-3 py-1 rounded"
-          >
-            프로필 수정
-          </button>
-         )}
+        {/* 가운데: 닉네임 + 지역 */}
+        <div className="flex-1 space-y-1">
+          {editing ? (
+            <>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="닉네임"
+                className="border rounded px-2 py-1 w-full"
+              />
+              {/* 구글맵스 API */}
+              <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
+                <Autocomplete
+                  onLoad={(autocomplete) =>
+                    (autocompleteRef.current = autocomplete)
+                  }
+                  onPlaceChanged={() => {
+                    const place = autocompleteRef.current.getPlace();
+                    const dong = place.address_components.find((c) =>
+                      c.types.includes('sublocality_level_1')
+                    );
+                    setRegion(dong ? dong.long_name : place.formatted_address);
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={region}
+                    placeholder="지역 입력"
+                    className="border rounded px-2 py-1 w-full"
+                  />
+                </Autocomplete>
+              </LoadScript>
+            </>
+          ) : (
+            <>
+              <p className="font-bold text-lg text-darkbrown">
+                {profile.nickname}
+              </p>
+              <p className="text-gray-500 text-sm">{profile.region}</p>
+            </>
+          )}
+        </div>
+
+        {/* 저장. 수정 버튼 */}
+        <div className="absolute bottom-2 right-2">
+          {editing ? (
+            <button
+              onClick={handleSaveProfile}
+              className="bg-darkbrown text-white px-3 py-1 rounded"
+            >
+              저장하기
+            </button>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="bg-darkbrown text-white px-3 py-1 rounded"
+            >
+              프로필 수정
+            </button>
+          )}
         </div>
       </section>
 
@@ -205,9 +217,9 @@ export default function MyPage() {
             return (
               <div
                 key={b.bookId}
-               className="min-w-[150px] border rounded-lg bg-white shadow p-2 flex flex-col justify-between"
-             >
-               {/* 책 썸네일 */}
+                className="min-w-[150px] border rounded-lg bg-white shadow p-2 flex flex-col justify-between"
+              >
+                {/* 책 썸네일 */}
                 {thumbnail ? (
                   <img
                     src={thumbnail}
@@ -216,12 +228,14 @@ export default function MyPage() {
                   />
                 ) : (
                   <div className="w-full h-32 flex items-center justify-center bg-pistachio text-darkbrown rounded">
-                    {b.title?.slice(0, 1) || "?"}
+                    {b.title?.slice(0, 1) || '?'}
                   </div>
                 )}
 
-               {/* 책 제목 */}
-               <p className="mt-2 font-medium text-darkbrown truncate">{b.title}</p>
+                {/* 책 제목 */}
+                <p className="mt-2 font-medium text-darkbrown truncate">
+                  {b.title}
+                </p>
 
                 {/* 상태 표시 */}
                 <span className="text-sm text-gray-500">{b.status}</span>
@@ -231,13 +245,13 @@ export default function MyPage() {
 
           {/* 더보기 버튼 */}
           {myRegisters.length > 3 && (
-           <button
-             onClick={() => navigate("/MyBookPost")}
-             className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
-           >
-             더보기
-           </button>
-         )}
+            <button
+              onClick={() => navigate('/MyBookPost')}
+              className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
+            >
+              더보기
+            </button>
+          )}
         </div>
       </section>
 
@@ -260,7 +274,7 @@ export default function MyPage() {
           {/* 더보기 버튼 */}
           {myBoardsList.length > 3 && (
             <button
-              onClick={() => navigate("/MyBoardPost")}
+              onClick={() => navigate('/MyBoardPost')}
               className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
             >
               더보기
@@ -271,7 +285,9 @@ export default function MyPage() {
 
       {/* 팔로워/팔로잉 */}
       <section className="border p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">팔로워 ({followers.length}) / 팔로잉 ({followings.length})</h3>
+        <h3 className="font-semibold mb-2">
+          팔로워 ({followers.length}) / 팔로잉 ({followings.length})
+        </h3>
         <div className="flex gap-4">
           {/* 팔로워 리스트 */}
           {/**max-h-24 overflow-y-auto로 세로 스크롤 가능 */}

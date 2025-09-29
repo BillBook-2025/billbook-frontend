@@ -9,7 +9,7 @@ export default function Verification() {
   const navigate = useNavigate();
 
   // 회원가입 페이지에서 넘어온 아이디, 비번, 이메일, 이름 받기
-  const { userId, password, email, username } = location.state || {};
+  const { userId, password, email, userName } = location.state || {};
 
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -24,7 +24,7 @@ export default function Verification() {
       // 아니면 간편로그인?
 
       // 본인인증 성공했다고 가정하고 회원가입 API 호출
-      const result = await signup(userId, password, email, username);
+      const result = await signup(userId, password, email, userName);
 
       alert(result.message || '회원가입 완료');
       navigate('/login');
@@ -52,7 +52,7 @@ export default function Verification() {
   };
 
   // 만약 location.state가 없으면 (직접 접속 등) 경고
-  if (!userId || !password || !email || !username) {
+  if (!userId || !password || !email || !userName) {
     return (
       <div className="relative min-h-screen bg-ivory flex flex-col items-center justify-center px-6 text-center">
         <p className="text-red-500 text-lg font-bold">
