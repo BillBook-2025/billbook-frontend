@@ -1,7 +1,7 @@
 // src/api/books.js
 // 책 거래글 관련 api
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.209.17.126:8080/api";
 
 // 내부용: fetch 호출에 쓰는 함수
 // 이거 안쓰면 다 일일히 export const 어쩌고~ 형태로 써얗함
@@ -47,12 +47,12 @@ export async function fetchWithAuth(url, options = {}, token) {
 
 // 등록된 거래글 목록 불러오기
 export async function bookList(token) {
-  return fetchWithAuth('/api/books', {}, token);
+  return fetchWithAuth('/books', {}, token);
 }
 
 // 거래글 상세정보
 export async function bookDetail(bookId, token) {
-  return fetchWithAuth(`/api/books/${bookId}`, {}, token);
+  return fetchWithAuth(`/books/${bookId}`, {}, token);
 }
 
 // 등록된 책 정보 수정
@@ -73,7 +73,7 @@ export async function modifyBook(bookId, data, deleteImages, newImages, token) {
   }
 
   return fetchWithAuth(
-    `/api/books/${bookId}`,
+    `/books/${bookId}`,
     {
       method: 'PATCH',
       body: formData,
@@ -84,13 +84,13 @@ export async function modifyBook(bookId, data, deleteImages, newImages, token) {
 
 // 등록된 책 게시물 삭제
 export async function deleteBook(bookId, token) {
-  return fetchWithAuth(`/api/books/${bookId}`, { method: 'DELETE' }, token);
+  return fetchWithAuth(`/books/${bookId}`, { method: 'DELETE' }, token);
 }
 
 // 채팅방 생성
 export async function createChatroom(bookId, token) {
   return fetchWithAuth(
-    `/api/books/${bookId}/chatroom`,
+    `/books/${bookId}/chatroom`,
     { method: 'POST' },
     token
   );
@@ -98,19 +98,19 @@ export async function createChatroom(bookId, token) {
 
 // 좋아요 개수 조회
 export async function likeCount(bookId, token) {
-  return fetchWithAuth(`/api/books/${bookId}/like`, {}, token);
+  return fetchWithAuth(`/books/${bookId}/like`, {}, token);
 }
 
 // 좋아요 토글
 export async function likeBook(bookId, token) {
-  return fetchWithAuth(`/api/books/${bookId}/like`, { method: 'POST' }, token);
+  return fetchWithAuth(`/books/${bookId}/like`, { method: 'POST' }, token);
 }
 
 // 거래글 사진 업로드
 // 이미지 파일은 JSON이 아니라 FormData 형태로 보내야함
 export async function uploadImage(bookId, formData, token) {
   return fetchWithAuth(
-    `/api/books/${bookId}/upload-images`,
+    `/books/${bookId}/upload-images`,
     {
       method: 'POST',
       body: formData,
@@ -122,7 +122,7 @@ export async function uploadImage(bookId, formData, token) {
 // 거래글 사진 삭제
 export async function deleteImage(bookId, filename, token) {
   return fetchWithAuth(
-    `/api/books/${bookId}/upload-images`,
+    `/books/${bookId}/upload-images`,
     {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -135,7 +135,7 @@ export async function deleteImage(bookId, filename, token) {
 // 책 대출하기
 export async function borrowBook(bookId, data, token) {
   return fetchWithAuth(
-    `/api/books/${bookId}/borrow`,
+    `/books/${bookId}/borrow`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -148,7 +148,7 @@ export async function borrowBook(bookId, data, token) {
 // 반납 완료 후 게시물 자동 생성
 export async function returnBook(bookId, token) {
   return fetchWithAuth(
-    `/api/books/${bookId}/existing`,
+    `/books/${bookId}/existing`,
     { method: 'POST' },
     token
   );
@@ -157,7 +157,7 @@ export async function returnBook(bookId, token) {
 // 거래글 검색
 export async function searchBook(params, token) {
   const queryString = new URLSearchParams(params).toString();
-  return fetchWithAuth(`/api/books/search?${queryString}`, {}, token);
+  return fetchWithAuth(`/books/search?${queryString}`, {}, token);
 }
 
 // 새 책 거래 게시물 등록
@@ -171,7 +171,7 @@ export async function registerBook(data, images, token) {
     });
   }
   return fetchWithAuth(
-    '/api/books/register/new',
+    '/books/register/new',
     {
       method: 'POST',
       body: formData,
@@ -185,7 +185,7 @@ export async function registerBook(data, images, token) {
 export async function fetchBookInfo(keyword, token) {
   const queryString = new URLSearchParams({ keyword }).toString();
   return fetchWithAuth(
-    `/api/books/register/new/info?${queryString}`,
+    `/books/register/new/info?${queryString}`,
     {},
     token
   );
