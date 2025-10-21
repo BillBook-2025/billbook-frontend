@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
-import { registerBook, searchBook } from "../../api/books";
+import { registerBook, fetchBookInfo } from "../../api/books";
 
 export default function PostUpload() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function PostUpload() {
     if (!searchQuery.trim()) return;
     try {
       // 이름 기준으로 검색, API에서 이름 정확도 순으로 정렬
-      const books = await searchBook({ keyword: searchQuery }, token);
+      const books = await fetchBookInfo({ keyword: searchQuery }, token);
       setSearchResults(books);
     } 
     catch (err) {

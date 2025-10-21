@@ -182,8 +182,8 @@ export async function registerBook(data, images, token) {
 
 // api를 통해 키워드로 책 정보 가져오기
 // 거래글 올릴 때 사용
-export async function fetchBookInfo(keyword, token) {
-  const queryString = new URLSearchParams({ keyword }).toString();
+export async function fetchBookInfo(params, token) {
+  const queryString = new URLSearchParams(params).toString();
   return fetchWithAuth(
     `/books/register/new/info?${queryString}`,
     {},
