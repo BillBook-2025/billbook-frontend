@@ -5,13 +5,14 @@ import { Client } from '@stomp/stompjs';
 
 let stompClient = null;
 
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.209.17.126:8080/api";
 // 웹소켓 연결 
-export function connectWebSocket(token, onConnectCallback) {
+export function connectWebSocket(onConnectCallback) {
   if (stompClient && stompClient.connected) return;
 
   stompClient = new Client({
-    webSocketFactory: () => new SockJS(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080'}/websocket/ws-chat`),
-    connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+    webSocketFactory: () => new SockJS(`${API_BASE_URL}/websocket/ws-chat`),
+    connectHeaders: {},
     debug: (str) => console.log('[WebSocket]', str),
     reconnectDelay: 5000,
     onConnect: () => {

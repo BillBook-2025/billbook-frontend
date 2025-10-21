@@ -5,47 +5,47 @@ const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.2
 import {fetchWithAuth} from './books.js';
 
 // 프로필 조회
-export async function fetchProfile(userId, token) {
-  return fetchWithAuth(`/profile/${userId}`, {}, token);
+export async function fetchProfile(userId) {
+  return fetchWithAuth(`/profile/${userId}`, {});
 }
 
 // 팔로워 조회
-export async function fetchFollowers(userId, token) {
-  return fetchWithAuth(`/profile/${userId}/follower`, {}, token);
+export async function fetchFollowers(userId) {
+  return fetchWithAuth(`/profile/${userId}/follower`, {});
 }
 
 // 팔로잉 목록 조회
-export async function fetchFollowings(userId, token) {
-  return fetchWithAuth(`/profile/${userId}/following`, {}, token);
+export async function fetchFollowings(userId) {
+  return fetchWithAuth(`/profile/${userId}/following`, {});
 }
 
 // 팔로우 추가
-export async function addFollowing(userId, followUserId, token) {
+export async function addFollowing(userId, followUserId) {
   return fetchWithAuth(`/profile/${userId}/following`, 
     { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: followUserId }),
-    }, token
+    }
   );
 }
 
 // 팔로우 취소
-export async function unfollowUser(userId, followUserId, token) {
+export async function unfollowUser(userId, followUserId) {
   return fetchWithAuth(`/profile/${userId}/following`, 
     { method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: followUserId }),
-    }, token
+    }
   );
 }
 
 // 매너온도
-export async function changeTemperature(userId, data, token) {
+export async function changeTemperature(userId, data) {
   return fetchWithAuth(`/profile/${userId}/temperature`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data), // 예: {score: 5}
-  }, token);
+  });
 }
 
 /**
@@ -54,41 +54,41 @@ export async function changeTemperature(userId, data, token) {
  */
 
 // 해당 유저가 빌린 책 목록 조회
-export async function borrowedBooks(userId, token, params = {}) {
+export async function borrowedBooks(userId, params = {}) {
   const query = new URLSearchParams(params).toString();
   const url = query ? `/profile/${userId}/buy?${query}` : `/api/profile/${userId}/buy`;
-  return fetchWithAuth(url, {}, token);
+  return fetchWithAuth(url, {});
 }
 
 // 해당 유저가 등록한 책 목록 조회
-export async function registeredBooks(userId, token, params = {}) {
+export async function registeredBooks(userId, params = {}) {
   const query = new URLSearchParams(params).toString();
   const url = query ? `/profile/${userId}/sell?${query}` : `/profile/${userId}/sell`;
-  return fetchWithAuth(url, {}, token);
+  return fetchWithAuth(url, {});
 }
 
 // 해당 유저와의 책 거래 횟수 조회
-export async function dealCount(userId, params = {}, token) {
+export async function dealCount(userId, params = {}) {
   const query = new URLSearchParams(params).toString();
   const url = query ? `/profile/${userId}/history?${query}` : `/profile/${userId}/history`;
-  return fetchWithAuth(url, {}, token);
+  return fetchWithAuth(url, {});
 }
 
 
 // 유저가 쓴 (커뮤)게시글 조회
-export async function userBoards(userId, token, params = {}) {
+export async function userBoards(userId, params = {}) {
   const query = new URLSearchParams(params).toString();
   const url = query ? `/profile/${userId}/boards?${query}` : `/profile/${userId}/boards`;
-  return fetchWithAuth(url, {}, token);
+  return fetchWithAuth(url, {});
 }
 
 // 프로필 이미지 등록
-export async function uploadProfileImage(userId, imageUrl, token) {
+export async function uploadProfileImage(userId, imageUrl) {
   return fetchWithAuth(`/profile/${userId}/image`, 
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profilePic: imageUrl })
-    },token
+    }
   );
 }

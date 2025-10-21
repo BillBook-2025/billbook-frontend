@@ -15,10 +15,9 @@ export async function login(userId, password) {
 }
 
 // 로그아웃
-export async function logout(token) {
+export async function logout() {
   return fetchWithAuth('/auth/login',
-    {  method: 'DELETE'  },
-    token
+    {  method: 'DELETE'  }
   );
 }
 
@@ -51,6 +50,7 @@ export async function changePassword(password, confirmPassword) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password, confirmPassword }),
+    credentials: "include"
   });
   if (!response.ok) {
     const errorText = await response.text();
@@ -72,13 +72,12 @@ export async function signup(userId, password, email, username) {
 }
 
 // 회원 탈퇴
-export async function deleteAccount(password, message, token) {
+export async function deleteAccount(password, message) {
   return fetchWithAuth( '/auth/signup',
     {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password, message }),
-    },
-    token
+    }
   );
 }

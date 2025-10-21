@@ -5,78 +5,75 @@ const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.2
 import {fetchWithAuth} from './books.js';
 
 // 채팅목록 불러오기
-export async function getChatrooms(token) {
-  return fetchWithAuth('/chatrooms', {}, token);
+export async function getChatrooms() {
+  return fetchWithAuth('/chatrooms', {});
 }
 
 // 채팅방 나가기
-export async function leaveChatroom(chatId, token) {
-  return fetchWithAuth(`/chatrooms/${chatId}`, { method: 'DELETE' }, token);
+export async function leaveChatroom(chatId) {
+  return fetchWithAuth(`/chatrooms/${chatId}`, { 
+    method: 'DELETE' });
 }
 
 // 채팅 상세 페이지 불러오기
-export async function getChatroomDetail(chatId, token) {
-  return fetchWithAuth(`/chatrooms/${chatId}`, {}, token);
+export async function getChatroomDetail(chatId) {
+  return fetchWithAuth(`/chatrooms/${chatId}`, {});
 }
 
 // 채팅 불러오기
-export async function getChats(chatId, token) {
-  return fetchWithAuth(`/chatrooms/${chatId}/chat`, {}, token);
+export async function getChats(chatId) {
+  return fetchWithAuth(`/chatrooms/${chatId}/chat`, {});
 }
 
 // 채팅 보내기
-export async function sendChat(chatId, data, token) {
+export async function sendChat(chatId, data) {
   return fetchWithAuth(`/chatrooms/${chatId}/chat`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    },
-    token
+    }
   );
 }
 
 // 사진 올리기 
-export async function getPictures(chatId, token) {
-  return fetchWithAuth(`/chatrooms/${chatId}/picture`, {}, token);
+export async function getPictures(chatId) {
+  return fetchWithAuth(`/chatrooms/${chatId}/picture`, {});
 }
 
 // 사진 보내기 
-export async function sendPicture(chatId, formData, token) {
+export async function sendPicture(chatId, formData) {
   return fetchWithAuth(`/chatrooms/${chatId}/picture`,
     {
       method: 'POST',
       body: formData,
-    },
-    token
+    }
   );
 }
 
 // 송금하기
-export async function sendDeal(chatId, data, token) {
+export async function sendDeal(chatId, data) {
   return fetchWithAuth(`/chatrooms/${chatId}/deal`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    },
-    token
+    }
   );
 }
 
 // 기한 확인
-export async function getDeadline(chatId, token) {
-  return fetchWithAuth(`/chatrooms/${chatId}/deadline`, {}, token);
+export async function getDeadline(chatId) {
+  return fetchWithAuth(`/chatrooms/${chatId}/deadline`, {});
 }
 
 // 기한 설정
-export async function setDeadline(chatId, data, token) {
+export async function setDeadline(chatId, data) {
   return fetchWithAuth(`/chatrooms/${chatId}/deadline`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data), 
-    },
-    token
+    }
   );
 }

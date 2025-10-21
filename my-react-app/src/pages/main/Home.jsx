@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // 돋보기 아이콘
-import { Search } from 'lucide-react';
+import { Search, BookImage } from 'lucide-react';
 // api 함수
 import { bookList } from "../../api/books";
 
@@ -88,11 +88,19 @@ export default function Home() {
             onClick={() => navigate(`/bookDetail/${book.bookId}`)}
             className="border rounded-md p-2 cursor-pointer hover:shadow"
           >
-            <img
-              src={book.bookPic || '/default_book.png'}
-              alt={book.title}
-              className="w-full h-40 object-cover rounded"
-            />
+            {book.bookPic ? (
+              // 이미지 있으면 보여줌
+              <img
+                src={book.bookPic}
+                alt={book.title}
+                className="w-full h-40 object-cover rounded"
+              />
+            ) : (
+              // 이미지 없으면 아이콘
+              <div className="w-full h-40 rounded bg-gray-50 flex items-center justify-center">
+                <BookImage className="w-16 h-16 text-gray-400" strokeWidth={1.5} />
+              </div>
+            )}
             <div className="mt-2 text-sm font-semibold">{book.title}</div>
             <div className="text-xs text-gray-500">{book.locate?.address}</div>
             <div className="text-xs text-gray-700">상태: {getBookCondition(book.bookPoint)}</div>
