@@ -1,5 +1,7 @@
 // /src/components/BottomNavigation.jsx
 
+import { useNavigate, useLocation } from 'react-router-dom';
+
 import React from 'react';
 /* 리액트 lucide 아이콘 라이브러리 쓸것임!! */
 import {

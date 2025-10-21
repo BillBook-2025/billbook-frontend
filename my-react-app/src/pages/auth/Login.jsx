@@ -20,7 +20,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const result = await login(userId, password); // 로그인함수갖다씀
+      const data = await login(userId, password); // 로그인함수갖다씀
 
       // 로그인 성공 시 사용자 정보 저장 (로컬스토리지)
       localStorage.setItem('userInfo', JSON.stringify(data));
