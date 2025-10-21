@@ -161,24 +161,16 @@ export async function searchBook(params, token) {
 }
 
 // 새 책 거래 게시물 등록
-export async function registerBook(data, images, token) {
-  const formData = new FormData();
-  formData.append('book', JSON.stringify(data));
-
-  if (images && images.length > 0) {
-    images.forEach((file) => {
-      formData.append('images', file);
-    });
-  }
-  return fetchWithAuth(
-    '/books/register/new',
-    {
-      method: 'POST',
-      body: formData,
+export async function registerBook(formData, token) {
+  return fetch(API_BASE_URL + "/books/register/new", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`, // 토큰만 넣고 타입은 제거
     },
-    token
-  );
+    body: formData,
+  });
 }
+
 
 // api를 통해 키워드로 책 정보 가져오기
 // 거래글 올릴 때 사용

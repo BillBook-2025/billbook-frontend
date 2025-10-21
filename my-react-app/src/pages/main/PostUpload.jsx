@@ -72,20 +72,34 @@ export default function PostUpload() {
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("bookId", selectedBook.id);
-      formData.append("title", selectedBook.title);
-      formData.append("description", description);
-      formData.append("location", location);
+      const bookData = {
+        title: selectedBook.title,
+        author: selectedBook.author,
+        publisher: selectedBook.publisher || "",
+        category: selectedBook.category || "",
+        isbn: selectedBook.isbn || "",
+        bookpoint: 1000, // 예시 포인트
+        content: description,
+        locate: {
+          address: location,
+          latitude: 0, // 카카오맵 API
+          longitude: 0, // 카카오맵 API
+          regionLevel1: "",
+          regionLevel2: "",
+          regionLevel3: "",
+        },
+      };
 
+      const formData = new FormData();
+      formData.append("book", JSON.stringify(bookData));
+
+      // 이미지추가
       images.forEach((img) => formData.append("images", img));
 
-      await registerBook(
-        { bookId: selectedBook.id, title: selectedBook.title, description, location },
-        images,
-        token
-      );
+      await registerBook(formData, token);
       alert("게시글 등록 완료");
+
+      // 등록성공하면 홈화면으로이동
       navigate("/home");
     } 
     catch (err) {

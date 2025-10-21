@@ -24,7 +24,7 @@ import { Autocomplete, LoadScript } from "@react-google-maps/api";
 export default function MyPage() {
   const navigate = useNavigate();
   // 구글맵 api
-  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_KEY;
+  const apiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_KEY;
   // 유저 정보 불러오기
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.token;
