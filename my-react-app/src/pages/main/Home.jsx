@@ -18,6 +18,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [token, setToken] = useState(null);
 
   // 책 상태 점수 -> 단어 변환하는 함수
   const getBookCondition = (point) => {
@@ -34,7 +35,7 @@ export default function Home() {
       try {
          // 로컬스토리지에서 token 가져오기
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const token = userInfo?.token;
+        const token = userInfo?.token || null;
 
         // 현재 거래 가능한 글 불러오기
         const data = await bookList(token); 
@@ -58,7 +59,7 @@ export default function Home() {
       {/* 검색창처럼 보이는 버튼(서치 페이지로 이동 ㅋ) */}
       <button
         onClick={() => navigate('/search')}
-        className="w-full max-w-md mx-auto flex items-center justify-between px-4 py-2 border rounded-md text-gray-700 hover:border-pistachio hover:text-pistachio cursor-pointer"
+        className="w-full max-w-md mx-auto flex items-center justify-between mt-3 px-4 py-2 border-2 border-darkbrown rounded-md bg-pistachio text-darkbrown cursor-pointer"
         type="button"
       >
         검색하기
