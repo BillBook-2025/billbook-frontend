@@ -5,7 +5,8 @@ import { Client } from '@stomp/stompjs';
 
 let stompClient = null;
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.209.17.126:8080/api";
+const API_BASE_URL = "/api";
+
 // 웹소켓 연결 
 export function connectWebSocket(onConnectCallback) {
   if (stompClient && stompClient.connected) return;

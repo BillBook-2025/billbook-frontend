@@ -55,7 +55,7 @@ export default function Search() {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           placeholder="검색어를 입력하세요"
-          className="w-full h-10 px-4 pr-10 border rounded text-base"
+          className="w-full max-w-md mx-auto flex items-center justify-between mt-3 px-4 py-2 border-2 border-darkbrown rounded-md bg-pistachio text-darkbrown cursor-pointer"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSearch();
           }}

@@ -25,12 +25,9 @@ export default function Category() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        const token = userInfo?.token;
-
         // 카테고리로 필터링 한 검색결과
         const params = { category: categoryName };
-        const data = await searchBook(params, token);
+        const data = await searchBook(params);
         // 검색 결과를 posts 상태로 저장
         setPosts(data);
       } 

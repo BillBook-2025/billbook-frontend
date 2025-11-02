@@ -1,22 +1,29 @@
 // src/api/books.js
 // 책 거래글 관련 api
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.209.17.126:8080/api";
+const API_BASE_URL = '/api';
 
 // 내부용: fetch 호출에 쓰는 함수
 // 이거 안쓰면 다 일일히 export const 어쩌고~ 형태로 써얗함
-export async function fetchWithAuth(url, options = {}, token) {
+export async function fetchWithAuth(url, options = {}) {
   /**
    * url: 요청할 API 경로 (예: /api/books)
    * options: fetch 함수에 넣는 옵션(HTTP 메서드, 바디, 헤더 등)
    * 세션 쿠키 사용
    */
-  const headers = {
-    ...(options.headers || {}),
-  };
+  options.method = options.method || 'GET';
+  options.credentials = 'include';
 
-  const response = await fetch(API_BASE_URL + url, 
-    { ...options, headers, credentials: include });
+  const isFormData = options.body instanceof FormData;
+
+  // FormData의 인스턴스가 아닐때만 헤더
+  const headers = !isFormData
+    ? {
+        ...(options.headers || {}),
+      }
+    : undefined; // 폼데이터일때 언디파인드로 두기
+
+  const response = await fetch(API_BASE_URL + url, { ...options, headers });
 
   // 응답이 ok가 아닐 경우
   if (!response.ok) {
@@ -46,11 +53,11 @@ export async function fetchWithAuth(url, options = {}, token) {
 
 // 등록된 거래글 목록 불러오기
 export async function bookList() {
-  return fetchWithAuth('/books', {} );
+  return fetchWithAuth('/books', {});
 }
 
 // 거래글 상세정보
-export async function bookDetail(bookId ) {
+export async function bookDetail(bookId) {
   return fetchWithAuth(`/books/${bookId}`, {});
 }
 
@@ -71,27 +78,22 @@ export async function modifyBook(bookId, data, deleteImages, newImages) {
     });
   }
 
-  return fetchWithAuth(
-    `/books/${bookId}`,
-    {
-      method: 'PATCH',
-      body: formData,
-    }
-  );
+  return fetchWithAuth(`/books/${bookId}`, {
+    method: 'PATCH',
+    body: formData,
+  });
 }
 
 // 등록된 책 게시물 삭제
 export async function deleteBook(bookId) {
-  return fetchWithAuth(`/books/${bookId}`, { 
-    method: 'DELETE' });
+  return fetchWithAuth(`/books/${bookId}`, {
+    method: 'DELETE',
+  });
 }
 
 // 채팅방 생성
 export async function createChatroom(bookId) {
-  return fetchWithAuth(
-    `/books/${bookId}/chatroom`,
-    { method: 'POST' }
-  );
+  return fetchWithAuth(`/books/${bookId}/chatroom`, { method: 'POST' });
 }
 
 // 좋아요 개수 조회
@@ -101,52 +103,41 @@ export async function likeCount(bookId) {
 
 // 좋아요 토글
 export async function likeBook(bookId) {
-  return fetchWithAuth(`/books/${bookId}/like`, { 
-    method: 'POST' });
+  return fetchWithAuth(`/books/${bookId}/like`, {
+    method: 'POST',
+  });
 }
 
 // 거래글 사진 업로드
 // 이미지 파일은 JSON이 아니라 FormData 형태로 보내야함
 export async function uploadImage(bookId, formData) {
-  return fetchWithAuth(
-    `/books/${bookId}/upload-images`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  return fetchWithAuth(`/books/${bookId}/upload-images`, {
+    method: 'POST',
+    body: formData,
+  });
 }
 
 // 거래글 사진 삭제
 export async function deleteImage(bookId, filename) {
-  return fetchWithAuth(
-    `/books/${bookId}/upload-images`,
-    {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename }),
-    }
-  );
+  return fetchWithAuth(`/books/${bookId}/upload-images`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename }),
+  });
 }
 
 // 책 대출하기
 export async function borrowBook(bookId, data) {
-  return fetchWithAuth(
-    `/books/${bookId}/borrow`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data), //자바스크립트 객체를 문자열 JSON으로 변환
-    }
-  );
+  return fetchWithAuth(`/books/${bookId}/borrow`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data), //자바스크립트 객체를 문자열 JSON으로 변환
+  });
 }
 
 // 반납 완료 후 게시물 자동 생성
 export async function returnBook(bookId) {
-  return fetchWithAuth(
-    `/books/${bookId}/existing`,
-    { method: 'POST' }
-  );
+  return fetchWithAuth(`/books/${bookId}/existing`, { method: 'POST' });
 }
 
 // 거래글 검색
@@ -157,19 +148,15 @@ export async function searchBook(params) {
 
 // 새 책 거래 게시물 등록
 export async function registerBook(formData) {
-  return fetch(API_BASE_URL + "/books/register/new", {
-    method: "POST",
+  return fetchWithAuth(`/books/register/new`, {
+    method: 'POST',
     body: formData,
-    credentials: "include",
   });
 }
-
 
 // api를 통해 키워드로 책 정보 가져오기
 // 거래글 올릴 때 사용
 export async function fetchBookInfo(params) {
   const queryString = new URLSearchParams(params).toString();
-  return fetchWithAuth(
-    `/books/register/new/info?${queryString}`,
-    {});
+  return fetchWithAuth(`/books/register/new/info?${queryString}`, {});
 }

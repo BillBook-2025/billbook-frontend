@@ -10,23 +10,22 @@ import { registeredBooks } from "../../api/profile";
 export default function MyBookPost() {
   const navigate = useNavigate();
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const token = userInfo?.token;
   const userId = userInfo?.userId;
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token || !userId) return;
+    if (!userId) return;
 
-    registeredBooks(userId, token)
+    registeredBooks(userId)
       .then((data) => {
         // 등록일자 기준 정렬(최신순)
         const sorted = [...data].sort((a, b) => new Date(b.time)-new Date(a.time));
         setBooks(sorted);
       })
       .finally(() => setLoading(false));
-  }, [token, userId]);
+  }, [userId]);
 
   const handleMannerClick = (b) => {
     if (b.status === "RETURNED") {

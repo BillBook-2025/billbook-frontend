@@ -54,7 +54,6 @@ import { borrowBook, returnBook } from '../../api/books';
 
 export default function Chatroom() {
   const { chatId } = useParams();
-  const token = localStorage.getItem("token");
 
   const [chatData, setChatData] = useState(null);
   const [chats, setChats] = useState([]);
@@ -69,26 +68,22 @@ export default function Chatroom() {
 
 // 초기 데이터 로드
   useEffect(() => {
-    if (!token) return;
-
-    getChatroomDetail(chatId, token)
+    getChatroomDetail(chatId)
       .then((data) => {
         setChatData(data);
-        return fetchProfile(data.partnerId, token);
+        return fetchProfile(data.partnerId);
       })
       .then((profile) => setPartner(profile))
       .catch((err) => console.error("채팅방 로드 실패", err));
 
-    getChats(chatId, token)
+    getChats(chatId)
       .then((data) => setChats(data))
       .catch((err) => console.error("채팅 불러오기 실패", err));
-  }, [chatId, token]);
+  }, [chatId]);
 
   // 웹소켓 연결 + 구독
   useEffect(() => {
-    if (!token) return;
-
-    connectWebSocket(token, () => {
+    connectWebSocket(() => {
       const unsubscribe = subscribeChatroom(chatId, (msg) => {
         setChats((prev) => [...prev, msg]);
       });
@@ -98,7 +93,7 @@ export default function Chatroom() {
         disconnectWebSocket();
       };
     });
-  }, [chatId, token]);
+  }, [chatId]);
 
   // 메시지 전송 
   const handleSend = () => {
@@ -118,7 +113,7 @@ export default function Chatroom() {
     const formData = new FormData();
     formData.append("picture", file);
     try {
-      await sendPicture(chatId, formData, token);
+      await sendPicture(chatId, formData);
     } 
     catch (err) {
       console.error("사진 전송 실패", err);
@@ -130,7 +125,7 @@ export default function Chatroom() {
     const amount = prompt("송금할 금액을 입력하세요:");
     if (!amount) return;
     try {
-      await sendDeal(chatId, { amount }, token);
+      await sendDeal(chatId, { amount });
       alert("송금 완료!");
     } 
     catch (err) {
@@ -142,7 +137,7 @@ export default function Chatroom() {
   const handleSetDeadline = async () => {
     if (!selectedDate) return;
     try {
-      await setDeadline(chatId, { deadline: selectedDate.toISOString().split("T")[0] }, token);
+      await setDeadline(chatId, { deadline: selectedDate.toISOString().split("T")[0] });
       alert("약속 날짜 설정 완료");
       setMenuOpen(false);
     } 
@@ -154,7 +149,7 @@ export default function Chatroom() {
   // 책 대출하기
   const handleBorrowBook = async () => {
     try {
-      await borrowBook(chatData.bookId, { borrowerId: chatData.myId }, token);
+      await borrowBook(chatData.bookId, { borrowerId: chatData.myId });
       alert("대출 완료! 마이페이지에서 대여 상태를 확인할 수 있습니다.");
 
       // 상태 업데이트: 더 이상 대여 불가로 표시
@@ -170,7 +165,7 @@ export default function Chatroom() {
   const handleCompleteDeal = async () => {
     try {
       //거래글 상태 재활성화
-      await returnBook(chatData.bookId, token); 
+      await returnBook(chatData.bookId); 
       alert("완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요");
 
       // 상태 업데이트

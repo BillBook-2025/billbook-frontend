@@ -1,6 +1,6 @@
 // src/api/profile.js
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || "http://13.209.17.126:8080/api";
+const API_BASE_URL = "/api";
 
 import {fetchWithAuth} from './books.js';
 
@@ -44,7 +44,7 @@ export async function changeTemperature(userId, data) {
   return fetchWithAuth(`/profile/${userId}/temperature`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data), // 예: {score: 5}
+    body: JSON.stringify(data), 
   });
 }
 
@@ -56,7 +56,7 @@ export async function changeTemperature(userId, data) {
 // 해당 유저가 빌린 책 목록 조회
 export async function borrowedBooks(userId, params = {}) {
   const query = new URLSearchParams(params).toString();
-  const url = query ? `/profile/${userId}/buy?${query}` : `/api/profile/${userId}/buy`;
+  const url = query ? `/profile/${userId}/buy}?${query}` : `/profile/${userId}/buy`;
   return fetchWithAuth(url, {});
 }
 

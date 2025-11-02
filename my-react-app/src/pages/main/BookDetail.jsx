@@ -11,7 +11,6 @@ import { bookDetail } from "../../api/books";
 
 export default function BookDetail() {
   const { bookId } = useParams(); 
-  const token = localStorage.getItem("token");
 
   const [book, setBook] = useState(null);
   const navigate = useNavigate();
@@ -20,9 +19,9 @@ export default function BookDetail() {
   // 백에서 인터파크api 받아와서 구현해놨다고 하니까 그걸 받아서 쓰기만하면됨
 
   useEffect(() => {
-    if (!bookId || !token) return;
+    if (!bookId ) return;
 
-    bookDetail(bookId, token)
+    bookDetail(bookId)
       .then((data) => {
         // 서버 API 응답 구조에 맞게 필요한 정보만 추출
         setBook({
@@ -38,7 +37,7 @@ export default function BookDetail() {
         console.error("책 정보 로드 실패:", err);
         setBook(null);
       });
-  }, [bookId, token]);
+  }, [bookId]);
 
   if (!book) return <p>책 정보를 불러오는 중입니다...</p>;
 

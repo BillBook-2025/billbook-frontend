@@ -10,23 +10,22 @@ import { userBoards } from "../../api/profile"; // 유저 게시글 조회 API
 export default function MyBoardPost() {
   const navigate = useNavigate();
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const token = userInfo?.token;
   const userId = userInfo?.userId;
 
   const [boards, setBoards] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token || !userId) return;
+    if (!userId) return;
 
-    userBoards(userId, token)
+    userBoards(userId)
       .then((data) => {
         // 작성일 기준 최신순 정렬
         const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setBoards(sorted);
       })
       .finally(() => setLoading(false));
-  }, [token, userId]);
+  }, [userId]);
 
   if (loading) return <div className="p-4">로딩 중...</div>;
 

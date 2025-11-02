@@ -10,8 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { getChatrooms, leaveChatroom } from "../../api/chatrooms";
 
 export default function ChatList() {
-  const token = localStorage.getItem("token");
-
   const [chatrooms, setChatrooms] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState([]);
@@ -19,11 +17,10 @@ export default function ChatList() {
 
   // 채팅 목록 불러오기
   useEffect(() => {
-    if (!token) return;
-    getChatrooms(token)
+    getChatrooms()
       .then((data) => setChatrooms(data))
       .catch((err) => console.error("채팅 목록 불러오기 실패", err));
-  }, [token]);
+  }, []);
 
   // 채팅방 클릭 → Chatroom으로 이동
   const handleClickChatroom = (id) => {
@@ -52,7 +49,7 @@ export default function ChatList() {
   const handleDelete = async () => {
     for (const id of selectedRooms) {
       try {
-        await leaveChatroom(id, token);
+        await leaveChatroom(id);
       } 
       catch (err) {
         console.error(`채팅방 ${id} 삭제 실패`, err);
@@ -68,7 +65,7 @@ export default function ChatList() {
       {/* 상단 헤더 */}
       <div className="flex justify-between items-center p-4 border-b">
         <h1 className="text-lg font-bold">채팅 목록</h1>
-        <button onClick={toggleEditMode} className="text-blue-500">
+        <button onClick={toggleEditMode} className="text-orange-500">
           {editMode ? "완료" : "편집"}
         </button>
       </div>

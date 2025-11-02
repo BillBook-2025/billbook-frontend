@@ -10,20 +10,19 @@ import { fetchFollowers, fetchFollowings, unfollowUser } from "../../api/profile
 export default function Follow() {
   const navigate = useNavigate();
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const token = userInfo?.token;
   const userId = userInfo?.userId;
 
   const [activeTab, setActiveTab] = useState("followers"); // 'followers' or 'followings'
   const [list, setList] = useState([]);
 
   const loadList = async () => {
-    if (!token || !userId) return;
+    if ( !userId) return;
     try {
       let data = [];
       if (activeTab === "followers") {
-        data = await fetchFollowers(userId, token);
+        data = await fetchFollowers(userId);
       } else {
-        data = await fetchFollowings(userId, token);
+        data = await fetchFollowings(userId);
       }
       setList(data);
     } 
@@ -34,13 +33,12 @@ export default function Follow() {
 
   useEffect(() => {
     loadList();
-  }, [activeTab, token, userId]);
+  }, [activeTab, userId]);
 
   // 언팔로우 버튼 클릭
   const handleUnfollow = async (followId) => {
-    if (!token) return;
     try {
-      await unfollowUser(followId, token); // API에서 팔로잉 해제
+      await unfollowUser(followId); // API에서 팔로잉 해제
       setList(list.filter((user) => user.userId !== followId)); // 목록에서 제거
     } 
     catch (err) {

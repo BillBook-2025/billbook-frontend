@@ -47,7 +47,7 @@ export default function SearchResult() {
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-4">검색 결과</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center text-darkbrown">검색 결과</h1>
 
       {/* 검색창 */}
       <form onSubmit={handleSearchSubmit} className="flex gap-2 mb-4">
@@ -56,12 +56,12 @@ export default function SearchResult() {
           value={query}
           placeholder="책 제목을 입력하세요"
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-grow border rounded px-3 py-2"
+          className="flex-grow px-4 py-2 border-2 border-darkbrown rounded-md bg-pistachio text-darkbrown placeholder-darkbrown/70" // ⭐️ mt-3, w-full, flex 등 불필요한 클래스 모두 제거
           aria-label="책 제목 검색 입력"
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="flex-shrink-0 px-4 py-2 bg-darkbrown text-white rounded-md hover:bg-orange-500" // ⭐️ rounded-md로 통일, flex-shrink-0 추가
           aria-label="검색 버튼"
         >
           검색
@@ -69,14 +69,19 @@ export default function SearchResult() {
       </form>
 
       {/* 지역 설정 버튼 */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap justify-center gap-2">
         {["전체", "서울", "부산", "대구", "광주", "인천", "경기도", "경상도", "전라도", "강원도", "충청도", "제주도", "울릉도","독도"].map((r) => (
           <button
             key={r}
             onClick={() => setRegion(r)}
-            className={`px-3 py-1 rounded border ${
-              region === r ? "bg-gray-300" : "bg-white"
-            }`}
+            className={`px-4 py-1 rounded-md text-sm font-medium transition-all
+                        border
+                        ${
+                          region === r
+                            ? "bg-pistachio text-darkbrown border-darkbrown ring-1 ring-darkbrown" // 활성 상태
+                            : "bg-white text-darkbrown border-gray-300" // 비활성 상태
+                        }
+                        hover:bg-orange-500 hover:text-white hover:border-orange-500`} // 호버 상태
             aria-pressed={region === r}
           >
             {r}
@@ -84,7 +89,7 @@ export default function SearchResult() {
         ))}
       </div>
 
-      <hr />
+      <hr className="my-6 border-darkbrown/20" />
 
       {/* 검색 결과 리스트 */}
       {results.length === 0 ? (

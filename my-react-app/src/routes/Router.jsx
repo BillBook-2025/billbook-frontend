@@ -63,9 +63,9 @@ export default function Router() {
           <Route path="/search" element={<Search />} />
           <Route path="/recommend" element={<Recommend />} />
           <Route path="/bookDetail/:bookId" element={<BookDetail />} />
-          <Route path="/post/:postId" element={<Post />} />
+          <Route path="/post/:bookId" element={<Post />} />
           <Route path="/postUpload" element={<PostUpload />} />
-          <Route path="/postEdit" element={<PostEdit />} />
+          <Route path="/edit/:bookId" element={<PostEdit />} />
           <Route path="/chatroom" element={<Chatroom />} />
           <Route path="/chatList" element={<ChatList />} />
           <Route path="/category/:categoryName" element={<Category />} />
@@ -73,7 +73,7 @@ export default function Router() {
           {/* 커뮤니티 */}
           <Route path="/community" element={<Community />} />
           <Route path="/communityPost" element={<CommunityPost />} />
-          <Route path="/userProfile" element={<UserProfile />} />
+          <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/communityUpload" element={<CommunityUpload />} />
 
           {/* 마이페이지 */}

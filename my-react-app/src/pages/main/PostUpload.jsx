@@ -12,11 +12,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // API 함수
 import { registerBook, fetchBookInfo } from "../../api/books";
+import { XCircle } from 'lucide-react';
 
 export default function PostUpload() {
   const navigate = useNavigate();
-
-  const token = localStorage.getItem("token"); // 토큰 가져오기
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -24,6 +23,7 @@ export default function PostUpload() {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]); 
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,7 +32,7 @@ export default function PostUpload() {
     if (!searchQuery.trim()) return;
     try {
       // 이름 기준으로 검색, API에서 이름 정확도 순으로 정렬
-      const books = await fetchBookInfo({ keyword: searchQuery }, token);
+      const books = await fetchBookInfo({ keyword: searchQuery });
       setSearchResults(books);
     } 
     catch (err) {
@@ -51,7 +51,28 @@ export default function PostUpload() {
   // 이미지 업로드
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+     // 새로 추가된 파일만
+    const newImages = [...images, ...files];
+    setImages(newImages);
+
+    // 새로 추가된 파일에 대한 미리보기 URL 생성
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...newPreviews]);
+  };
+
+  // 이미지 삭제
+  const handleRemoveImage = (indexToRemove) => {
+    // images state에서 제거
+    setImages(images.filter((_, index) => index !== indexToRemove));
+
+    // imagePreviews state에서 제거
+    const newPreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
+    setImagePreviews(newPreviews);
+    
+    // 메모리 누수 방지를 위해 사용이 끝난 URL 해제
+    // 이 작업은 컴포넌트가 unmount될 때 useEffect에서 처리하는 것이 더 안정적일 수 있으나,
+    // CommunityUpload.jsx의 로직을 그대로 따릅니다.
+    URL.revokeObjectURL(imagePreviews[indexToRemove]);
   };
 
   // 게시글 등록
@@ -70,43 +91,60 @@ export default function PostUpload() {
     }
 
     setIsSubmitting(true);
+    setError("");
+
+    const formData = new FormData();
+
+    // *** 1. API 문서(BookPostRequestDto)에 맞는 JSON 객체 생성 ***
+    const bookData = {
+      // selectedBook 객체에서 가져올 정보
+      title: selectedBook.title,
+      author: selectedBook.author,
+      publisher: selectedBook.publisher, // selectedBook에 이 정보가 있어야 합니다.
+      category: selectedBook.category,   // selectedBook에 이 정보가 있어야 합니다.
+      isbn: selectedBook.id,           // book.id가 isbn이라고 가정합니다.
+
+      // state에서 가져올 정보
+      content: description, // ❌ 'description'이 아니라 'content'
+      
+      // ⚠️ 'location' (문자열)을 API의 'locate' (객체)로 변환해야 합니다.
+      // 지금은 'location' 문자열을 'address'에만 넣습니다.
+      locate: {
+        address: location || "미지정", 
+        latitude: 0.0, // 카카오맵 API 연동 전 임시값
+        longitude: 0.0, // 카카오맵 API 연동 전 임시값
+        regionLevel1: "",
+        regionLevel2: "",
+        regionLevel3: ""
+      },
+
+      // DTO에 있지만 현재 폼에서 입력받지 않는 값
+      bookpoint: 1000 // 예제 DTO의 기본값 1000 사용
+    };
+
+    // *** 2. JSON을 Blob으로 변환 ***
+    const jsonData = JSON.stringify(bookData);
+    const jsonBlob = new Blob([jsonData], {
+      type: 'application/json' 
+    });
+
+    // *** 3. ❌ 'data'가 아닌 'book' 키로 FormData에 추가 ***
+    formData.append('book', jsonBlob); 
+
+    // *** 4. 이미지 파일 추가 ('images' 키) ***
+    for (let i = 0; i < images.length; i++) {
+      formData.append("images", images[i]);
+    }
 
     try {
-      const bookData = {
-        title: selectedBook.title,
-        author: selectedBook.author,
-        publisher: selectedBook.publisher || "",
-        category: selectedBook.category || "",
-        isbn: selectedBook.isbn || "",
-        bookpoint: 1000, // 예시 포인트
-        content: description,
-        locate: {
-          address: location,
-          latitude: 0, // 카카오맵 API
-          longitude: 0, // 카카오맵 API
-          regionLevel1: "",
-          regionLevel2: "",
-          regionLevel3: "",
-        },
-      };
-
-      const formData = new FormData();
-      formData.append("book", JSON.stringify(bookData));
-
-      // 이미지추가
-      images.forEach((img) => formData.append("images", img));
-
-      await registerBook(formData, token);
-      alert("게시글 등록 완료");
-
-      // 등록성공하면 홈화면으로이동
-      navigate("/home");
-    } 
-    catch (err) {
-      console.error("게시글 등록 실패", err);
-      setError("등록 중 오류가 발생했습니다.");
-    } 
-    finally {
+      // [PostUpload.jsx:91]
+      await registerBook(formData); 
+      navigate("/home"); 
+    } catch (err) {
+      console.error(err);
+      // [PostUpload.jsx:94]
+      setError("등록 중 오류가 발생했습니다."); 
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -134,9 +172,9 @@ export default function PostUpload() {
         {/* 검색 결과 리스트 */}
         {searchResults.length > 0 && (
           <ul className="border mt-2 max-h-40 overflow-auto">
-            {searchResults.map((book) => (
+            {searchResults.map((book, index) => (
               <li
-                key={book.id}
+                key={book.id || index}
                 onClick={() => handleSelectBook(book)}
                 className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between"
               >
@@ -169,6 +207,27 @@ export default function PostUpload() {
           onChange={(e) => setLocation(e.target.value)}
           className="w-full p-2 border rounded"
         />
+        {/* 이미지 미리보기 */}
+        {imagePreviews.length > 0 && (
+          <div className="flex flex-wrap gap-2 p-2 border rounded-md">
+            {imagePreviews.map((previewUrl, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={previewUrl}
+                  alt={`preview ${index}`}
+                  className="w-24 h-24 object-cover rounded-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-0 right-0 -mt-1 -mr-1 bg-white rounded-full"
+                >
+                  <XCircle className="w-5 h-5 text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <input type="file" multiple onChange={handleImageChange} />
         <button
           type="submit"

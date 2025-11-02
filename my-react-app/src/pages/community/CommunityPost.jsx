@@ -6,18 +6,21 @@
 - [댓글 입력칸],[종이비행기(전송버튼)]
 - 대댓글 달기
 */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 // API 함수
-import { getBoardDetail,  getBoardLike,  likeBoard,  getComment,
-  addComment,  addReply } from "../../api/boards";
+import { getBoardDetail,  
+  getBoardLike,  
+  likeBoard,  
+  getComment,
+  addComment,  
+  addReply 
+} from "../../api/boards";
 // 하트, 댓글남기기 버튼 이모티콘으로 하기
 import { Heart, Send } from "lucide-react";
 
 export default function CommunityPost() {
   const { boardId } = useParams();
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const token = userInfo?.token;
 
   const [board, setBoard] = useState(null);
   const [likeCount, setLikeCount] = useState(0);
@@ -29,43 +32,62 @@ export default function CommunityPost() {
   const [replyContent, setReplyContent] = useState("");
   const [replyInputOpen, setReplyInputOpen] = useState(null);
 
+  const fetchComments = useCallback(async () => {
+    try {
+      const data = await getComment(boardId);
+      setComments(data);
+    } catch (error) {
+      console.error("댓글 로드 실패:", error);
+      // 댓글 로드에 실패해도 페이지가 죽지 않도록 빈 배열 설정
+      setComments([]); 
+    }
+  }, [boardId]);
+
   useEffect(() => {
     if (!token || !boardId) return;
 
     // 게시글 상세 조회
-    getBoardDetail(boardId, token).then(setBoard);
+    getBoardDetail(boardId).then(setBoard);
 
     // 좋아요 개수
-    getBoardLike(boardId, token).then((data) => setLikeCount(data.likeCount));
+    getBoardLike(boardId).then((data) => { 
+      setLikeCount(data.likeCount);
+      setLiked(data.isLiked); 
+    }).catch(console.error);
 
     // 댓글 조회
     fetchComments();
-  }, [token, boardId]);
-
-  const fetchComments = async () => {
-    const data = await getComment(boardId, token);
-    setComments(data);
-  };
+  }, [boardId, fetchComments]);
 
   const handleLike = async () => {
-    await likeBoard(boardId, token);
+    await likeBoard(boardId);
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   const handleAddComment = async () => {
-    if (!commentInput.trim()) return;
-    await addComment(boardId, { content: commentInput }, token);
-    setCommentInput("");
-    fetchComments();
+    try {
+      await likeBoard(boardId);
+      setLiked((prev) => !prev);
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
+    } 
+    catch (error) {
+      console.error("좋아요 처리 실패:", error);
+      alert(error.message); 
+    }
   };
 
   const handleAddReply = async (commentId) => {
     if (!replyContent.trim()) return;
-    await addReply(boardId, commentId, { content: replyContent }, token);
-    setReplyContent("");
-    setReplyInputOpen(null);
-    fetchComments();
+    try {
+      await addComment(boardId, { content: commentInput }); // token 인자 제거
+      setCommentInput("");
+      fetchComments(); // 새 댓글 목록 불러오기
+    } 
+    catch (error) {
+      console.error("댓글 작성 실패:", error);
+      alert(error.message);
+    }
   };
 
   if (!board) return <div className="p-4">로딩 중...</div>;
@@ -99,7 +121,7 @@ export default function CommunityPost() {
       {/* 댓글 영역 */}
       <div className="border rounded-lg bg-white p-4 space-y-4">
         <h3 className="font-semibold mb-2">댓글</h3>
-        {comments.map((c) => (
+        {Array.isArray(comments) && comments.map((c) => (
           <div key={c.commentId} className="mb-3">
             
             {/* 댓글 */}

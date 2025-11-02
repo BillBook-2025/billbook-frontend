@@ -11,7 +11,6 @@ export default function Manner() {
   const bookId = searchParams.get("bookId"); // 책 ID 필요하면 사용
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-  const token = userInfo?.token;
 
   const [score, setScore] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +24,7 @@ export default function Manner() {
 
     setLoading(true);
     try {
-      await changeTemperature(partnerId, { score: numericScore }, token);
+      await changeTemperature(partnerId, { score: numericScore });
       alert("매너평가가 완료되었습니다!");
       navigate(-1); // 이전 페이지로 이동
     } catch (err) {

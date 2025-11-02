@@ -21,11 +21,22 @@ export default function BottomNavigation() {
   // 현재 위치(location.pathname)와 각 버튼의 경로(path)를 비교해서 현재 페이지인지 여부를 판단
   const isActive = (path) => location.pathname === path;
 
+  const handleFloatingClick = () => {
+    // 페이지 당 다른 +버튼 ㅣ기능임!!
+    if (location.pathname.startsWith('/community')) {
+      // 커뮤니티 페이지면 커뮤 글 작성 페이지로 이동
+      navigate('/communityUpload');
+    } else {
+      // 그 외 모든 페이지(홈, 마이페이지 등)에서는 책 등록 페이지로 이동
+      navigate('/postUpload');
+    }
+  };
+
   return (
     <>
-      {/* 플로팅 책 등록하기 버튼 (+) */}
+      {/* 만능 플로팅 버튼 (+) */}
       <button
-        onClick={() => navigate('/postUpload')}
+        onClick={handleFloatingClick}
         className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-yellow-300 hover:bg-yellow-200 shadow-lg border-2 border-white flex items-center justify-center z-50"
       >
         <Plus className="w-8 h-8 text-black" />

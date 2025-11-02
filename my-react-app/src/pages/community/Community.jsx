@@ -18,34 +18,37 @@ export default function Community() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 로컬 스토리지에서 사용자 토큰 가져오기
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const token = userInfo?.token;
-
   // 모든 게시글을 불러오는 함수
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const data = await getBoards(token);
+      const data = await getBoards();
       // API 응답 데이터를 최신순으로 정렬
-      setPosts(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      if (Array.isArray(data)) {
+        setPosts(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      } 
+      else {
+        setPosts([]); // data가 배열이 아니면 빈 배열로 설정
+      }
     } catch (err) {
-      setError('게시글을 불러오는 데 실패했습니다.');
+      const status = err.message.match(/HTTP (\d+):/)?.[1];
+      if (status === '401' || status === '403') {
+        setError('게시글을 보려면 로그인이 필요합니다.');
+      } 
+      else {
+        setError('게시글을 불러오는 데 실패했습니다.');
+      }
       console.error(err);
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
 
-  // 컴포넌트가 처음 렌더링될 때 게시글 목록을 불러옵니다.
+  // 게시글 목록
   useEffect(() => {
-    if (token) {
       fetchPosts();
-    } else {
-      setError('게시글을 보려면 로그인이 필요합니다.');
-      setLoading(false);
-    }
-  }, [token]);
+  }, []);
 
   // 검색 핸들러
   const handleSearch = async (e) => {
@@ -56,20 +59,31 @@ export default function Community() {
     }
     try {
       setLoading(true);
-      const data = await searchBoard({ keyword: searchTerm }, token);
-      setPosts(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch (err) {
-      setError('검색 결과를 불러오는 데 실패했습니다.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const data = await searchBoard({ keyword: searchTerm }); // token 인자 제거
+      if (Array.isArray(data)) {
+        setPosts(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      } else {
+        setPosts([]); // data가 배열이 아니면 빈 배열로 설정
+      }
+    } catch (err) {
+      const status = err.message.match(/HTTP (\d+):/)?.[1];
+
+      if (status === '401' || status === '403') {
+        setError('검색을 하려면 로그인이 필요합니다.');
+      } else {
+        setError('검색 결과를 불러오는 데 실패했습니다.');
+      }
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
     return <div className="p-4 text-center">로딩 중...</div>;
   }
 
+  // 에러 메시지
   if (error) {
     return <div className="p-4 text-center text-red-500">{error}</div>;
   }
@@ -134,21 +148,13 @@ export default function Community() {
             </div>
           ))
         ) : (
+          // 글 0개일떄
           <div className="text-center py-10 bg-gray-50 rounded-lg">
             <p className="text-gray-500">아직 게시글이 없습니다.</p>
             <p className="text-gray-400 text-sm mt-1">첫 번째 글을 작성해보세요!</p>
           </div>
         )}
       </main>
-
-      {/* 새 글 작성 버튼 (Floating) */}
-      <button
-        onClick={() => navigate('/community/new')}
-        className="fixed bottom-24 right-4 bg-pistachio-dark text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-pistachio-dark/90 transition"
-        aria-label="새 게시글 작성"
-      >
-        <Plus className="w-7 h-7" />
-      </button>
     </div>
   );
 }

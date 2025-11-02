@@ -16,20 +16,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // API 함수
-import {  bookDetail, modifyBook, searchBook } from '../../api/books';
+import { bookDetail, modifyBook, searchBook } from '../../api/books';
+import { XCircle } from 'lucide-react';
 
 export default function PostEdit({}) {
   const { bookId } = useParams();
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-
   const [bookSearch, setBookSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
+
   const [content, setContent] = useState('');
   const [location, setLocation] = useState('');
-  const [images, setImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [deleteImages, setDeleteImages] = useState([]);
+
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,23 +40,32 @@ export default function PostEdit({}) {
   useEffect(() => {
     async function fetchPost() {
       try {
-        const post = await bookDetail(bookId, token);
+        const post = await bookDetail(bookId);
         setSelectedBook(post);
         setContent(post.content);
-        setLocation(post.location);
-        setBookSearch(post.title);
+        // locate에서 adress문자열 추출해서 저장
+        setLocation(post.locate?.address || '');
+        setBookSearch(`${post.title} - ${post.author}`);
+
+        // 기존 이미지
+        setImagePreviews(
+          (post.bookPic || []).map((img) => ({
+            ...img,
+            isNew: false,
+          }))
+        );
       } catch (err) {
         setError('게시글 로드 실패');
       }
     }
     fetchPost();
-  }, [bookId, token]);
+  }, [bookId]);
 
   // 책 검색
   const handleSearch = async () => {
     if (!bookSearch.trim()) return;
     try {
-      const results = await searchBook({ keyword: bookSearch }, token);
+      const results = await searchBook({ keyword: bookSearch });
       setSearchResults(results);
     } catch (err) {
       setError('책 검색 실패');
@@ -67,23 +79,57 @@ export default function PostEdit({}) {
     setSearchResults([]);
   };
 
+  // 이미지 업로드
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    // 새로 추가된 파일
+    const newFilesToAdd = [...files];
+    setNewImages((prev) => [...prev, ...newFilesToAdd]); //
+
+    // 새로 추가된 파일에 대한 미리보기 URL 생성
+    const newPreviewsToAdd = newFilesToAdd.map((file) => ({
+      url: URL.createObjectURL(file), //
+      isNew: true,
+      file: file,
+    }));
+    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]); //
+  };
+
+  // 이미지 삭제
+  const handleRemoveImage = (indexToRemove) => {
+    const imageToRemove = imagePreviews[indexToRemove];
+
+    if (!imageToRemove.isNew) {
+      setDeleteImages((prev) => [...prev, imageToRemove.url]);
+    } else {
+      setNewImages((prev) =>
+        prev.filter((file) => file !== imageToRemove.file)
+      );
+      URL.revokeObjectURL(imageToRemove.url); //
+    }
+
+    setImagePreviews((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    ); //
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedBook) return setError('책을 선택해주세요');
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('bookId', selectedBook.id);
-      formData.append('content', content);
-      formData.append('location', location);
-      images.forEach((img) => formData.append('images', img));
+      const bookText = {
+        title: selectedBook.title,
+        author: selectedBook.author,
+        publisher: selectedBook.publisher,
+        category: selectedBook.category,
+        isbn: selectedBook.isbn || selectedBook.id,
+        content: content,
+        locate: { address: location || '미지정' },
+        bookPoint: selectedBook.bookPoint,
+      };
 
-      await modifyBook( bookId,
-        { bookId: selectedBook.id, content, location },
-        [],       // 삭제할 이미지 없으면 빈 배열
-        images,   // 새로 업로드할 이미지
-        token
-      );
+      await modifyBook(bookId, bookText, deleteImages, newImages);
 
       alert('게시글 수정 완료');
       navigate(`/post/${bookId}`);
@@ -95,67 +141,110 @@ export default function PostEdit({}) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4">
+    <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">게시글 수정</h1>
 
       {/* 책 검색 */}
-      <input
-        type="text"
-        placeholder="책 검색"
-        value={bookSearch}
-        onChange={(e) => setBookSearch(e.target.value)}
-        className="w-full p-2 border rounded mb-2"
-      />
-      <button type="button" onClick={handleSearch}>
-        검색
-      </button>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="책 검색"
+          value={bookSearch} //
+          onChange={(e) => setBookSearch(e.target.value)} //
+          className="w-full p-2 border rounded"
+        />
+        <button
+          onClick={handleSearch} //
+          className="mt-2 px-4 py-2 bg-pistachio text-black rounded"
+          type="button"
+        >
+          검색
+        </button>
 
-      {searchResults.length > 0 && (
-        <ul className="border mt-2">
-          {searchResults.map((book) => (
-            <li key={book.id} onClick={() => handleSelectBook(book)}>
-              {book.title} - {book.author}
-            </li>
-          ))}
-        </ul>
-      )}
+        {searchResults.length > 0 && (
+          <ul className="border mt-2 max-h-40 overflow-auto">
+            {searchResults.map((book, index) => (
+              <li
+                key={book.id || index}
+                onClick={() => handleSelectBook(book)} //
+                className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between"
+              >
+                <span>{book.title}</span>
+                <span className="text-gray-500 text-sm">{book.author}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      {/* 선택된 책 표시 */}
-      {selectedBook && <p>선택된 책: {selectedBook.title}</p>}
+      {/* 입력폼 */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* 책제목 로드 */}
+        <input
+          type="text"
+          value={selectedBook?.title || ''}
+          placeholder="책 제목"
+          readOnly
+          className="w-full p-2 border rounded bg-gray-100"
+        />
+        {/* 상세 설명 */}
+        <textarea
+          placeholder="상세 설명"
+          value={content} //
+          onChange={(e) => setContent(e.target.value)} //
+          className="w-full p-2 border rounded"
+        />
+        {/* 위치 */}
+        <input
+          type="text"
+          placeholder="위치 입력"
+          value={location} //
+          onChange={(e) => setLocation(e.target.value)} //
+          className="w-full p-2 border rounded"
+        />
 
-      {/* 설명 */}
-      <textarea
-        placeholder="상세 설명"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="w-full p-2 border rounded mb-2"
-      />
+        {/* 이미지 업로드+미리보기 */}
+        {imagePreviews.length > 0 && (
+          <div className="flex flex-wrap gap-2 p-2 border rounded-md">
+            {imagePreviews.map((preview, index) => (
+              <div key={preview.id || index} className="relative">
+                <img
+                  src={preview.url}
+                  alt={`preview ${index}`}
+                  className="w-24 h-24 object-cover rounded-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)} //
+                  className="absolute top-0 right-0 -mt-1 -mr-1 bg-white rounded-full"
+                >
+                  <XCircle className="w-5 h-5 text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* 위치 */}
-      <input
-        type="text"
-        placeholder="위치"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        className="w-full p-2 border rounded mb-2"
-      />
+        {/* (새) 이미지 추가 */}
+        <input
+          type="file"
+          multiple
+          onChange={handleImageChange} //
+          accept="image/*" // 이미지 파일만 선택하도록
+        />
 
-      {/* 이미지 업로드 */}
-      <input
-        type="file"
-        multiple
-        onChange={(e) => setImages(Array.from(e.target.files))}
-      />
+        {/* 완료 버튼 */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded text-black font-semibold"
+        >
+          {isSubmitting ? '수정 중...' : '수정하기'}
+        </button>
 
-      {error && <p className="text-red-500">{error}</p>}
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-4 p-2 bg-pistachio rounded"
-      >
-        {isSubmitting ? '수정 중...' : '수정 완료'}
-      </button>
-    </form>
+        {/* 에러 메시지 */}
+        {error && <p className="text-red-500">{error}</p>}
+      </form>
+    </div>
   );
 }

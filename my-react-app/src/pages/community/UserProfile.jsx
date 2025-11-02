@@ -23,7 +23,6 @@ export default function MyPage() {
   const apiKey = process.env.REACT_APP_GOOGLE_MAPS_KEY;
   // 유저 정보 불러오기
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const token = userInfo?.token;
   const userId = userInfo?.userId;
 
   const [profile, setProfile] = useState(null);
@@ -44,45 +43,45 @@ export default function MyPage() {
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
-    if (!token || !userId) return;
+    if (!userId) return;
 
     // 개인정보
-    myInfo(userId, token).then((data) => {
+    myInfo(userId).then((data) => {
       setProfile(data);
       setNickname(data.nickname || '');
       setRegion(data.region || '');
     });
 
     // 포인트
-    myPoints(userId, token).then(setPoints);
+    myPoints(userId).then(setPoints);
 
     // 내가 좋아요 누른 책
-    myLikes(userId, token).then(setLikedBooks);
+    myLikes(userId).then(setLikedBooks);
 
     // 내가 올린 책
-    registeredBooks(userId, token).then(setMyRegisters);
+    registeredBooks(userId).then(setMyRegisters);
 
     // 내가 빌린 책
-    borrowedBooks(userId, token).then(setMyBorrows);
+    borrowedBooks(userId).then(setMyBorrows);
 
     // 내가 쓴 커뮤니티 글
-    userBoards(userId, token).then(setMyBoardsList);
+    userBoards(userId).then(setMyBoardsList);
 
     // 팔로워, 팔로잉
-    fetchFollowers(userId, token).then(setFollowers);
-    fetchFollowings(userId, token).then(setFollowings);
-  }, [token, userId]);
+    fetchFollowers(userId).then(setFollowers);
+    fetchFollowings(userId).then(setFollowings);
+  }, [userId]);
 
   // 프로필 수정
   const handleSaveProfile = async () => {
     try {
-      await editMyInfo(userId, { nickname, region }, token);
+      await editMyInfo(userId, { nickname, region });
       if (avatarFile) {
         const formData = new FormData();
         formData.append('avatar', avatarFile);
-        await uploadProfileImage(userId, formData, token);
+        await uploadProfileImage(userId, formData);
       }
-      const updated = await myInfo(userId, token);
+      const updated = await myInfo(userId);
       setProfile(updated);
       setEditing(false);
       alert('프로필이 수정되었습니다!');
