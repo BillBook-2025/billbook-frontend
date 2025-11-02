@@ -31,7 +31,7 @@ import { Autocomplete, LoadScript } from '@react-google-maps/api';
 export default function MyPage() {
   const navigate = useNavigate();
   // 구글맵 api
-  const apiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_KEY;
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
   const userId = userInfo?.id;
@@ -40,7 +40,6 @@ export default function MyPage() {
   const [editing, setEditing] = useState(false);
   const [nickname, setNickname] = useState('');
   const [region, setRegion] = useState('');
-  const [avatarFile, setAvatarFile] = useState(null);
 
   const [points, setPoints] = useState(0);
   const [likedBooks, setLikedBooks] = useState([]);
@@ -54,42 +53,71 @@ export default function MyPage() {
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
     // 개인정보
-    myInfo(userId).then((data) => {
-      setProfile(data);
-      setNickname(data.nickname || '');
-      setRegion(data.region || '');
-    });
+    myInfo(userId)
+      .then((data) => {
+        setProfile(data);
+        setNickname(data.userName || data.nickname || '');
+        setRegion(data.region || '');
+      })
+      .catch((err) => console.error("myInfo 로드 실패", err));
 
     // 포인트
-    myPoints(userId).then(setPoints);
+    myPoints(userId)
+      .then((data) => setPoints(data.points || 0))
+      .catch((err) => console.error("myPoints 로드 실패", err));
 
     // 내가 좋아요 누른 책
-    myLikes(userId).then(setLikedBooks);
+    myLikes(userId)
+      .then((data) => setLikedBooks(data.data?.books || []))
+      .catch((err) => console.error("myLikes 로드 실패", err));
 
     // 내가 올린 책
-    registeredBooks(userId).then(setMyRegisters);
+    registeredBooks(userId)
+      .then((data) => setMyRegisters(data.data?.books || []))
+      .catch((err) => console.error("registeredBooks 로드 실패", err));
 
     // 내가 빌린 책
-    borrowedBooks(userId).then(setMyBorrows);
+    borrowedBooks(userId)
+      .then((data) => setMyBorrows(data.data?.books || []))
+      .catch((err) => console.error("borrowedBooks 로드 실패", err));
 
     // 내가 쓴 커뮤니티 글
-    userBoards(userId).then(setMyBoardsList);
+    /*
+    userBoards(userId)
+      .then((data) => setMyBoardsList(data.boards || [])) 
+      .catch((err) => console.error("userBoards 로드 실패", err));
+    */
 
-    // 팔로워, 팔로잉
-    fetchFollowers(userId).then(setFollowers);
-    fetchFollowings(userId).then(setFollowings);
+    // 팔로워
+    fetchFollowers(userId)
+      .then((data) => setFollowers(data.follower || []))
+      .catch((err) => console.error("fetchFollowers 로드 실패", err));
+
+    // 팔로잉
+    fetchFollowings(userId)
+      .then((data) => setFollowings(data.following || []))
+      .catch((err) => console.error("fetchFollowings 로드 실패", err));
   }, [userId, navigate]);
 
   // 프로필 수정
   const handleSaveProfile = async () => {
     try {
-      await editMyInfo(userId, { nickname, region });
-      if (avatarFile) {
+      await editMyInfo(userId, { userName: nickname, region });
+
+      const file = fileInputRef.current?.files[0];
+
+      if (file) {
         const formData = new FormData();
-        formData.append('avatar', avatarFile);
+        formData.append('avatar', file); 
         await uploadProfileImage(userId, formData);
       }
+
       const updated = await myInfo(userId);
       setProfile(updated);
       setEditing(false);
@@ -102,31 +130,34 @@ export default function MyPage() {
 
   if (!profile) return <div>로딩 중...</div>;
 
+  const currentAvatar = profile.ProfilePic || profile.avatarUrl;
+
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 프로필 섹션 */}
       <section className="border p-4 rounded-lg flex items-start gap-4 bg-ivory relative">
         {/* 왼쪽: 프로필 사진 */}
+        {/* 세션쿠키에있는 유저정보중에 프사가 있으면 그걸 가져오고, 
+         없으면 User 아이콘으로 대체하는 로직임 */}
         <div className="flex-shrink-0">
-          <img
-            src={
-              avatarFile ? URL.createObjectURL(avatarFile) : profile.avatarUrl
-            }
-            alt="프로필"
-            className="w-24 h-24 rounded-full object-cover"
-          />
-          {/* 프사 설정 안했으면 기본 아이콘 */}
-          {!avatarFile && !profile.avatarUrl && (
+          {currentAvatar ? (
+            <img
+              src={currentAvatar}
+              alt="프로필"
+              className="w-24 h-24 rounded-full object-cover"
+            />
+          ) : (
             <div className="w-24 h-24 rounded-full bg-pistachio flex items-center justify-center">
               <User className="w-12 h-12 text-darkbrown" />
             </div>
           )}
+
           {editing && (
             <input
               type="file"
               ref={fileInputRef}
-              onChange={(e) => setAvatarFile(e.target.files[0])}
-              className="mt-2"
+              accept="image/*" // ㅇㅣ미지만 선택가능
+              className="mt-2 w-full text-sm"
             />
           )}
         </div>
@@ -148,18 +179,28 @@ export default function MyPage() {
                   onLoad={(autocomplete) =>
                     (autocompleteRef.current = autocomplete)
                   }
+                  // 동 단위 추출 로직
                   onPlaceChanged={() => {
-                    const place = autocompleteRef.current.getPlace();
-                    const dong = place.address_components.find((c) =>
-                      c.types.includes('sublocality_level_1')
-                    );
-                    setRegion(dong ? dong.long_name : place.formatted_address);
+                    if (autocompleteRef.current) {
+                      const place = autocompleteRef.current.getPlace();
+                      if (place.address_components) {
+                        // 동 (sublocality_level_1 또는 sublocality)
+                        const dong = place.address_components.find(
+                          (c) => c.types.includes('sublocality_level_1') || c.types.includes('sublocality')
+                        );
+                        setRegion(dong ? dong.long_name : place.formatted_address);
+                      } else {
+                        // 주소 구성요소가 없는 경우
+                        setRegion(place.name);
+                      }
+                    }
                   }}
                 >
                   <input
                     type="text"
-                    value={region}
-                    placeholder="지역 입력"
+                    value={region} // 현재 'region' 상태값 표시
+                    onChange={(e) => setRegion(e.target.value)} // 직접 타이핑 허용
+                    placeholder="지역 입력 (예: 서교동)"
                     className="border rounded px-2 py-1 w-full"
                   />
                 </Autocomplete>
@@ -168,9 +209,9 @@ export default function MyPage() {
           ) : (
             <>
               <p className="font-bold text-lg text-darkbrown">
-                {profile.nickname}
+                {profile.userName || profile.nickname}
               </p>
-              <p className="text-gray-500 text-sm">{profile.region}</p>
+              <p className="text-gray-500 text-sm">{profile.region || "지역 미설정"}</p>
             </>
           )}
         </div>
@@ -292,15 +333,15 @@ export default function MyPage() {
       </section>
 
       {/* 팔로워/팔로잉 */}
-      <section className="border p-4 rounded-lg">
+      <section className="border p-4 rounded-lg bg-ivory">
         <h3 className="font-semibold mb-2">
           팔로워 ({followers.length}) / 팔로잉 ({followings.length})
         </h3>
         <div className="flex gap-4">
           {/* 팔로워 리스트 */}
-          {/**max-h-24 overflow-y-auto로 세로 스크롤 가능 */}
+          {/* 세로 스크롤 가능 */}
           <div className="flex-1 max-h-24 overflow-y-auto border p-2 rounded">
-            {followers.data.map((f) => (
+            {followers.map((f) => (
               <p key={f.userId} className="text-sm">
                 {f.nickname}
               </p>
@@ -309,7 +350,7 @@ export default function MyPage() {
 
           {/* 팔로잉 리스트 */}
           <div className="flex-1 max-h-24 overflow-y-auto border p-2 rounded">
-            {followings.data.map((f) => (
+            {followings.map((f) => (
               <p key={f.userId} className="text-sm">
                 {f.nickname}
               </p>

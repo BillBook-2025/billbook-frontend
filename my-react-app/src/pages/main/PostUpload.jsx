@@ -5,27 +5,40 @@
 - 제목은 자동으로 책 제목과 동일하게 설정
 - 책 선택 ? (이름 검색으로 리스트중에 정해서 선택하면. 그 책 정보가 api를통해 자동으로 들어오게)
 - [상세 설명]
-- [지역 설정하기] - 카카오맵 api 를 프런트에서 가져와서 백으로 위치를 넘겨주기
+- [지역 설정하기] - 구글맵 api 를 프런트에서 가져와서 백으로 위치를 넘겨주기
  */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 // API 함수
-import { registerBook, fetchBookInfo } from "../../api/books";
-import { XCircle } from 'lucide-react';
+import { registerBook, fetchBookInfo } from '../../api/books';
+import { Locate, XCircle } from 'lucide-react';
+// 구글맵 api
+import { LoadScript, Autocomplete, GoogleMap, Marker } from '@react-google-maps/api';
 
 export default function PostUpload() {
   const navigate = useNavigate();
+  // 구글맵 api
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState('');
   const [images, setImages] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]); 
-  const [error, setError] = useState("");
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [location, setLocation] = useState({
+    address: '',
+    latitude: 0,
+    longitude: 0,
+    regionLevel1: '',
+    regionLevel2: '',
+    regionLevel3: '',
+  });
+
+  const autocompleteRef = useRef(null);
 
   // 책 검색
   const handleSearch = async () => {
@@ -34,9 +47,8 @@ export default function PostUpload() {
       // 이름 기준으로 검색, API에서 이름 정확도 순으로 정렬
       const books = await fetchBookInfo({ keyword: searchQuery });
       setSearchResults(books);
-    } 
-    catch (err) {
-      console.error("책 검색 실패", err);
+    } catch (err) {
+      console.error('책 검색 실패', err);
     }
   };
 
@@ -51,12 +63,12 @@ export default function PostUpload() {
   // 이미지 업로드
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-     // 새로 추가된 파일만
+    // 새로 추가된 파일만
     const newImages = [...images, ...files];
     setImages(newImages);
 
     // 새로 추가된 파일에 대한 미리보기 URL 생성
-    const newPreviews = files.map(file => URL.createObjectURL(file));
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...newPreviews]);
   };
 
@@ -66,84 +78,52 @@ export default function PostUpload() {
     setImages(images.filter((_, index) => index !== indexToRemove));
 
     // imagePreviews state에서 제거
-    const newPreviews = imagePreviews.filter((_, index) => index !== indexToRemove);
+    const newPreviews = imagePreviews.filter(
+      (_, index) => index !== indexToRemove
+    );
     setImagePreviews(newPreviews);
-    
+
     // 메모리 누수 방지를 위해 사용이 끝난 URL 해제
-    // 이 작업은 컴포넌트가 unmount될 때 useEffect에서 처리하는 것이 더 안정적일 수 있으나,
-    // CommunityUpload.jsx의 로직을 그대로 따릅니다.
     URL.revokeObjectURL(imagePreviews[indexToRemove]);
   };
 
   // 게시글 등록
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
-    if (!selectedBook) {
-      setError("책을 선택해주세요.");
-      return;
-    }
-
-    if (!description.trim()) {
-      setError("상세 설명을 입력해주세요.");
-      return;
-    }
+    if (!selectedBook) return setError('책을 선택해주세요.');
+    if (!description.trim()) return setError('상세 설명을 입력해주세요.');
+    if (!location.address) return setError('지역을 선택해주세요.');
 
     setIsSubmitting(true);
-    setError("");
-
-    const formData = new FormData();
-
-    // *** 1. API 문서(BookPostRequestDto)에 맞는 JSON 객체 생성 ***
-    const bookData = {
-      // selectedBook 객체에서 가져올 정보
-      title: selectedBook.title,
-      author: selectedBook.author,
-      publisher: selectedBook.publisher, // selectedBook에 이 정보가 있어야 합니다.
-      category: selectedBook.category,   // selectedBook에 이 정보가 있어야 합니다.
-      isbn: selectedBook.id,           // book.id가 isbn이라고 가정합니다.
-
-      // state에서 가져올 정보
-      content: description, // ❌ 'description'이 아니라 'content'
-      
-      // ⚠️ 'location' (문자열)을 API의 'locate' (객체)로 변환해야 합니다.
-      // 지금은 'location' 문자열을 'address'에만 넣습니다.
-      locate: {
-        address: location || "미지정", 
-        latitude: 0.0, // 카카오맵 API 연동 전 임시값
-        longitude: 0.0, // 카카오맵 API 연동 전 임시값
-        regionLevel1: "",
-        regionLevel2: "",
-        regionLevel3: ""
-      },
-
-      // DTO에 있지만 현재 폼에서 입력받지 않는 값
-      bookpoint: 1000 // 예제 DTO의 기본값 1000 사용
-    };
-
-    // *** 2. JSON을 Blob으로 변환 ***
-    const jsonData = JSON.stringify(bookData);
-    const jsonBlob = new Blob([jsonData], {
-      type: 'application/json' 
-    });
-
-    // *** 3. ❌ 'data'가 아닌 'book' 키로 FormData에 추가 ***
-    formData.append('book', jsonBlob); 
-
-    // *** 4. 이미지 파일 추가 ('images' 키) ***
-    for (let i = 0; i < images.length; i++) {
-      formData.append("images", images[i]);
-    }
 
     try {
-      // [PostUpload.jsx:91]
-      await registerBook(formData); 
-      navigate("/home"); 
+      // 책 등록
+      const bookData = {
+        title: selectedBook.title,
+        author: selectedBook.author,
+        publisher: selectedBook.publisher || '',
+        category: selectedBook.category || '',
+        isbn: selectedBook.isbn || '',
+        bookpoint: 1000, // 예시 포인트
+        content: description,
+        locate: location,
+      };
+
+      const formData = new FormData();
+      formData.append('book', JSON.stringify(bookData));
+      images.forEach((file) => {
+        formData.append('images', file);
+      });
+
+      await registerBook(formData);
+      alert('게시글 등록 완료');
+
+      navigate(`/home`);
     } catch (err) {
-      console.error(err);
-      // [PostUpload.jsx:94]
-      setError("등록 중 오류가 발생했습니다."); 
+      console.error('거래글 등록 실패:', err);
+      setError('등록에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +132,7 @@ export default function PostUpload() {
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">거래글 업로드</h1>
-
+      {/* 책 검색 */}
       <div className="mb-4">
         <input
           type="text"
@@ -163,8 +143,7 @@ export default function PostUpload() {
         />
         <button
           onClick={handleSearch}
-          className="mt-2 px-4 py-2 bg-pistachio text-black rounded"
-          type="button"
+          className="px-4 py-2 bg-pistachio rounded"
         >
           검색
         </button>
@@ -186,27 +165,82 @@ export default function PostUpload() {
         )}
       </div>
 
+      {/* 폼 */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          value={selectedBook?.title || ""}
-          placeholder="책 제목"
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100"
-        />
         <textarea
           placeholder="상세 설명"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full p-2 border rounded"
         />
-        <input
-          type="text"
-          placeholder="위치 입력"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="w-full p-2 border rounded"
-        />
+        {/* 구글맵 자동완성 + 지도 */}
+        <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
+          <Autocomplete
+            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onPlaceChanged={() => {
+              if (autocompleteRef.current) {
+                const place = autocompleteRef.current.getPlace();
+                if (!place.geometry) return;
+
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                const comps = place.address_components || [];
+
+                const region1 =
+                  comps.find((c) =>
+                    c.types.includes('administrative_area_level_1')
+                  )?.long_name || '';
+                const region2 =
+                  comps.find((c) =>
+                    c.types.includes('administrative_area_level_2')
+                  )?.long_name || '';
+                const region3 =
+                  comps.find(
+                    (c) =>
+                      c.types.includes('sublocality_level_1') ||
+                      c.types.includes('sublocality')
+                  )?.long_name || '';
+
+                setLocation({
+                  address: place.formatted_address,
+                  latitude: lat,
+                  longitude: lng,
+                  regionLevel1: region1,
+                  regionLevel2: region2,
+                  regionLevel3: region3,
+                });
+              }
+            }}
+          >
+            <input
+              type="text"
+              placeholder="위치 입력 (예: 서교동)"
+              value={location.address}
+              onChange={(e) =>
+                setLocation({ ...location, address: e.target.value })
+              }
+              className="w-full p-2 border rounded"
+            />
+          </Autocomplete>
+
+          {/* 지도 표시 */}
+          <GoogleMap
+            center={{
+              lat: location.latitude || 37.5665,
+              lng: location.longitude || 126.9780,
+            }}
+            zoom={14}
+            mapContainerStyle={{ width: '100%', height: '200px', marginTop: '8px', borderRadius: '8px' }}
+          >
+            <Marker
+              position={{
+                lat: location.latitude || 37.5665,
+                lng: location.longitude || 126.9780,
+              }}
+            />
+          </GoogleMap>
+        </LoadScript>
+
         {/* 이미지 미리보기 */}
         {imagePreviews.length > 0 && (
           <div className="flex flex-wrap gap-2 p-2 border rounded-md">
@@ -234,7 +268,7 @@ export default function PostUpload() {
           disabled={isSubmitting}
           className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded text-black font-semibold"
         >
-          {isSubmitting ? "등록 중..." : "게시글 등록"}
+          {isSubmitting ? '등록 중...' : '게시글 등록'}
         </button>
         {error && <p className="text-red-500">{error}</p>}
       </form>

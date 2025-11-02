@@ -83,12 +83,11 @@ export async function userBoards(userId, params = {}) {
 }
 
 // 프로필 이미지 등록
-export async function uploadProfileImage(userId, imageUrl) {
+export async function uploadProfileImage(userId, formData) {
   return fetchWithAuth(`/profile/${userId}/image`, 
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profilePic: imageUrl })
+      body: formData,
     }
   );
 }

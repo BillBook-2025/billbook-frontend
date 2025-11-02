@@ -16,14 +16,21 @@ export async function fetchWithAuth(url, options = {}) {
 
   const isFormData = options.body instanceof FormData;
 
-  // FormData의 인스턴스가 아닐때만 헤더
-  const headers = !isFormData
-    ? {
-        ...(options.headers || {}),
-      }
-    : undefined; // 폼데이터일때 언디파인드로 두기
+  const finalOptions = { ...options };
+  
+  if (isFormData) {
+    if (finalOptions.headers) {
+      finalOptions.headers = { ...finalOptions.headers }; 
+      delete finalOptions.headers['Content-Type']; 
+    }
+  } else {
+    finalOptions.headers = {
+      'Content-Type': 'application/json',
+      ...(finalOptions.headers || {}),
+    };
+  }
 
-  const response = await fetch(API_BASE_URL + url, { ...options, headers });
+  const response = await fetch(API_BASE_URL + url, finalOptions);
 
   // 응답이 ok가 아닐 경우
   if (!response.ok) {

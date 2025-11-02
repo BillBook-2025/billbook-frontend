@@ -13,22 +13,34 @@
  */
 // PostUpload 랑 거의 동일한데 기존 게시글 데이터 불러오는거만 추가하면됨
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // API 함수
 import { bookDetail, modifyBook, searchBook } from '../../api/books';
 import { XCircle } from 'lucide-react';
+// 구글맵 api
+import { LoadScript, Autocomplete, GoogleMap, Marker } from '@react-google-maps/api';
 
 export default function PostEdit({}) {
   const { bookId } = useParams();
   const navigate = useNavigate();
+
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+  const autocompleteRef = useRef(null);
 
   const [bookSearch, setBookSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
 
   const [content, setContent] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState({
+    address: '',
+    latitude: 37.5665,
+    longitude: 126.9780,
+    regionLevel1: '',
+    regionLevel2: '',
+    regionLevel3: '',
+  });
   const [newImages, setNewImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [deleteImages, setDeleteImages] = useState([]);
@@ -43,9 +55,16 @@ export default function PostEdit({}) {
         const post = await bookDetail(bookId);
         setSelectedBook(post);
         setContent(post.content);
-        // locate에서 adress문자열 추출해서 저장
-        setLocation(post.locate?.address || '');
-        setBookSearch(`${post.title} - ${post.author}`);
+        
+        const locate = post.locate || {};
+        setLocation({
+          address: locate.address || '',
+          latitude: locate.latitude || 37.5665,
+          longitude: locate.longitude || 126.9780,
+          regionLevel1: locate.regionLevel1 || '',
+          regionLevel2: locate.regionLevel2 || '',
+          regionLevel3: locate.regionLevel3 || '',
+        });
 
         // 기존 이미지
         setImagePreviews(
@@ -84,15 +103,15 @@ export default function PostEdit({}) {
     const files = Array.from(e.target.files);
     // 새로 추가된 파일
     const newFilesToAdd = [...files];
-    setNewImages((prev) => [...prev, ...newFilesToAdd]); //
+    setNewImages((prev) => [...prev, ...newFilesToAdd]); 
 
     // 새로 추가된 파일에 대한 미리보기 URL 생성
     const newPreviewsToAdd = newFilesToAdd.map((file) => ({
-      url: URL.createObjectURL(file), //
+      url: URL.createObjectURL(file), 
       isNew: true,
       file: file,
     }));
-    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]); //
+    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]); 
   };
 
   // 이미지 삭제
@@ -105,7 +124,7 @@ export default function PostEdit({}) {
       setNewImages((prev) =>
         prev.filter((file) => file !== imageToRemove.file)
       );
-      URL.revokeObjectURL(imageToRemove.url); //
+      URL.revokeObjectURL(imageToRemove.url); 
     }
 
     setImagePreviews((prev) =>
@@ -117,6 +136,7 @@ export default function PostEdit({}) {
     e.preventDefault();
     if (!selectedBook) return setError('책을 선택해주세요');
     setIsSubmitting(true);
+
     try {
       const bookText = {
         title: selectedBook.title,
@@ -125,8 +145,8 @@ export default function PostEdit({}) {
         category: selectedBook.category,
         isbn: selectedBook.isbn || selectedBook.id,
         content: content,
-        locate: { address: location || '미지정' },
-        bookPoint: selectedBook.bookPoint,
+        locate: location,
+        bookPoint: selectedBook.bookPoint || 1000,
       };
 
       await modifyBook(bookId, bookText, deleteImages, newImages);
@@ -194,14 +214,73 @@ export default function PostEdit({}) {
           onChange={(e) => setContent(e.target.value)} //
           className="w-full p-2 border rounded"
         />
-        {/* 위치 */}
-        <input
-          type="text"
-          placeholder="위치 입력"
-          value={location} //
-          onChange={(e) => setLocation(e.target.value)} //
-          className="w-full p-2 border rounded"
-        />
+        {/* 구글맵 자동완성 + 지도 */}
+        <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
+          <Autocomplete
+            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onPlaceChanged={() => {
+              if (autocompleteRef.current) {
+                const place = autocompleteRef.current.getPlace();
+                if (!place.geometry) return;
+
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                const comps = place.address_components || [];
+
+                const region1 =
+                  comps.find((c) =>
+                    c.types.includes('administrative_area_level_1')
+                  )?.long_name || '';
+                const region2 =
+                  comps.find((c) =>
+                    c.types.includes('administrative_area_level_2')
+                  )?.long_name || '';
+                const region3 =
+                  comps.find(
+                    (c) =>
+                      c.types.includes('sublocality_level_1') ||
+                      c.types.includes('sublocality')
+                  )?.long_name || '';
+
+                setLocation({
+                  address: place.formatted_address,
+                  latitude: lat,
+                  longitude: lng,
+                  regionLevel1: region1,
+                  regionLevel2: region2,
+                  regionLevel3: region3,
+                });
+              }
+            }}
+          >
+            <input
+              type="text"
+              placeholder="위치 입력 (예: 서교동)"
+              value={location.address}
+              onChange={(e) =>
+                setLocation({ ...location, address: e.target.value })
+              }
+              className="w-full p-2 border rounded"
+            />
+          </Autocomplete>
+
+          {/* 지도 표시 */}
+          <GoogleMap
+            center={{
+              lat: location.latitude || 37.5665,
+              lng: location.longitude || 126.9780,
+            }}
+            zoom={14}
+            mapContainerStyle={{ width: '100%', height: '200px', marginTop: '8px', borderRadius: '8px' }}
+          >
+            <Marker
+              position={{
+                lat: location.latitude || 37.5665,
+                lng: location.longitude || 126.9780,
+              }}
+            />
+          </GoogleMap>
+        </LoadScript>
 
         {/* 이미지 업로드+미리보기 */}
         {imagePreviews.length > 0 && (
