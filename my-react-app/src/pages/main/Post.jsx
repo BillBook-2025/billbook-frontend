@@ -30,7 +30,7 @@ import {
 
 export default function Post() {
   const { bookId } = useParams();
-  
+
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [likesCount, setLikesCount] = useState(0);
@@ -48,8 +48,6 @@ export default function Post() {
         return '알 수 없음';
     }
   };
-
-  const getDetail = 
 
   // 게시글 로드 + 좋아요 상태
   useEffect(() => {
@@ -125,9 +123,7 @@ export default function Post() {
       <p className="text-gray-500 mt-1">
         상태: {getBookCondition(post.bookPoint)}
       </p>
-      <p className="text-gray-500 mt-1">
-        설명: {getDetail(post.content)}
-      </p>
+      <p className="mt-1">설명: {post.content}</p>
 
       <div className="flex items-center gap-4 mb-2">
         {isOwner ? (

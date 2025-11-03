@@ -12,7 +12,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 // API 함수
 import { registerBook, fetchBookInfo } from '../../api/books';
-import { Locate, XCircle } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 // 구글맵 api
 import { LoadScript, Autocomplete, GoogleMap, Marker } from '@react-google-maps/api';
 
@@ -25,6 +25,8 @@ export default function PostUpload() {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [description, setDescription] = useState('');
+  const [bookPoint, setBookPoint] = useState(3);
+
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [error, setError] = useState('');
@@ -106,7 +108,7 @@ export default function PostUpload() {
         publisher: selectedBook.publisher || '',
         category: selectedBook.category || '',
         isbn: selectedBook.isbn || '',
-        bookpoint: 1000, // 예시 포인트
+        bookPoint: bookPoint,
         content: description,
         locate: location,
       };
@@ -167,6 +169,23 @@ export default function PostUpload() {
 
       {/* 폼 */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* 책 상태 */}
+        <div className="mb-2">
+          <label htmlFor="bookPoint" className="block text-sm font-medium text-gray-700">
+            책 상태
+          </label>
+          <select
+            id="bookPoint"
+            value={bookPoint}
+            onChange={(e) => setBookPoint(Number(e.target.value))}
+            className="w-full p-2 border rounded"
+          >
+            <option value={3}>좋음</option>
+            <option value={2}>보통</option>
+            <option value={1}>나쁨</option>
+          </select>
+        </div>
+
         <textarea
           placeholder="상세 설명"
           value={description}

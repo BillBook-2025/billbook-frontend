@@ -33,6 +33,7 @@ export default function PostEdit({}) {
   const [selectedBook, setSelectedBook] = useState(null);
 
   const [content, setContent] = useState('');
+  const [bookPoint, setBookPoint] = useState(3);
   const [location, setLocation] = useState({
     address: '',
     latitude: 37.5665,
@@ -48,6 +49,19 @@ export default function PostEdit({}) {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getBookCondition = (point) => {
+    switch (point) {
+      case 3:
+        return '좋음';
+      case 2:
+        return '보통';
+      case 1:
+        return '나쁨';
+      default:
+        return '알 수 없음';
+    }
+  };
+
   // 기존 게시글 데이터 불러오기
   useEffect(() => {
     async function fetchPost() {
@@ -55,7 +69,9 @@ export default function PostEdit({}) {
         const post = await bookDetail(bookId);
         setSelectedBook(post);
         setContent(post.content);
-        
+        setBookPoint(post.bookPoint || 3);
+        setBookSearch(`${post.title} - ${post.author}`);
+
         const locate = post.locate || {};
         setLocation({
           address: locate.address || '',
@@ -146,7 +162,7 @@ export default function PostEdit({}) {
         isbn: selectedBook.isbn || selectedBook.id,
         content: content,
         locate: location,
-        bookPoint: selectedBook.bookPoint || 1000,
+        bookPoint: bookPoint || 1000,
       };
 
       await modifyBook(bookId, bookText, deleteImages, newImages);
@@ -207,6 +223,22 @@ export default function PostEdit({}) {
           readOnly
           className="w-full p-2 border rounded bg-gray-100"
         />
+        {/* 책 상태 */}
+        <div className="mb-2">
+          <label htmlFor="bookPoint" className="block text-sm font-medium text-gray-700">
+            책 상태
+          </label>
+          <select
+            id="bookPoint"
+            value={bookPoint}
+            onChange={(e) => setBookPoint(Number(e.target.value))}
+            className="w-full p-2 border rounded"
+          >
+            <option value={3}>좋음</option>
+            <option value={2}>보통</option>
+            <option value={1}>나쁨</option>
+          </select>
+        </div>
         {/* 상세 설명 */}
         <textarea
           placeholder="상세 설명"
