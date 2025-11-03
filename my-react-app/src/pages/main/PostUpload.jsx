@@ -14,7 +14,12 @@ import { useNavigate } from 'react-router-dom';
 import { registerBook, fetchBookInfo } from '../../api/books';
 import { XCircle } from 'lucide-react';
 // 구글맵 api
-import { LoadScript, Autocomplete, GoogleMap, Marker } from '@react-google-maps/api';
+import {
+  LoadScript,
+  Autocomplete,
+  GoogleMap,
+  Marker,
+} from '@react-google-maps/api';
 
 export default function PostUpload() {
   const navigate = useNavigate();
@@ -33,8 +38,8 @@ export default function PostUpload() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState({
     address: '',
-    latitude: 0,
-    longitude: 0,
+    latitude: null,
+    longitude: null,
     regionLevel1: '',
     regionLevel2: '',
     regionLevel3: '',
@@ -108,16 +113,18 @@ export default function PostUpload() {
         publisher: selectedBook.publisher || '',
         category: selectedBook.category || '',
         isbn: selectedBook.isbn || '',
-        bookPoint: bookPoint,
+        bookpoint: bookPoint,
         content: description,
         locate: location,
       };
 
       const formData = new FormData();
-      formData.append('book', JSON.stringify(bookData));
-      images.forEach((file) => {
-        formData.append('images', file);
-      });
+
+      formData.append('book', new Blob([JSON.stringify(bookData)], {
+        type: 'application/json'
+      }));
+
+      images.forEach((file) => formData.append('images', file));
 
       await registerBook(formData);
       alert('게시글 등록 완료');
@@ -125,7 +132,7 @@ export default function PostUpload() {
       navigate(`/home`);
     } catch (err) {
       console.error('거래글 등록 실패:', err);
-      setError('등록에 실패했습니다. 다시 시도해주세요.');
+      setError(`등록에 실패했습니다.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -171,7 +178,10 @@ export default function PostUpload() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* 책 상태 */}
         <div className="mb-2">
-          <label htmlFor="bookPoint" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="bookPoint"
+            className="block text-sm font-medium text-gray-700"
+          >
             책 상태
           </label>
           <select
@@ -246,15 +256,20 @@ export default function PostUpload() {
           <GoogleMap
             center={{
               lat: location.latitude || 37.5665,
-              lng: location.longitude || 126.9780,
+              lng: location.longitude || 126.978,
             }}
             zoom={14}
-            mapContainerStyle={{ width: '100%', height: '200px', marginTop: '8px', borderRadius: '8px' }}
+            mapContainerStyle={{
+              width: '100%',
+              height: '200px',
+              marginTop: '8px',
+              borderRadius: '8px',
+            }}
           >
             <Marker
               position={{
                 lat: location.latitude || 37.5665,
-                lng: location.longitude || 126.9780,
+                lng: location.longitude || 126.978,
               }}
             />
           </GoogleMap>

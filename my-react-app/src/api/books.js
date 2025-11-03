@@ -71,13 +71,17 @@ export async function bookDetail(bookId) {
 // 등록된 책 정보 수정
 export async function modifyBook(bookId, data, deleteImages, newImages) {
   const formData = new FormData();
-  formData.append('book', JSON.stringify(data));
+  formData.append('book', new Blob([JSON.stringify(data)], {
+    type: 'application/json'
+  }));
 
   // 이미지 삭제
   if (deleteImages && deleteImages.length > 0) {
-    formData.append('deleteImages', JSON.stringify(deleteImages));
+    formData.append('deleteImages', new Blob([JSON.stringify(deleteImages)], {
+      type: 'application/json'
+    }));
   }
-
+  
   // 이미지 추가
   if (newImages && newImages.length > 0) {
     newImages.forEach((file) => {
