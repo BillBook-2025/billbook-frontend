@@ -115,7 +115,7 @@ export default function Home() {
                 {book.locate?.address}
               </div>
               <div className="text-xs text-gray-700">
-                상태: {getBookCondition(book.bookPoint)}
+                상태: {getBookCondition(book.bookpoint)}
               </div>
             </div>
           );

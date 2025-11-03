@@ -101,7 +101,6 @@ export default function Post() {
   };
 
   // 채팅 생성
-  /**이미 존재하는 채팅방이면 그 방으로 바로 연결되도록 API 구현 확인 필요 */
   const handleChat = async () => {
     try {
       const data = await createChatroom(bookId);

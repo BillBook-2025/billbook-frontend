@@ -36,8 +36,8 @@ export default function PostEdit({}) {
   const [bookPoint, setBookPoint] = useState(3);
   const [location, setLocation] = useState({
     address: '',
-    latitude: 37.5665,
-    longitude: 126.9780,
+    latitude: null,
+    longitude: null,
     regionLevel1: '',
     regionLevel2: '',
     regionLevel3: '',
@@ -162,7 +162,7 @@ export default function PostEdit({}) {
         isbn: selectedBook.isbn || selectedBook.id,
         content: content,
         locate: location,
-        bookPoint: bookPoint || 1000,
+        bookpoint: bookPoint || 1000,
       };
 
       await modifyBook(bookId, bookText, deleteImages, newImages);

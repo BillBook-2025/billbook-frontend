@@ -116,7 +116,7 @@ export default function Community() {
           posts.map((post) => (
             <div
               key={post.boardId}
-              onClick={() => navigate(`/community/${post.boardId}`)}
+              onClick={() => navigate(`/communityPost/${post.boardId}`)}
               className="bg-white border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
             >
               <div className="flex items-center mb-2">
@@ -142,7 +142,7 @@ export default function Community() {
                 </div>
                 <div className="flex items-center gap-1">
                   <MessageCircle className="w-4 h-4" />
-                  <span>{post.commentCount || 0}</span>
+                  <span>{post.commentsCount || 0}</span>
                 </div>
               </div>
             </div>

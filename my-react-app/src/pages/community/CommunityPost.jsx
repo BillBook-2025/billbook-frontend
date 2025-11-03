@@ -6,18 +6,19 @@
 - [댓글 입력칸],[종이비행기(전송버튼)]
 - 대댓글 달기
 */
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 // API 함수
-import { getBoardDetail,  
-  getBoardLike,  
-  likeBoard,  
+import {
+  getBoardDetail,
+  getBoardLike,
+  likeBoard,
   getComment,
-  addComment,  
-  addReply 
-} from "../../api/boards";
+  addComment,
+  addReply,
+} from '../../api/boards';
 // 하트, 댓글남기기 버튼 이모티콘으로 하기
-import { Heart, Send } from "lucide-react";
+import { Heart, Send } from 'lucide-react';
 
 export default function CommunityPost() {
   const { boardId } = useParams();
@@ -26,10 +27,10 @@ export default function CommunityPost() {
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState([]);
-  const [commentInput, setCommentInput] = useState("");
+  const [commentInput, setCommentInput] = useState('');
 
   // 대댓글 상태
-  const [replyContent, setReplyContent] = useState("");
+  const [replyContent, setReplyContent] = useState('');
   const [replyInputOpen, setReplyInputOpen] = useState(null);
 
   const fetchComments = useCallback(async () => {
@@ -37,55 +38,54 @@ export default function CommunityPost() {
       const data = await getComment(boardId);
       setComments(data);
     } catch (error) {
-      console.error("댓글 로드 실패:", error);
+      console.error('댓글 로드 실패:', error);
       // 댓글 로드에 실패해도 페이지가 죽지 않도록 빈 배열 설정
-      setComments([]); 
+      setComments([]);
     }
   }, [boardId]);
 
   useEffect(() => {
-    if (!token || !boardId) return;
-
     // 게시글 상세 조회
     getBoardDetail(boardId).then(setBoard);
 
     // 좋아요 개수
-    getBoardLike(boardId).then((data) => { 
-      setLikeCount(data.likeCount);
-      setLiked(data.isLiked); 
-    }).catch(console.error);
+    getBoardLike(boardId)
+      .then((data) => {
+        setLikeCount(data.likeCount);
+        setLiked(data.isLiked);
+      })
+      .catch(console.error);
 
     // 댓글 조회
     fetchComments();
   }, [boardId, fetchComments]);
 
+  // 좋아요누르기
   const handleLike = async () => {
     await likeBoard(boardId);
     setLiked((prev) => !prev);
     setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
+  // 댓글달기
   const handleAddComment = async () => {
     try {
-      await likeBoard(boardId);
-      setLiked((prev) => !prev);
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-    } 
-    catch (error) {
-      console.error("좋아요 처리 실패:", error);
-      alert(error.message); 
+      await addComment(boardId, { content: commentInput });
+      fetchComments();
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+      alert(error.message);
     }
   };
 
+  // 대댓글달기
   const handleAddReply = async (commentId) => {
     if (!replyContent.trim()) return;
     try {
-      await addComment(boardId, { content: commentInput }); // token 인자 제거
-      setCommentInput("");
-      fetchComments(); // 새 댓글 목록 불러오기
-    } 
-    catch (error) {
-      console.error("댓글 작성 실패:", error);
+      await addComment(boardId, { content: commentInput });
+      fetchComments();
+    } catch (error) {
+      console.error('대댓글 작성 실패:', error);
       alert(error.message);
     }
   };
@@ -95,11 +95,11 @@ export default function CommunityPost() {
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 게시글 정보 */}
-      <div className="border rounded-lg bg-pistachio p-4">
+      <div className="border rounded-lg bg-ivory p-4">
         <h2 className="text-xl font-bold mb-2">{board.title}</h2>
         <p className="text-sm text-gray-700 mb-2">{board.content}</p>
         <p className="text-xs text-gray-500">
-          작성자: {board.userId} | 작성일:{" "}
+          작성자: {board.userId} | 작성일:{' '}
           {new Date(board.createdAt).toLocaleDateString()}
         </p>
 
@@ -111,7 +111,7 @@ export default function CommunityPost() {
           {/* 하트 누르기전 회색->누르면 레드 */}
           <Heart
             className={`w-5 h-5 ${
-              liked ? "fill-red-500 text-red-500" : "text-gray-400"
+              liked ? 'fill-red-500 text-red-500' : 'text-gray-400'
             }`}
           />
           <span>{likeCount}</span>
@@ -121,67 +121,20 @@ export default function CommunityPost() {
       {/* 댓글 영역 */}
       <div className="border rounded-lg bg-white p-4 space-y-4">
         <h3 className="font-semibold mb-2">댓글</h3>
-        {Array.isArray(comments) && comments.map((c) => (
-          <div key={c.commentId} className="mb-3">
-            
-            {/* 댓글 */}
-            <div className="border-b pb-2 last:border-b-0">
-              <p className="text-sm text-gray-700">
-                <span className="font-medium">{c.userId}</span>: {c.content}
-              </p>
-              <p className="text-xs text-gray-400">
-                {new Date(c.createdAt).toLocaleDateString("ko-KR")}
-              </p>
-              
-              {/* 대댓글 입력 */}
-              <button
-                className="text-xs text-pistachio mt-1"
-                onClick={() =>
-                  setReplyInputOpen(
-                    replyInputOpen === c.commentId ? null : c.commentId
-                  )
-                }
-              >
-                답글 달기
-              </button>
-
-              {/* 대댓글 입력창 */}
-              {replyInputOpen === c.commentId && (
-                <div className="flex gap-2 mt-2 ml-4">
-                  <input
-                    type="text"
-                    placeholder="대댓글 입력..."
-                    className="flex-1 border rounded p-2 text-sm"
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                  />
-                  <button
-                    className="px-2 bg-pistachio text-darkbrown rounded hover:bg-pistachio-dark"
-                    onClick={() => handleAddReply(c.commentId)}
-                  >
-                    {/* 종이비행기 이모티콘 누르면 댓글전송 */}
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* 대댓글 리스트 */}
-              {c.replies && c.replies.length > 0 && (
-                <div className="mt-2 ml-4 space-y-2">
-                  {c.replies.map((r) => (
-                    <div key={r.replyId} className="text-sm text-gray-600">
-                      <span className="font-medium">{r.userId}</span>:{" "}
-                      {r.content}
-                      <p className="text-xs text-gray-400">
-                        {new Date(r.createdAt).toLocaleDateString("ko-KR")}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {Array.isArray(comments) &&
+          comments.map((c) => (
+            <div key={c.commentId} className="mb-3">
+              {/* 댓글 */}
+              <div className="border-b pb-2 last:border-b-0">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">{c.userId}</span>: {c.content}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {new Date(c.createdAt).toLocaleDateString('ko-KR')}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
         {/* 댓글 작성 */}
         <div className="flex gap-2 mt-2">
@@ -193,7 +146,7 @@ export default function CommunityPost() {
             onChange={(e) => setCommentInput(e.target.value)}
           />
           <button
-            className="px-4 bg-pistachio text-darkbrown rounded hover:bg-pistachio-dark"
+            className="px-4 bg-orange-400 text-white rounded hover:bg-pistachio-dark"
             onClick={handleAddComment}
           >
             {/* 종이비행기 이모티콘 누르면 댓글전송 */}

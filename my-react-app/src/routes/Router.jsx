@@ -72,7 +72,7 @@ export default function Router() {
 
           {/* 커뮤니티 */}
           <Route path="/community" element={<Community />} />
-          <Route path="/communityPost" element={<CommunityPost />} />
+          <Route path="/communityPost/:boardId" element={<CommunityPost />} />
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/communityUpload" element={<CommunityUpload />} />
 

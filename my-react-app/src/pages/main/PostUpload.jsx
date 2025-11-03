@@ -179,7 +179,7 @@ export default function PostUpload() {
         {/* 책 상태 */}
         <div className="mb-2">
           <label
-            htmlFor="bookPoint"
+            htmlFor="bookpoint"
             className="block text-sm font-medium text-gray-700"
           >
             책 상태

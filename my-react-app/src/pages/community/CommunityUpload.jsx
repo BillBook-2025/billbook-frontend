@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // API 함수
-import { createBoard, uploadBoardImage } from '../../api/boards';
+import { createBoard } from '../../api/boards';
 // 아이콘
 import { ArrowLeft, Image as ImageIcon, XCircle } from 'lucide-react';
 
@@ -62,16 +62,23 @@ export default function CommunityUpload() {
     setLoading(true);
     setError(null);
 
+    const boardDto = {
+      title: title,
+      category: '기타', // '기타'로 기본값 설정 (API 명세 참고)
+      isbn: null, // '나눔' 카테고리가 아니므로 null
+      boardPic: null, // API 명세 예시 참고
+      content: content,
+    };
+    
     const formData = new FormData();
 
-    const jsonData = JSON.stringify({ title, content, });
-    const jsonBlob = new Blob([jsonData], {
-      type: 'application/json'
-    });
-    formData.append('data', jsonBlob);
+    formData.append(
+      'boards',
+      new Blob([JSON.stringify(boardDto)], { type: 'application/json' })
+    );
 
     images.forEach((image) => {
-      formData.append('images', image);
+      formData.append('newImages', image);
     });
 
     try {
