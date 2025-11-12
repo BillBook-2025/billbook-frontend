@@ -1,4 +1,5 @@
 // src/pages/auth/Verification.jsx
+{/**사용하지 않는 페이지!!!!!!!!!!! */}
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';

@@ -12,26 +12,35 @@ import { useNavigate } from 'react-router-dom';
 import { Search, BookImage } from 'lucide-react';
 // api 함수
 import { bookList } from '../../api/books';
+import { logout } from '../../api/auth';
 
 export default function Home() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // 책 상태 점수 -> 단어 변환하는 함수
-  const getBookCondition = (point) => {
-    switch (point) {
-      case 3:
-        return '좋음';
-      case 2:
-        return '보통';
-      case 1:
-        return '나쁨';
-      default:
-        return '알 수 없음';
+  // 로그아웃
+  const handleLogout = async () => {
+    if (window.confirm('로그아웃하시겠습니까?')) {
+      try {
+        await logout();
+        alert('로그아웃되었습니다.');
+
+        navigate('/login'); // 로그인 페이지로 이동
+      } 
+      catch (error) {
+        console.error('로그아웃 실패:', error);
+        alert('로그아웃 중 오류가 발생했습니다.');
+      }
     }
   };
 
+  // 책 상태 GOOD/FAIR/POOR
+  const getBookCondition = (condition) => {
+    
+  };
+
+  // 일단 전체 글 목록 불러옴
   useEffect(() => {
     async function fetchPosts() {
       try {
@@ -51,9 +60,44 @@ export default function Home() {
     fetchPosts();
   }, []);
 
+  /*
+  const handleNearbySearch = () => {
+    setIsLoadingNearby(true); // 로딩 시작
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // 3. 현재 위치(lat, lng)로 fetchPosts 함수 호출!
+          fetchPosts(lat, lng); 
+        },
+        (error) => {
+          console.error("위치 정보를 가져올 수 없습니다.", error);
+          alert("위치 정보 사용을 허용해주세요.");
+          setIsLoadingNearby(false); // 로딩 중단
+        }
+      );
+    } else {
+      alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
+      setIsLoadingNearby(false); // 로딩 중단
+    }
+  };
+  */
+
   return (
     <div className="pb-20">
       {' '}
+      {/* 로그아웃 버튼 */}
+      <div className="w-full px-4 pt-3 flex justify-start">
+        <button
+          onClick={handleLogout}
+          className="bg-gray-200 text-orange-500 text-sm py-1 px-3 rounded hover:bg-yellow-200 transition"
+        >
+          로그아웃
+        </button>
+      </div>
       {/* 하단 바 공간 확보 */}
       {/* 검색창처럼 보이는 버튼(서치 페이지로 이동 ㅋ) */}
       <button
@@ -115,7 +159,7 @@ export default function Home() {
                 {book.locate?.address}
               </div>
               <div className="text-xs text-gray-700">
-                상태: {getBookCondition(book.bookpoint)}
+                상태: {getBookCondition(book.condition)}
               </div>
             </div>
           );

@@ -81,6 +81,7 @@ export default function Chatroom() {
       .catch((err) => console.error("채팅 불러오기 실패", err));
   }, [chatId]);
 
+  // STOMP로
   // 웹소켓 연결 + 구독
   useEffect(() => {
     connectWebSocket(() => {

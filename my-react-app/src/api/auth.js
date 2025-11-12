@@ -1,30 +1,26 @@
 // src/api/auth.js
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = '/api';
 
-import {fetchWithAuth} from './books.js';
+import { fetchWithAuth } from './books.js';
 
 // 로그인
 export async function login(userId, password) {
-  return fetchWithAuth('/auth/login', 
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, password }),
+  return fetchWithAuth('/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, password }),
   });
 }
 
 // 로그아웃
 export async function logout() {
-  return fetchWithAuth('/auth/login',
-    {  method: 'DELETE'  }
-  );
+  return fetchWithAuth('/auth/login', { method: 'DELETE' });
 }
 
 // 아이디 찾기
 export async function findId(email) {
-  return fetchWithAuth('/auth/find/id', 
-    {
+  return fetchWithAuth('/auth/find/id', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -50,7 +46,7 @@ export async function changePassword(password, confirmPassword) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password, confirmPassword }),
-    credentials: "include"
+    credentials: 'include',
   });
   if (!response.ok) {
     const errorText = await response.text();
@@ -60,24 +56,20 @@ export async function changePassword(password, confirmPassword) {
   return;
 }
 
-
 // 회원가입
-export async function signup(userId, password, email, username) {
-  return fetchWithAuth('/auth/signup', 
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, password, email, username }),
-    });
+export async function signup(userId, password, email, userName) {
+  return fetchWithAuth('/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, password, email, userName }),
+  });
 }
 
 // 회원 탈퇴
 export async function deleteAccount(password, message) {
-  return fetchWithAuth( '/auth/signup',
-    {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, message }),
-    }
-  );
+  return fetchWithAuth('/auth/signup', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password, message }),
+  });
 }

@@ -62,11 +62,11 @@ export default function Router() {
           <Route path="/searchResult" element={<SearchResult />} />
           <Route path="/search" element={<Search />} />
           <Route path="/recommend" element={<Recommend />} />
-          <Route path="/bookDetail/:bookId" element={<BookDetail />} />
+          <Route path="/book/:bookId" element={<BookDetail />} />
           <Route path="/post/:bookId" element={<Post />} />
           <Route path="/postUpload" element={<PostUpload />} />
           <Route path="/edit/:bookId" element={<PostEdit />} />
-          <Route path="/chatroom" element={<Chatroom />} />
+          <Route path=":chat/:chatId" element={<Chatroom />} />
           <Route path="/chatList" element={<ChatList />} />
           <Route path="/category/:categoryName" element={<Category />} />
 

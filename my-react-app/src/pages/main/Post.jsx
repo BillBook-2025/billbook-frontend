@@ -19,6 +19,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 // 하트(좋아요) 아이콘
 import { Heart } from 'lucide-react';
+// 구글맵
+import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 // API 함수
 import {
   bookDetail,
@@ -30,11 +32,13 @@ import {
 
 export default function Post() {
   const { bookId } = useParams();
-
   const navigate = useNavigate();
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+
   const [post, setPost] = useState(null);
   const [likesCount, setLikesCount] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [mapCenter, setMapCenter] = useState(null);
 
   const getBookCondition = (point) => {
     switch (point) {
@@ -56,9 +60,16 @@ export default function Post() {
         const data = await bookDetail(bookId);
         setPost(data);
 
+        if (data.locate && data.locate.latitude && data.locate.longitude) {
+          setMapCenter({
+            lat: Number(data.locate.latitude),
+            lng: Number(data.locate.longitude),
+          });
+        }
+
         const likeData = await likeCount(bookId);
-        setLikesCount(likeData.count);
-        setLiked(likeData.likedByMe);
+        setLikesCount(Number(likeData.count) || 0);
+        setLiked(!!likeData.likedByMe);
       } catch (err) {
         console.error('게시글 로드 실패', err);
       }
@@ -86,18 +97,11 @@ export default function Post() {
     }
   };
 
-  // 좋아요 누르기
+  // 좋아요누르기
   const handleLike = async () => {
-    try {
-      await likeBook(bookId);
-      setLikesCount((prev) => {
-        if (liked) return prev - 1;
-        else return prev + 1;
-      });
-      setLiked((prev) => !prev);
-    } catch (err) {
-      console.error('좋아요 실패', err);
-    }
+    await likeBook(bookId);
+    setLiked((prev) => !prev);
+    setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   // 채팅 생성
@@ -142,16 +146,22 @@ export default function Post() {
           </>
         ) : (
           <>
-            <button onClick={handleLike} className="flex flex-col items-center">
+            {/* 좋아요 버튼 */}
+            <button
+              className="mt-3 flex items-center gap-2 text-darkbrown"
+              onClick={handleLike}
+            >
+              {/* 하트 누르기전 회색->누르면 레드 */}
               <Heart
-                color={liked ? 'red' : 'gray'}
-                fill={liked ? 'red' : 'none'}
+                className={`w-5 h-5 ${
+                  liked ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                }`}
               />
-              <span className="text-sm">{likesCount}</span>
+              <span>{likesCount || 0}</span>
             </button>
             <button
               onClick={handleChat}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 bg-pistachio text-white rounded hover:bg-orange-500"
             >
               채팅하기
             </button>
@@ -166,9 +176,23 @@ export default function Post() {
       </div>
 
       <p className="text-gray-700 mt-2">{post.description}</p>
-      <p className="text-gray-500 mt-1">
-        위치: {post.locate?.address || '없음'}
-      </p>
+
+      {/* 구글맵 표시 */}
+      {mapCenter && apiKey ? (
+        <div className="mt-4 h-60 w-full rounded-md overflow-hidden border">
+          <LoadScript googleMapsApiKey={apiKey}>
+            <GoogleMap
+              mapContainerStyle={{ width: '100%', height: '100%' }}
+              center={mapCenter}
+              zoom={15}
+            >
+              <Marker position={mapCenter} />
+            </GoogleMap>
+          </LoadScript>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-400">지도 정보가 없습니다.</p>
+      )}
     </div>
   );
 }
