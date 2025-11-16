@@ -40,19 +40,6 @@ export default function Post() {
   const [liked, setLiked] = useState(false);
   const [mapCenter, setMapCenter] = useState(null);
 
-  const getBookCondition = (point) => {
-    switch (point) {
-      case 3:
-        return '좋음';
-      case 2:
-        return '보통';
-      case 1:
-        return '나쁨';
-      default:
-        return '알 수 없음';
-    }
-  };
-
   // 게시글 로드 + 좋아요 상태
   useEffect(() => {
     async function loadData() {
@@ -60,10 +47,12 @@ export default function Post() {
         const data = await bookDetail(bookId);
         setPost(data);
 
-        if (data.locate && data.locate.latitude && data.locate.longitude) {
+        // 키 이름 둘다 확인..
+        const postLoc = data.locate || data.location;
+        if (postLoc && postLoc.latitude && postLoc.longitude) {
           setMapCenter({
-            lat: Number(data.locate.latitude),
-            lng: Number(data.locate.longitude),
+            lat: Number(postLoc.latitude),
+            lng: Number(postLoc.longitude),
           });
         }
 
@@ -107,10 +96,33 @@ export default function Post() {
   // 채팅 생성
   const handleChat = async () => {
     try {
-      const data = await createChatroom(bookId);
-      navigate(`/chat/${data.chatroomId}`);
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const buyerId = userInfo?.id;
+
+      if (!buyerId) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+
+      const data = await createChatroom(bookId, buyerId);
+
+      if (data && data.chatroomId) {
+        navigate(`/chat/${data.chatroomId}`);
+      } else {
+        console.error('채팅방 ID를 받지 못했습니다.', data);
+      }
     } catch (err) {
       console.error('채팅방 생성 실패', err);
+      if (err.status === 403) {
+        alert('본인의 게시글에는 채팅방을 만들 수 없습니다.');
+      } else if (err.status === 409) {
+        alert('이미 채팅방이 존재합니다.');
+      } else if (err.status === 404) {
+        alert('존재하지 않는 게시글입니다.');
+      } else {
+        alert('채팅방 생성에 실패했습니다.');
+      }
     }
   };
 
@@ -123,9 +135,7 @@ export default function Post() {
         alt={`책 이미지: ${post.title}`}
         className="w-full h-60 object-cover rounded mb-2"
       />
-      <p className="text-gray-500 mt-1">
-        상태: {getBookCondition(post.bookPoint)}
-      </p>
+      <p className="mt-1"> 상태: {post.condition}</p>
       <p className="mt-1">설명: {post.content}</p>
 
       <div className="flex items-center gap-4 mb-2">

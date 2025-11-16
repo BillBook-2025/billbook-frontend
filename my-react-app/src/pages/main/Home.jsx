@@ -27,17 +27,11 @@ export default function Home() {
         alert('로그아웃되었습니다.');
 
         navigate('/login'); // 로그인 페이지로 이동
-      } 
-      catch (error) {
+      } catch (error) {
         console.error('로그아웃 실패:', error);
         alert('로그아웃 중 오류가 발생했습니다.');
       }
     }
-  };
-
-  // 책 상태 GOOD/FAIR/POOR
-  const getBookCondition = (condition) => {
-    
   };
 
   // 일단 전체 글 목록 불러옴
@@ -156,10 +150,10 @@ export default function Home() {
               )}
               <div className="mt-2 text-sm font-semibold">{book.title}</div>
               <div className="text-xs text-gray-500">
-                {book.locate?.address}
+                {(book.locate || book.location)?.address}
               </div>
               <div className="text-xs text-gray-700">
-                상태: {getBookCondition(book.condition)}
+                상태: {book.condition}
               </div>
             </div>
           );

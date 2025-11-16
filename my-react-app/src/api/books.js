@@ -34,6 +34,16 @@ export async function fetchWithAuth(url, options = {}) {
 
   // 응답이 ok가 아닐 경우
   if (!response.ok) {
+    // 401에러 처리(로그인만료)
+    if (response.status === 401) {
+      alert('인증이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.');
+      window.location.replace('/login');
+
+      const error = new Error('HTTP 401: Unauthorized');
+      error.status = 401;
+      throw error;
+    }
+
     const text = await response.text();
     let errorContent;
     try {
@@ -41,6 +51,7 @@ export async function fetchWithAuth(url, options = {}) {
     } catch {
       errorContent = text || 'error';
     }
+
     throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorContent)}`);
   }
 
@@ -109,8 +120,11 @@ export async function deleteBook(bookId) {
 }
 
 // 채팅방 생성
-export async function createChatroom(bookId) {
-  return fetchWithAuth(`/books/${bookId}/chatroom`, { method: 'POST' });
+export async function createChatroom(bookId, buyerId) {
+  return fetchWithAuth(`/books/${bookId}/chatroom`, {
+    method: 'POST',
+    body: JSON.stringify({ buyerId: buyerId }),
+  });
 }
 
 // 좋아요 개수 조회

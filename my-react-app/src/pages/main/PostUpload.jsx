@@ -30,7 +30,8 @@ export default function PostUpload() {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [description, setDescription] = useState('');
-  const [bookPoint, setBookPoint] = useState(3);
+  const [condition, setCondition] = useState('GOOD');
+  const [bookPoint, setBookPoint] = useState(1000);
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -97,6 +98,9 @@ export default function PostUpload() {
   // 게시글 등록
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('handleSubmit 시작 - 현재 location state:', location);
+
     setError('');
 
     if (!selectedBook) return setError('책을 선택해주세요.');
@@ -114,15 +118,19 @@ export default function PostUpload() {
         category: selectedBook.category || '',
         isbn: selectedBook.isbn || '',
         bookpoint: bookPoint,
+        condition: condition,
         content: description,
         locate: location,
       };
 
       const formData = new FormData();
 
-      formData.append('book', new Blob([JSON.stringify(bookData)], {
-        type: 'application/json'
-      }));
+      formData.append(
+        'book',
+        new Blob([JSON.stringify(bookData)], {
+          type: 'application/json',
+        })
+      );
 
       images.forEach((file) => formData.append('images', file));
 
@@ -179,20 +187,20 @@ export default function PostUpload() {
         {/* 책 상태 */}
         <div className="mb-2">
           <label
-            htmlFor="bookpoint"
+            htmlFor="condition"
             className="block text-sm font-medium text-gray-700"
           >
             책 상태
           </label>
           <select
-            id="bookPoint"
-            value={bookPoint}
-            onChange={(e) => setBookPoint(Number(e.target.value))}
+            id="condition"
+            value={condition} 
+            onChange={(e) => setCondition(e.target.value)} 
             className="w-full p-2 border rounded"
           >
-            <option value={3}>좋음</option>
-            <option value={2}>보통</option>
-            <option value={1}>나쁨</option>
+            <option value="GOOD">좋음</option>
+            <option value="FAIR">보통</option>
+            <option value="POOR">나쁨</option>
           </select>
         </div>
 
@@ -209,7 +217,12 @@ export default function PostUpload() {
             onPlaceChanged={() => {
               if (autocompleteRef.current) {
                 const place = autocompleteRef.current.getPlace();
-                if (!place.geometry) return;
+                console.log('Google Maps API가 반환한 place 객체:', place);
+                
+                if (!place.geometry || !place.geometry.location) {
+                  console.error('선택한 장소에 유효한 위치 정보가 없습니다.');
+                  return;
+                }
 
                 const lat = place.geometry.location.lat();
                 const lng = place.geometry.location.lng();
@@ -230,14 +243,18 @@ export default function PostUpload() {
                       c.types.includes('sublocality')
                   )?.long_name || '';
 
-                setLocation({
-                  address: place.formatted_address,
+                const newLocation = {
+                  address: place.formatted_address || '',
                   latitude: lat,
                   longitude: lng,
                   regionLevel1: region1,
                   regionLevel2: region2,
                   regionLevel3: region3,
-                });
+                };
+      
+                console.log('State에 저장될 location 객체:', newLocation);
+
+                setLocation(newLocation);
               }
             }}
           >

@@ -19,7 +19,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { bookDetail, modifyBook, searchBook } from '../../api/books';
 import { XCircle } from 'lucide-react';
 // 구글맵 api
-import { LoadScript, Autocomplete, GoogleMap, Marker } from '@react-google-maps/api';
+import {
+  LoadScript,
+  Autocomplete,
+  GoogleMap,
+  Marker,
+} from '@react-google-maps/api';
 
 export default function PostEdit({}) {
   const { bookId } = useParams();
@@ -33,7 +38,8 @@ export default function PostEdit({}) {
   const [selectedBook, setSelectedBook] = useState(null);
 
   const [content, setContent] = useState('');
-  const [bookPoint, setBookPoint] = useState(3);
+  const [condition, setCondition] = useState('GOOD');
+  const [bookPoint, setBookPoint] = useState(1000);
   const [location, setLocation] = useState({
     address: '',
     latitude: null,
@@ -49,19 +55,6 @@ export default function PostEdit({}) {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getBookCondition = (point) => {
-    switch (point) {
-      case 3:
-        return '좋음';
-      case 2:
-        return '보통';
-      case 1:
-        return '나쁨';
-      default:
-        return '알 수 없음';
-    }
-  };
-
   // 기존 게시글 데이터 불러오기
   useEffect(() => {
     async function fetchPost() {
@@ -69,14 +62,15 @@ export default function PostEdit({}) {
         const post = await bookDetail(bookId);
         setSelectedBook(post);
         setContent(post.content);
-        setBookPoint(post.bookPoint || 3);
+        setBookPoint(post.bookPoint || 1000);
         setBookSearch(`${post.title} - ${post.author}`);
+        setCondition(post.condition || 'GOOD');
 
         const locate = post.locate || {};
         setLocation({
           address: locate.address || '',
           latitude: locate.latitude || 37.5665,
-          longitude: locate.longitude || 126.9780,
+          longitude: locate.longitude || 126.978,
           regionLevel1: locate.regionLevel1 || '',
           regionLevel2: locate.regionLevel2 || '',
           regionLevel3: locate.regionLevel3 || '',
@@ -119,15 +113,15 @@ export default function PostEdit({}) {
     const files = Array.from(e.target.files);
     // 새로 추가된 파일
     const newFilesToAdd = [...files];
-    setNewImages((prev) => [...prev, ...newFilesToAdd]); 
+    setNewImages((prev) => [...prev, ...newFilesToAdd]);
 
     // 새로 추가된 파일에 대한 미리보기 URL 생성
     const newPreviewsToAdd = newFilesToAdd.map((file) => ({
-      url: URL.createObjectURL(file), 
+      url: URL.createObjectURL(file),
       isNew: true,
       file: file,
     }));
-    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]); 
+    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]);
   };
 
   // 이미지 삭제
@@ -140,12 +134,12 @@ export default function PostEdit({}) {
       setNewImages((prev) =>
         prev.filter((file) => file !== imageToRemove.file)
       );
-      URL.revokeObjectURL(imageToRemove.url); 
+      URL.revokeObjectURL(imageToRemove.url);
     }
 
     setImagePreviews((prev) =>
       prev.filter((_, index) => index !== indexToRemove)
-    ); //
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -162,6 +156,7 @@ export default function PostEdit({}) {
         isbn: selectedBook.isbn || selectedBook.id,
         content: content,
         locate: location,
+        condition: condition,
         bookpoint: bookPoint || 1000,
       };
 
@@ -225,20 +220,24 @@ export default function PostEdit({}) {
         />
         {/* 책 상태 */}
         <div className="mb-2">
-          <label htmlFor="bookPoint" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="condition"
+            className="block text-sm font-medium text-gray-700"
+          >
             책 상태
           </label>
           <select
-            id="bookPoint"
-            value={bookPoint}
-            onChange={(e) => setBookPoint(Number(e.target.value))}
+            id="condition" 
+            value={condition} 
+            onChange={(e) => setCondition(e.target.value)} 
             className="w-full p-2 border rounded"
           >
-            <option value={3}>좋음</option>
-            <option value={2}>보통</option>
-            <option value={1}>나쁨</option>
+            <option value="GOOD">좋음</option>
+            <option value="FAIR">보통</option>
+            <option value="POOR">나쁨</option>
           </select>
         </div>
+
         {/* 상세 설명 */}
         <textarea
           placeholder="상세 설명"
@@ -300,15 +299,20 @@ export default function PostEdit({}) {
           <GoogleMap
             center={{
               lat: location.latitude || 37.5665,
-              lng: location.longitude || 126.9780,
+              lng: location.longitude || 126.978,
             }}
             zoom={14}
-            mapContainerStyle={{ width: '100%', height: '200px', marginTop: '8px', borderRadius: '8px' }}
+            mapContainerStyle={{
+              width: '100%',
+              height: '200px',
+              marginTop: '8px',
+              borderRadius: '8px',
+            }}
           >
             <Marker
               position={{
                 lat: location.latitude || 37.5665,
-                lng: location.longitude || 126.9780,
+                lng: location.longitude || 126.978,
               }}
             />
           </GoogleMap>
