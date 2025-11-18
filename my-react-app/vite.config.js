@@ -14,11 +14,22 @@ export default defineConfig({
   server: {
     // server.proxy 옵션을 추가합니다.
     proxy: {
+      // 웹소켓용 설정
+      '/api/ws': {
+        target: 'http://13.209.17.126:8080',
+        changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/api/, '') 
+      },
+
       // '/api'로 시작하는 모든 요청을 프록시(중계)합니다.
       '/api': {
         target: 'http://13.209.17.126:8080', // 실제 백엔드 서버 주소
         changeOrigin: true, // Cross-Origin 요청을 위해 true로 설정
 
+        // websocket
+        ws: true,
+        
         // 쿠키 서버로 보내는 거(인증)를 위한 설정
         configure: (proxy, options) => {
           proxy.on('proxyRes', (proxyRes, req, res) => {

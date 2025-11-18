@@ -40,305 +40,284 @@ returnBook 호출로 게시물 새로 등록
  */
 
 import { useRef, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+// API
+import { getChats, sendPicture, setDeadline } from '../../api/chatrooms';
+import { returnBook, borrowBook } from '../../api/books';
 // 아이콘
-import { Plus, Send, Image, DollarSign } from 'lucide-react';
-// 리액트 date picker(캘린더)
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-// API 함수
-import { fetchProfile } from '../../api/profile';
 import {
-  getChatroomDetail,
-  getChats,
-  sendPicture,
-  sendDeal,
-  getDeadline,
-  setDeadline,
-} from '../../api/chatrooms';
-import {
-  connectWebSocket,
-  subscribeChatroom,
-  sendMessage,
-  disconnectWebSocket,
-} from '../../api/websocket';
-import { borrowBook, returnBook } from '../../api/books';
+  ArrowLeft, MoreVertical, Send, Plus, Image as ImageIcon, Calendar, DollarSign
+} from 'lucide-react';
+// 웹소켓
+import { connectWebSocket, subscribeChatroom, sendMessage } from '../../api/websocket';
 
 export default function Chatroom() {
   const { chatId } = useParams();
+  const navigate = useNavigate();
 
-  const [chatData, setChatData] = useState(null);
-  const [chats, setChats] = useState([]);
   const [message, setMessage] = useState('');
-  const [partner, setPartner] = useState(null);
-  const menuRef = useRef(null);
-  const [menuOpen, setMenuOpen] = useState(false); // + 버튼 눌렀을때 나오는 메뉴
-  const [selectedDate, setSelectedDate] = useState(null);
-  const clientRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [chatData, setChatData] = useState({
+    id: null,
+    partnerName: '상대방',
+    myId: null,
+    isActive: true,
+  });
 
-  const messagesEndRef = useRef(null);
+  const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // 초기 데이터 로드
+  const [showMenu, setShowMenu] = useState(false);
+  const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [deadline, setDeadlineState] = useState('');
+
   useEffect(() => {
-    getChatroomDetail(chatId)
-      .then((data) => {
-        setChatData(data);
-        return fetchProfile(data.partnerId);
-      })
-      .then((profile) => setPartner(profile))
-      .catch((err) => console.error('채팅방 로드 실패', err));
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo && userInfo.id) {
+      setChatData(prev => ({ ...prev, myId: userInfo.id }));
+    }
+  }, []);
 
-    getChats(chatId)
-      .then((data) => setChats(data))
-      .catch((err) => console.error('채팅 불러오기 실패', err));
+  // 데이터 불러오기
+  useEffect(() => {
+    if (!chatId) return;
+    async function fetchData() {
+      try {
+        const res = await getChats(chatId);
+        if (res && Array.isArray(res.content)) {
+           setMessages(res.content);
+        } else if (Array.isArray(res)) {
+           setMessages(res);
+        } else if (res && Array.isArray(res.messages)) {
+           setMessages(res.messages);
+        } else {
+           setMessages([]);
+        }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err);
+      }
+    }
+    fetchData();
   }, [chatId]);
 
-  // STOMP로
-  // 웹소켓 연결 + 구독
+  // 웹소켓 연결
   useEffect(() => {
+    if (!chatId) return;
     connectWebSocket(() => {
-      const unsubscribe = subscribeChatroom(chatId, (msg) => {
-        setChats((prev) => [...prev, msg]);
+      const unsubscribe = subscribeChatroom(chatId, (newMsg) => {
+        setMessages((prev) => [...prev, newMsg]);
       });
-
       return () => {
-        unsubscribe();
-        disconnectWebSocket();
+        if (unsubscribe) unsubscribe();
       };
     });
   }, [chatId]);
 
-  // 메시지 전송
-  const handleSend = () => {
-    if (!message.trim() || !chatData) return;
-    sendMessage(chatId, {
-      senderId: chatData.myId,
-      content: message,
-      type: 'TEXT',
-    });
-    setMessage('');
+  // 자동 스크롤
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+const handleSend = () => {
+  if (!input.trim()) return;
+
+  const messagePayload = {
+    senderId: userId,
+    message: input,   
+    type: "CHAT"      
   };
 
-  // 사진 전송
-  const handleSendPicture = async (e) => {
+  sendMessage(chatId, messagePayload);
+
+  setInput('');
+};
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
-    formData.append('picture', file);
+    formData.append('image', file);
     try {
       await sendPicture(chatId, formData);
-    } catch (err) {
-      console.error('사진 전송 실패', err);
-    }
+      setShowPlusMenu(false);
+    } catch (err) { console.error(err); }
   };
 
-  // 송금하기
-  const handleSendDeal = async () => {
-    const amount = prompt('송금할 금액을 입력하세요:');
-    if (!amount) return;
-    try {
-      await sendDeal(chatId, { amount });
-      alert('송금 완료!');
-    } catch (err) {
-      console.error('송금 실패', err);
-    }
-  };
-
-  // 약속 날짜 설정
   const handleSetDeadline = async () => {
-    if (!selectedDate) return;
+    if (!deadline) return alert('날짜를 선택해주세요');
     try {
-      await setDeadline(chatId, {
-        deadline: selectedDate.toISOString().split('T')[0],
-      });
-      alert('약속 날짜 설정 완료');
-      setMenuOpen(false);
-    } catch (err) {
-      console.error('기한 설정 실패', err);
-    }
+      await setDeadline(chatId, { deadline });
+      alert('반납 기한 설정 완료');
+      setShowDatePicker(false);
+      setShowPlusMenu(false);
+    } catch (err) { console.error(err); }
   };
 
-  // 책 대출하기
-  const handleBorrowBook = async () => {
-    try {
-      await borrowBook(chatData.bookId, { borrowerId: chatData.myId });
-      alert('대출 완료! 마이페이지에서 대여 상태를 확인할 수 있습니다.');
-
-      // 상태 업데이트: 더 이상 대여 불가로 표시
-      setChatData((prev) => ({ ...prev, isActive: false }));
-      setMenuOpen(false);
-    } catch (err) {
-      console.error('대출 실패', err);
-    }
-  };
-
-  // 거래 완료 (= 반납 완료, 책 빌려준 사람만 가능)
-  const handleCompleteDeal = async () => {
-    try {
-      //거래글 상태 재활성화
-      await returnBook(chatData.bookId);
-      alert('완료되었습니다. 마이페이지에서 매너평가를 할 수 있어요');
-
-      // 상태 업데이트
-      setChatData((prev) => ({ ...prev, isActive: true }));
-      setMenuOpen(false);
-    } catch (err) {
-      console.error('거래 완료 실패', err);
-    }
-  };
-
-  // 새로운 채팅 메시지가 추가될 때 자동으로 스크롤을 맨 아래로 내려주는 기능
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chats]);
-
-  // 메뉴 바깥 클릭 감지 (누르면 메뉴 창 닫힘)
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
-    }
-
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [menuOpen]);
-
-  if (!chatData || !partner) return <div>로딩 중...</div>;
+  const handleBorrowBook = () => alert('기능 준비 중입니다.');
+  const handleCompleteDeal = () => alert('기능 준비 중입니다.');
+  const handleSendDeal = () => alert('송금 기능 준비 중입니다.');
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto border">
-      {/* 상단: 프로필 + 책 제목 */}
-      <div className="flex justify-between items-center p-4 border-b bg-white">
-        <div className="flex items-center gap-2">
-          <img
-            src={partner.avatarUrl}
-            alt="상대 프로필"
-            className="w-10 h-10 rounded-full"
-          />
+    // [PC 레이아웃 적용]
+    // h-screen: 모니터 화면 꽉 차게
+    // max-w-5xl: 너무 넓으면 보기 싫으니 적당히 넓게 (약 1024px)
+    <div className="flex flex-col h-screen bg-gray-100 w-full max-w-5xl mx-auto border-x shadow-2xl relative overflow-hidden">
+      
+      {/* 1. 상단 헤더 (고정) */}
+      <div className="flex-none flex items-center justify-between p-5 bg-white border-b shadow-sm z-20">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
           <div>
-            <p className="font-bold">{partner.username}</p>
+            <h2 className="font-bold text-xl text-gray-900">{chatData.partnerName}</h2>
+            {/* 필요시 여기에 책 제목 등 추가 정보 표시 */}
           </div>
         </div>
-        <div className="text-sm font-semibold text-gray-700">
-          {chatData.bookTitle}
-        </div>
+        <button onClick={() => setShowMenu(!showMenu)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <MoreVertical className="w-6 h-6 text-gray-600" />
+        </button>
+        
+        {/* 우측 상단 메뉴 드롭다운 */}
+        {showMenu && (
+            <div className="absolute right-4 top-16 w-48 bg-white border rounded-lg shadow-xl z-30 overflow-hidden">
+              <button className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium">거래 관리</button>
+              <button className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm text-red-500 font-medium border-t">나가기</button>
+            </div>
+        )}
       </div>
 
-      {/* 채팅 목록 */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-        {chats.map((c, i) => (
-          <div
-            key={i}
-            className={`mb-2 ${
-              c.senderId === chatData.myId ? 'text-right' : 'text-left'
-            }`}
-          >
-            <p className="inline-block px-3 py-2 rounded-lg bg-white shadow">
-              {c.content}
-            </p>
-          </div>
-        ))}
-        <div ref={messagesEndRef}></div>
+      {/* 2. 채팅 내역 (스크롤 영역) */}
+      <div 
+        className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f2f4f6]" 
+        ref={scrollRef}
+      >
+        {messages.map((msg, idx) => {
+          const isMe = String(msg.senderId) === String(chatData.myId);
+          return (
+            <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+              {/* 상대방 프사 (선택) */}
+              {!isMe && <div className="w-10 h-10 bg-gray-300 rounded-full mr-3 flex-shrink-0" />}
+              
+              <div 
+                className={`max-w-[60%] px-4 py-3 rounded-2xl text-base shadow-sm leading-relaxed break-words ${
+                  msg.senderId === userId
+                    ? 'bg-pistachio text-white rounded-tr-none' 
+                    : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                }`}
+              >
+                {msg.message || msg.content}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* 하단 입력 */}
-      <div className="border-t p-2 flex items-center gap-2 relative bg-white">
-        {/* + 버튼 */}
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 rounded-full hover:bg-gray-200"
+      {/* 3. 하단 입력창 (고정) */}
+      <div className="flex-none bg-white border-t p-4 z-20">
+        
+        {/* 입력 컨트롤러 */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              setShowPlusMenu(!showPlusMenu);
+              setShowDatePicker(false);
+            }} 
+            className={`p-3 rounded-full transition-all duration-200 ${showPlusMenu ? 'bg-gray-200 rotate-45' : 'hover:bg-gray-100'}`}
           >
-            <Plus />
+            <Plus className="w-6 h-6 text-gray-500" />
           </button>
 
-          {menuOpen && (
-            <div className="absolute bottom-12 left-0 bg-white shadow-lg rounded-lg p-3 flex flex-col gap-3 w-40">
-              {/* 캘린더 */}
-              <div>
-                <p className="text-xs mb-1">약속 날짜</p>
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
-                  dateFormat="yyyy-MM-dd"
-                  className="border rounded px-2 py-1 w-full"
-                />
-                <button
-                  onClick={handleSetDeadline}
-                  className="bg-blue-500 text-white w-full mt-2 py-1 rounded"
-                >
-                  설정
-                </button>
-              </div>
-
-              {/* 사진 */}
-              <label className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded cursor-pointer">
-                <Image size={18} /> 사진
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleSendPicture}
-                />
-              </label>
-
-              {/* 송금 */}
-              <button
-                onClick={handleSendDeal}
-                className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded"
-              >
-                <DollarSign size={18} /> 송금
-              </button>
-
-              {/* 책 대출하기 (모두) */}
-              {chatData.isActive && (
-                <button
-                  onClick={handleBorrowBook}
-                  className="bg-green-500 text-white w-full py-1 rounded hover:bg-green-600"
-                >
-                  책 대출하기
-                </button>
-              )}
-
-              {/* 거래 완료 (올린 사람만) */}
-              {chatData.isActive && chatData.myId === chatData.sellerId && (
-                <button
-                  onClick={handleCompleteDeal}
-                  className="bg-yellow-500 text-white w-full py-1 rounded hover:bg-yellow-600"
-                >
-                  거래 완료
-                </button>
-              )}
-            </div>
-          )}
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()}
+            placeholder="메시지를 입력하세요..."
+            className="flex-1 px-6 py-3 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-pistachio/50 text-base"
+          />
+          
+          <button 
+            onClick={handleSend} 
+            disabled={!message.trim()}
+            className={`p-3 rounded-full transition-all shadow-md ${
+                message.trim() 
+                ? 'bg-pistachio text-white hover:opacity-90 hover:scale-105' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+            style={message.trim() ? { backgroundColor: '#93C572' } : {}}
+          >
+            <Send className="w-5 h-5 ml-0.5" />
+          </button>
         </div>
 
-        {/* 입력창 */}
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="메시지 입력"
-          className="flex-grow border rounded px-2 py-1"
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-        />
+        {/* 확장 메뉴 */}
+        {showPlusMenu && (
+          <div className="grid grid-cols-4 gap-6 mt-4 p-6 bg-gray-50 rounded-2xl border animate-fade-in-up">
+             <MenuButton 
+                icon={<ImageIcon size={28} className="text-blue-500" />} 
+                label="사진" 
+                color="bg-blue-100"
+                onClick={() => fileInputRef.current.click()} 
+             />
+             <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+            
+             <MenuButton 
+                icon={<Calendar size={28} className="text-orange-500" />} 
+                label="약속 잡기" 
+                color="bg-orange-100"
+                onClick={() => { setShowDatePicker(true); setShowPlusMenu(false); }} 
+             />
 
-        {/* 전송 버튼 */}
-        <button
-          onClick={handleSend}
-          className="bg-blue-600 text-white p-2 rounded"
-        >
-          <Send size={18} />
-        </button>
+             <MenuButton 
+                icon={<DollarSign size={28} className="text-green-500" />} 
+                label="송금" 
+                color="bg-green-100"
+                onClick={handleSendDeal} 
+             />
+            
+             <MenuButton 
+                icon={<span className="text-purple-600 font-bold text-lg">Book</span>} 
+                label="책 대출" 
+                color="bg-purple-100"
+                onClick={handleBorrowBook} 
+             />
+          </div>
+        )}
+        
+        {/* 날짜 설정창 */}
+        {showDatePicker && (
+          <div className="mt-4 p-6 bg-white rounded-2xl border shadow-lg animate-fade-in-up">
+             <p className="text-lg font-bold mb-4 text-gray-800">반납 기한 설정</p>
+             <div className="flex gap-3">
+                <input 
+                    type="date" 
+                    value={deadline} 
+                    onChange={(e) => setDeadlineState(e.target.value)} 
+                    className="border p-3 rounded-lg flex-1 text-base bg-gray-50" 
+                />
+                <button onClick={handleSetDeadline} className="bg-darkbrown text-white px-6 py-3 rounded-lg font-bold hover:bg-opacity-90">확인</button>
+                <button onClick={() => setShowDatePicker(false)} className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-bold hover:bg-gray-300">취소</button>
+             </div>
+          </div>
+        )}
       </div>
+
     </div>
   );
+}
+
+// 메뉴 버튼 컴포넌트 (코드 깔끔하게 분리)
+function MenuButton({ icon, label, color, onClick }) {
+    return (
+        <button onClick={onClick} className="flex flex-col items-center gap-2 group">
+            <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm`}>
+                {icon}
+            </div>
+            <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900">{label}</span>
+        </button>
+    );
 }

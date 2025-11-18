@@ -187,6 +187,9 @@ export default function Post() {
 
       <p className="text-gray-700 mt-2">{post.description}</p>
 
+      <div className="text-xs text-gray-500">
+        {(post.locate || post.location)?.address}
+      </div>
       {/* 구글맵 표시 */}
       {mapCenter && apiKey ? (
         <div className="mt-4 h-60 w-full rounded-md overflow-hidden border">

@@ -6,68 +6,63 @@ const API_BASE_URL = '/api';
 // 내부용: fetch 호출에 쓰는 함수
 // 이거 안쓰면 다 일일히 export const 어쩌고~ 형태로 써얗함
 export async function fetchWithAuth(url, options = {}) {
-  /**
-   * url: 요청할 API 경로 (예: /api/books)
-   * options: fetch 함수에 넣는 옵션(HTTP 메서드, 바디, 헤더 등)
-   * 세션 쿠키 사용
-   */
   options.method = options.method || 'GET';
   options.credentials = 'include';
 
-  const isFormData = options.body instanceof FormData;
-
   const finalOptions = { ...options };
+  
+  finalOptions.headers = { ...(finalOptions.headers || {}) };
 
-  if (isFormData) {
-    if (finalOptions.headers) {
-      finalOptions.headers = { ...finalOptions.headers };
-      delete finalOptions.headers['Content-Type'];
+  if (finalOptions.body) {
+    if (finalOptions.body instanceof FormData) {
+      if (finalOptions.headers['Content-Type']) {
+        delete finalOptions.headers['Content-Type'];
+      }
+    } else {
+      if (!finalOptions.headers['Content-Type']) {
+        finalOptions.headers['Content-Type'] = 'application/json';
+      }
     }
   } else {
-    finalOptions.headers = {
-      'Content-Type': 'application/json',
-      ...(finalOptions.headers || {}),
-    };
+    // Body가 없는 경우 헤더를 보내지 않게
+    if (finalOptions.headers['Content-Type']) {
+      delete finalOptions.headers['Content-Type'];
+    }
   }
 
   const response = await fetch(API_BASE_URL + url, finalOptions);
 
-  // 응답이 ok가 아닐 경우
   if (!response.ok) {
-    // 401에러 처리(로그인만료)
     if (response.status === 401) {
-      alert(
-        '인증이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.'
-      );
-      window.location.replace('/login');
-
-      const error = new Error('HTTP 401: Unauthorized');
-      error.status = 401;
-      throw error;
+      alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+      window.location.href = '/login'; // 리다이렉트
+      throw new Error('Unauthorized');
     }
-
-    const text = await response.text();
-    let errorContent;
+    
+    // 에러 메시지 파싱 시도
+    let errorMessage = `HTTP Error ${response.status}`;
     try {
-      errorContent = JSON.parse(text);
-    } catch {
-      errorContent = text || 'error';
+      const errorJson = await response.json();
+      errorMessage = errorJson.message || errorJson.error || errorMessage;
+    } catch (e) {
+      // JSON 파싱 실패 시 텍스트로 읽기 시도
+      // const text = await response.text(); 
+      // errorMessage = text || errorMessage;
     }
 
-    throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorContent)}`);
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    throw error;
   }
 
-  // 204 No Content는 json 파싱 X
   if (response.status === 204) return;
 
-  // 성공 응답 처리
-  // 바디가 없으면 null 반환, JSON 아니면 문자열 반환
   const text = await response.text();
-  if (!text) return null; // body 없으면 걍냅둬
+  if (!text) return null;
   try {
-    return JSON.parse(text); // JSON이면 파싱
+    return JSON.parse(text);
   } catch {
-    return text; // 아니면 그냥 문자열 반환
+    return text;
   }
 }
 
@@ -98,9 +93,7 @@ export async function deleteBook(bookId) {
 
 // 채팅방 생성
 export async function createChatroom(bookId, buyerId) {
-  const requestUrl = `/books/${bookId}/chatRoom?buyerId=${buyerId}`;
-
-  return fetchWithAuth(requestUrl, {
+  return fetchWithAuth(`/books/${bookId}/chatRoom?buyerId=${buyerId}`, {
     method: 'POST',
   });
 }

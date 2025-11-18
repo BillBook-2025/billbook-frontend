@@ -15,11 +15,12 @@ export default function ChatList() {
   const [selectedRooms, setSelectedRooms] = useState([]);
   const navigate = useNavigate();
 
-  const userId = localStorage.getItem('userId');
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const userId = userInfo?.id;
 
   // 채팅 목록 불러오기
   useEffect(() => {
-    if (!myId) {
+    if (!userId) {
       console.error("로그인된 유저 ID가 없습니다.");
       return;
     }
