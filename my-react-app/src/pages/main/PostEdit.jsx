@@ -16,7 +16,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // API 함수
-import { bookDetail, modifyBook, searchBook } from '../../api/books';
+import {
+  bookDetail,
+  modifyBook,
+  searchBook,
+  deleteImage, 
+} from '../../api/books';
 import { XCircle } from 'lucide-react';
 // 구글맵 api
 import {
@@ -26,20 +31,24 @@ import {
   Marker,
 } from '@react-google-maps/api';
 
-export default function PostEdit({}) {
+export default function PostEdit() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
-  const autocompleteRef = useRef(null);
 
-  const [bookSearch, setBookSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
-
-  const [content, setContent] = useState('');
+  const [description, setDescription] = useState('');
   const [condition, setCondition] = useState('GOOD');
-  const [bookPoint, setBookPoint] = useState(1000);
+  
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]); 
+  const [newImagePreviews, setNewImagePreviews] = useState([]); 
+
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [location, setLocation] = useState({
     address: '',
     latitude: null,
@@ -48,124 +57,202 @@ export default function PostEdit({}) {
     regionLevel2: '',
     regionLevel3: '',
   });
-  const [newImages, setNewImages] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [deleteImages, setDeleteImages] = useState([]);
 
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const autocompleteRef = useRef(null);
 
-  // 기존 게시글 데이터 불러오기
   useEffect(() => {
     async function fetchPost() {
       try {
         const post = await bookDetail(bookId);
-        setSelectedBook(post);
-        setContent(post.content);
-        setBookPoint(post.bookPoint || 1000);
-        setBookSearch(`${post.title} - ${post.author}`);
-        setCondition(post.condition || 'GOOD');
+        
+        // 책 정보 세팅
+        setSelectedBook({
+          title: post.title,
+          author: post.author,
+          publisher: post.publisher,
+          category: post.category,
+          isbn: post.isbn,
+          authors: post.author ? [post.author] : [], 
+        });
+        setSearchQuery(`${post.title} - ${post.author}`);
+        setDescription(post.content);
+        setCondition(post.cond || 'GOOD');
 
-        const locate = post.locate || {};
+        const loc = post.locate || {};
         setLocation({
-          address: locate.address || '',
-          latitude: locate.latitude || 37.5665,
-          longitude: locate.longitude || 126.978,
-          regionLevel1: locate.regionLevel1 || '',
-          regionLevel2: locate.regionLevel2 || '',
-          regionLevel3: locate.regionLevel3 || '',
+          address: loc.address || '',
+          latitude: loc.latitude ? Number(loc.latitude) : 37.5665,
+          longitude: loc.longitude ? Number(loc.longitude) : 126.978,
+          regionLevel1: loc.regionLevel1 || '',
+          regionLevel2: loc.regionLevel2 || '',
+          regionLevel3: loc.regionLevel3 || '',
         });
 
-        // 기존 이미지
-        setImagePreviews(
-          (post.bookPic || []).map((img) => ({
-            ...img,
-            isNew: false,
-          }))
-        );
+        if (post.bookPic && Array.isArray(post.bookPic)) {
+            setExistingImages(post.bookPic);
+        }
       } catch (err) {
-        setError('게시글 로드 실패');
+        console.error(err);
+        setError('게시글 정보를 불러오는데 실패했습니다.');
       }
     }
     fetchPost();
   }, [bookId]);
 
-  // 책 검색
   const handleSearch = async () => {
-    if (!bookSearch.trim()) return;
+    if (!searchQuery.trim()) return;
     try {
-      const results = await searchBook({ keyword: bookSearch });
-      setSearchResults(results);
+      const books = await searchBook({ keyword: searchQuery });
+      setSearchResults(books);
     } catch (err) {
-      setError('책 검색 실패');
+      console.error('책 검색 실패', err);
     }
   };
 
-  // 책 선택한 후 정보 반영
   const handleSelectBook = (book) => {
     setSelectedBook(book);
-    setBookSearch(`${book.title} - ${book.author}`);
+    setSearchQuery(`${book.title} - ${book.author}`);
     setSearchResults([]);
   };
 
-  // 이미지 업로드
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    // 새로 추가된 파일
-    const newFilesToAdd = [...files];
-    setNewImages((prev) => [...prev, ...newFilesToAdd]);
+  // 구글맵 핸들 -정확한 주소 파싱
+  const handlePlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
 
-    // 새로 추가된 파일에 대한 미리보기 URL 생성
-    const newPreviewsToAdd = newFilesToAdd.map((file) => ({
-      url: URL.createObjectURL(file),
-      isNew: true,
-      file: file,
-    }));
-    setImagePreviews((prev) => [...prev, ...newPreviewsToAdd]);
+        let regionLevel1 = '';
+        let regionLevel2 = '';
+        let regionLevel3 = '';
+
+        if (place.address_components) {
+          place.address_components.forEach((component) => {
+            const types = component.types;
+            if (types.includes('administrative_area_level_1')) {
+              regionLevel1 = component.long_name;
+            }
+            if (
+              types.includes('sublocality_level_1') ||
+              types.includes('locality') ||
+              types.includes('administrative_area_level_2')
+            ) {
+              if (!regionLevel2 || types.includes('sublocality_level_1')) {
+                regionLevel2 = component.long_name;
+              }
+            }
+            if (
+              types.includes('sublocality_level_2') ||
+              types.includes('neighborhood')
+            ) {
+              regionLevel3 = component.long_name;
+            }
+          });
+        }
+
+        setLocation({
+          address: place.formatted_address || '',
+          latitude: lat,
+          longitude: lng,
+          regionLevel1,
+          regionLevel2,
+          regionLevel3,
+        });
+      }
+    }
   };
 
-  // 이미지 삭제
-  const handleRemoveImage = (indexToRemove) => {
-    const imageToRemove = imagePreviews[indexToRemove];
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setNewImages([...newImages, ...files]);
 
-    if (!imageToRemove.isNew) {
-      setDeleteImages((prev) => [...prev, imageToRemove.url]);
-    } else {
-      setNewImages((prev) =>
-        prev.filter((file) => file !== imageToRemove.file)
-      );
-      URL.revokeObjectURL(imageToRemove.url);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setNewImagePreviews([...newImagePreviews, ...newPreviews]);
+  };
+
+  // 새 이미지 삭제
+  const handleRemoveNewImage = (index) => {
+    setNewImages(newImages.filter((_, i) => i !== index));
+    
+    URL.revokeObjectURL(newImagePreviews[index]);
+    setNewImagePreviews(newImagePreviews.filter((_, i) => i !== index));
+  };
+
+  // 기존 이미지 삭제
+  const handleRemoveExistingImage = async (index, filename) => {
+    if(!window.confirm('이 이미지를 삭제하시겠습니까?')) return;
+    
+    try {
+        let targetFilename = filename;
+        if (!targetFilename && existingImages[index].url) {
+            targetFilename = existingImages[index].url.split('/').pop();
+        }
+
+        if (targetFilename) {
+            await deleteImage(bookId, targetFilename);
+        } else {
+            console.warn('파일명을 찾을 수 없어 API 호출 없이 UI에서만 제거합니다.');
+        }
+        setExistingImages(existingImages.filter((_, i) => i !== index));
+    } catch (err) {
+        console.error('이미지 삭제 실패', err);
+        alert('이미지를 삭제하지 못했습니다.');
     }
-
-    setImagePreviews((prev) =>
-      prev.filter((_, index) => index !== indexToRemove)
-    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedBook) return setError('책을 선택해주세요');
+    setError('');
+
+    if (!selectedBook) return setError('책 정보가 없습니다.');
+    if (!description.trim()) return setError('상세 설명을 입력해주세요.');
+    if (!location.address) return setError('지역을 선택해주세요.');
+
     setIsSubmitting(true);
 
     try {
-      const bookText = {
+      const formData = new FormData();
+
+      const bookPatchDto = {
+        bookpoint: 1000,
+        locate: {
+          address: location.address,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          regionLevel1: location.regionLevel1 || '',
+          regionLevel2: location.regionLevel2 || '',
+          regionLevel3: location.regionLevel3 || '',
+        },
+        content: description,
         title: selectedBook.title,
-        author: selectedBook.author,
+        author: Array.isArray(selectedBook.authors)
+          ? selectedBook.authors.join(', ')
+          : selectedBook.author,
+        cond: condition || 'GOOD',
         publisher: selectedBook.publisher,
-        category: selectedBook.category,
-        isbn: selectedBook.isbn || selectedBook.id,
-        content: content,
-        locate: location,
-        condition: condition,
-        bookpoint: bookPoint || 1000,
+        category: selectedBook?.category || '사회',
+        isbn: selectedBook.isbn,
       };
 
-      await modifyBook(bookId, bookText, deleteImages, newImages);
+      const jsonBlob = new Blob([JSON.stringify(bookPatchDto)], {
+        type: 'application/json',
+      });
 
+      formData.append('book', jsonBlob);
+
+      // 새로 추가된 이미지만 전송
+      newImages.forEach((file) => formData.append('images', file));
+
+      await modifyBook(bookId, formData);
+      
       alert('게시글 수정 완료');
-      navigate(`/post/${bookId}`);
+      navigate(`/post/${bookId}`); 
+
     } catch (err) {
-      setError('수정 실패');
+      console.error('수정 실패:', err);
+      setError('수정에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -175,29 +262,31 @@ export default function PostEdit({}) {
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">게시글 수정</h1>
 
-      {/* 책 검색 */}
+      {/* 책 검색 섹션 */}
       <div className="mb-4">
-        <input
-          type="text"
-          placeholder="책 검색"
-          value={bookSearch} //
-          onChange={(e) => setBookSearch(e.target.value)} //
-          className="w-full p-2 border rounded"
-        />
-        <button
-          onClick={handleSearch} //
-          className="mt-2 px-4 py-2 bg-pistachio text-black rounded"
-          type="button"
-        >
-          검색
-        </button>
-
+        <div className="flex gap-2">
+            <input
+            type="text"
+            placeholder="책 다시 검색 (변경 시)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full p-2 border rounded"
+            />
+            <button
+            onClick={handleSearch}
+            type="button"
+            className="px-4 py-2 bg-pistachio rounded whitespace-nowrap"
+            >
+            검색
+            </button>
+        </div>
+        
         {searchResults.length > 0 && (
           <ul className="border mt-2 max-h-40 overflow-auto">
             {searchResults.map((book, index) => (
               <li
                 key={book.id || index}
-                onClick={() => handleSelectBook(book)} //
+                onClick={() => handleSelectBook(book)}
                 className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between"
               >
                 <span>{book.title}</span>
@@ -208,28 +297,16 @@ export default function PostEdit({}) {
         )}
       </div>
 
-      {/* 입력폼 */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* 책제목 로드 */}
-        <input
-          type="text"
-          value={selectedBook?.title || ''}
-          placeholder="책 제목"
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100"
-        />
         {/* 책 상태 */}
         <div className="mb-2">
-          <label
-            htmlFor="condition"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="condition" className="block text-sm font-medium text-gray-700">
             책 상태
           </label>
           <select
-            id="condition" 
-            value={condition} 
-            onChange={(e) => setCondition(e.target.value)} 
+            id="condition"
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
             className="w-full p-2 border rounded"
           >
             <option value="GOOD">좋음</option>
@@ -238,64 +315,26 @@ export default function PostEdit({}) {
           </select>
         </div>
 
-        {/* 상세 설명 */}
         <textarea
           placeholder="상세 설명"
-          value={content} //
-          onChange={(e) => setContent(e.target.value)} //
-          className="w-full p-2 border rounded"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full p-2 border rounded min-h-[100px]"
         />
-        {/* 구글맵 자동완성 + 지도 */}
+
+        {/* 구글맵 */}
         <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
           <Autocomplete
             onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-            onPlaceChanged={() => {
-              if (autocompleteRef.current) {
-                const place = autocompleteRef.current.getPlace();
-                if (!place.geometry) return;
-
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                const comps = place.address_components || [];
-
-                const region1 =
-                  comps.find((c) =>
-                    c.types.includes('administrative_area_level_1')
-                  )?.long_name || '';
-                const region2 =
-                  comps.find((c) =>
-                    c.types.includes('administrative_area_level_2')
-                  )?.long_name || '';
-                const region3 =
-                  comps.find(
-                    (c) =>
-                      c.types.includes('sublocality_level_1') ||
-                      c.types.includes('sublocality')
-                  )?.long_name || '';
-
-                setLocation({
-                  address: place.formatted_address,
-                  latitude: lat,
-                  longitude: lng,
-                  regionLevel1: region1,
-                  regionLevel2: region2,
-                  regionLevel3: region3,
-                });
-              }
-            }}
+            onPlaceChanged={handlePlaceChanged}
           >
             <input
               type="text"
-              placeholder="위치 입력 (예: 서교동)"
-              value={location.address}
-              onChange={(e) =>
-                setLocation({ ...location, address: e.target.value })
-              }
-              className="w-full p-2 border rounded"
+              placeholder="거래 희망 장소 변경"
+              className="w-full border p-2 rounded mb-2"
             />
           </Autocomplete>
 
-          {/* 지도 표시 */}
           <GoogleMap
             center={{
               lat: location.latitude || 37.5665,
@@ -305,7 +344,6 @@ export default function PostEdit({}) {
             mapContainerStyle={{
               width: '100%',
               height: '200px',
-              marginTop: '8px',
               borderRadius: '8px',
             }}
           >
@@ -318,47 +356,56 @@ export default function PostEdit({}) {
           </GoogleMap>
         </LoadScript>
 
-        {/* 이미지 업로드+미리보기 */}
-        {imagePreviews.length > 0 && (
-          <div className="flex flex-wrap gap-2 p-2 border rounded-md">
-            {imagePreviews.map((preview, index) => (
-              <div key={preview.id || index} className="relative">
-                <img
-                  src={preview.url}
-                  alt={`preview ${index}`}
-                  className="w-24 h-24 object-cover rounded-md"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(index)} //
-                  className="absolute top-0 right-0 -mt-1 -mr-1 bg-white rounded-full"
-                >
-                  <XCircle className="w-5 h-5 text-red-500" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* 이미지 관리 */}
+        <div className="flex flex-col gap-2">
+            <label className="font-medium">이미지 수정</label>
+            
+            {/* 기존 이미지 리스트 */}
+            <div className="flex flex-wrap gap-2">
+                {existingImages.map((img, idx) => (
+                    <div key={idx} className="relative w-24 h-24">
+                        <img 
+                            src={img.url} 
+                            alt="existing" 
+                            className="w-full h-full object-cover rounded border" 
+                        />
+                        <button
+                            type="button"
+                            onClick={() => handleRemoveExistingImage(idx, img.fileName)} 
+                            className="absolute -top-2 -right-2 bg-white rounded-full shadow"
+                        >
+                            <XCircle className="w-6 h-6 text-red-500" />
+                        </button>
+                    </div>
+                ))}
 
-        {/* (새) 이미지 추가 */}
-        <input
-          type="file"
-          multiple
-          onChange={handleImageChange} //
-          accept="image/*" // 이미지 파일만 선택하도록
-        />
+                {/* 새 이미지 프리뷰 */}
+                {newImagePreviews.map((url, idx) => (
+                    <div key={`new-${idx}`} className="relative w-24 h-24">
+                        <img src={url} alt="new" className="w-full h-full object-cover rounded border border-blue-400" />
+                        <button
+                            type="button"
+                            onClick={() => handleRemoveNewImage(idx)}
+                            className="absolute -top-2 -right-2 bg-white rounded-full shadow"
+                        >
+                            <XCircle className="w-6 h-6 text-blue-500" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            
+            <input type="file" multiple onChange={handleImageChange} className="text-sm" />
+        </div>
 
-        {/* 완료 버튼 */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded text-black font-semibold"
+          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded text-black font-semibold mt-4"
         >
-          {isSubmitting ? '수정 중...' : '수정하기'}
+          {isSubmitting ? '수정 중...' : '수정 완료'}
         </button>
-
-        {/* 에러 메시지 */}
-        {error && <p className="text-red-500">{error}</p>}
+        
+        {error && <p className="text-red-500 text-center">{error}</p>}
       </form>
     </div>
   );

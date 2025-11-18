@@ -4,10 +4,10 @@
 - 체팅 목록 전체 불러오기
 - [편집]- 채팅 [선택]해서 삭제 가능
  */
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 // API 함수
-import { getChatrooms, leaveChatroom } from "../../api/chatrooms";
+import { getChatroom, leaveChatroom } from '../../api/chatrooms';
 
 export default function ChatList() {
   const [chatrooms, setChatrooms] = useState([]);
@@ -15,20 +15,26 @@ export default function ChatList() {
   const [selectedRooms, setSelectedRooms] = useState([]);
   const navigate = useNavigate();
 
+  const userId = localStorage.getItem('userId');
+
   // 채팅 목록 불러오기
   useEffect(() => {
-    getChatrooms()
+    if (!myId) {
+      console.error("로그인된 유저 ID가 없습니다.");
+      return;
+    }
+
+    getChatroom(userId)
       .then((data) => setChatrooms(data))
-      .catch((err) => console.error("채팅 목록 불러오기 실패", err));
+      .catch((err) => console.error('채팅 목록 불러오기 실패', err));
   }, []);
 
   // 채팅방 클릭 → Chatroom으로 이동
   const handleClickChatroom = (id) => {
     if (editMode) {
       toggleSelect(id);
-    } 
-    else {
-      navigate(`/chatroom/${id}`);
+    } else {
+      navigate(`/chatRoom/${id}`);
     }
   };
 
@@ -50,12 +56,13 @@ export default function ChatList() {
     for (const id of selectedRooms) {
       try {
         await leaveChatroom(id);
-      } 
-      catch (err) {
+      } catch (err) {
         console.error(`채팅방 ${id} 삭제 실패`, err);
       }
     }
-    setChatrooms((prev) => prev.filter((room) => !selectedRooms.includes(room.id)));
+    setChatrooms((prev) =>
+      prev.filter((room) => !selectedRooms.includes(room.id))
+    );
     setSelectedRooms([]);
     setEditMode(false);
   };
@@ -66,7 +73,7 @@ export default function ChatList() {
       <div className="flex justify-between items-center p-4 border-b">
         <h1 className="text-lg font-bold">채팅 목록</h1>
         <button onClick={toggleEditMode} className="text-orange-500">
-          {editMode ? "완료" : "편집"}
+          {editMode ? '완료' : '편집'}
         </button>
       </div>
 
@@ -80,8 +87,12 @@ export default function ChatList() {
               key={room.id}
               onClick={() => handleClickChatroom(room.id)}
               className={`flex items-center justify-between p-4 border-b cursor-pointer hover:bg-gray-100 ${
-                editMode ? "pl-10" : ""
-              }${editMode && selectedRooms.includes(room.id) ? "bg-pistachio bg-opacity-50" : "bg-white"}`}
+                editMode ? 'pl-10' : ''
+              }${
+                editMode && selectedRooms.includes(room.id)
+                  ? 'bg-pistachio bg-opacity-50'
+                  : 'bg-white'
+              }`}
             >
               {editMode && (
                 <input
@@ -93,7 +104,9 @@ export default function ChatList() {
               )}
               <div>
                 <p className="font-semibold">{room.partnerName}</p>
-                <p className="text-sm text-gray-500 truncate">{room.lastMessage}</p>
+                <p className="text-sm text-gray-500 truncate">
+                  {room.lastMessage}
+                </p>
               </div>
               <p className="text-xs text-gray-400">{room.updatedAt}</p>
             </div>

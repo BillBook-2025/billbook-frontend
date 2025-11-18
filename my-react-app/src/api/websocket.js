@@ -5,9 +5,9 @@ import { Client } from '@stomp/stompjs';
 
 let stompClient = null;
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = '/api';
 
-// 웹소켓 연결 
+// 웹소켓 연결
 export function connectWebSocket(onConnectCallback) {
   if (stompClient && stompClient.connected) return;
 
@@ -20,6 +20,10 @@ export function connectWebSocket(onConnectCallback) {
       console.log('WebSocket 연결됨');
       if (onConnectCallback) onConnectCallback();
     },
+    onStompError: (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+    },
     onDisconnect: () => console.log('WebSocket 연결 종료'),
   });
 
@@ -27,7 +31,7 @@ export function connectWebSocket(onConnectCallback) {
 }
 
 // 채팅방 구독 (서버가 브로드캐스트하는 특정 채널을 듣는 것)
-// /topic/{chatroomId}는 해당 채팅방에 들어온 모든 메시지를 서버가 뿌려주는 주소고, 
+// /topic/{chatroomId}는 해당 채팅방에 들어온 모든 메시지를 서버가 뿌려주는 주소고,
 // 클라이언트는 이걸 구독해서 메시지를 실시간으로 받음
 /**
 /app/chat.send → 클라이언트 → 서버
@@ -49,24 +53,41 @@ export function connectWebSocket(onConnectCallback) {
 export function subscribeChatroom(chatroomId, onMessageReceived) {
   if (!stompClient) return null;
 
-  const subscription = stompClient.subscribe(`/topic/${chatroomId}`, (message) => {
-    const parsedMessage = JSON.parse(message.body);
-    if (onMessageReceived) onMessageReceived(parsedMessage);
-  });
+  const subscription = stompClient.subscribe(
+    `/topic/chatRoom/${chatRoomId}/chat`,
+    (message) => {
+      const parsedMessage = JSON.parse(message.body);
+      try {
+        const parsedMessage = JSON.parse(message.body);
+        if (onMessageReceived) onMessageReceived(parsedMessage);
+      } catch (error) {
+        console.error("메시지 파싱 에러:", error);
+      }
+    }
+  );
 
   return () => subscription.unsubscribe();
 }
 
 // 메시지 보내기
 export function sendMessage(chatroomId, message) {
-  if (!stompClient || !stompClient.connected) return;
+  if (!stompClient || !stompClient.connected) {
+    console.error("웹소켓 연결 끊김. 메시지 전송 불가.");
+    return;
+  }
+
   stompClient.publish({
-    destination: '/app/chat.send',
-    body: JSON.stringify({ chatroomId, ...message }),
+    destination: `/app/chatRoom/${chatRoomId}/chat`,
+    body: JSON.stringify({
+      senderId: data.senderId,
+      message: data.content || data.message, 
+      type: data.type || 'CHAT', 
+      // sendAt은 서버 생성
+    }),
   });
 }
 
-// 연결 종료 
+// 연결 종료
 export function disconnectWebSocket() {
   if (stompClient) {
     stompClient.deactivate();

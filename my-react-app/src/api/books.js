@@ -36,7 +36,9 @@ export async function fetchWithAuth(url, options = {}) {
   if (!response.ok) {
     // 401에러 처리(로그인만료)
     if (response.status === 401) {
-      alert('인증이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.');
+      alert(
+        '인증이 만료되었거나 유효하지 않습니다. 로그인 페이지로 이동합니다.'
+      );
       window.location.replace('/login');
 
       const error = new Error('HTTP 401: Unauthorized');
@@ -80,32 +82,7 @@ export async function bookDetail(bookId) {
 }
 
 // 등록된 책 정보 수정
-export async function modifyBook(bookId, data, deleteImages, newImages) {
-  const formData = new FormData();
-  formData.append(
-    'book',
-    new Blob([JSON.stringify(data)], {
-      type: 'application/json',
-    })
-  );
-
-  // 이미지 삭제
-  if (deleteImages && deleteImages.length > 0) {
-    formData.append(
-      'deleteImages',
-      new Blob([JSON.stringify(deleteImages)], {
-        type: 'application/json',
-      })
-    );
-  }
-
-  // 이미지 추가
-  if (newImages && newImages.length > 0) {
-    newImages.forEach((file) => {
-      formData.append('newImages', file);
-    });
-  }
-
+export async function modifyBook(bookId, formData) {
   return fetchWithAuth(`/books/${bookId}`, {
     method: 'PATCH',
     body: formData,
@@ -121,9 +98,10 @@ export async function deleteBook(bookId) {
 
 // 채팅방 생성
 export async function createChatroom(bookId, buyerId) {
-  return fetchWithAuth(`/books/${bookId}/chatroom`, {
+  const requestUrl = `/books/${bookId}/chatRoom?buyerId=${buyerId}`;
+
+  return fetchWithAuth(requestUrl, {
     method: 'POST',
-    body: JSON.stringify({ buyerId: buyerId }),
   });
 }
 

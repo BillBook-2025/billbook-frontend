@@ -152,9 +152,7 @@ export default function Home() {
               <div className="text-xs text-gray-500">
                 {(book.locate || book.location)?.address}
               </div>
-              <div className="text-xs text-gray-700">
-                상태: {book.condition}
-              </div>
+              <div className="text-xs text-gray-700">상태: {book.cond}</div>
             </div>
           );
         })}

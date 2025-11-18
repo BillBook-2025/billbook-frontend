@@ -80,6 +80,69 @@ export default function PostUpload() {
     setImagePreviews([...imagePreviews, ...newPreviews]);
   };
 
+  // 구글맵 주소 -> 한국 주소 체계 반영
+  const handlePlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      console.log('Google Maps API 선택 결과:', place);
+
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        let regionLevel1 = ''; // 시/도
+        let regionLevel2 = ''; // 구/군/시
+        let regionLevel3 = ''; // 동/읍/면
+
+        // 주소 구성 요소 파싱 (한국 주소 체계 반영)
+        if (place.address_components) {
+          place.address_components.forEach((component) => {
+            const types = component.types;
+
+            if (types.includes('administrative_area_level_1')) {
+              regionLevel1 = component.long_name;
+            }
+
+            // '구' 정보 찾기 (sublocality_level_1이 가장 정확함)
+            if (
+              types.includes('sublocality_level_1') ||
+              types.includes('locality') ||
+              types.includes('administrative_area_level_2')
+            ) {
+              // 이미 값이 있어도 sublocality_level_1이면 덮어쓰기
+              if (!regionLevel2 || types.includes('sublocality_level_1')) {
+                regionLevel2 = component.long_name;
+              }
+            }
+
+            if (
+              types.includes('sublocality_level_2') ||
+              types.includes('neighborhood')
+            ) {
+              regionLevel3 = component.long_name;
+            }
+          });
+        }
+
+        // 상태 업데이트
+        setLocation({
+          address: place.formatted_address || '',
+          latitude: lat,
+          longitude: lng,
+          regionLevel1,
+          regionLevel2,
+          regionLevel3,
+        });
+
+        console.log('업데이트된 위치 정보:', {
+          regionLevel1,
+          regionLevel2,
+          regionLevel3,
+        });
+      }
+    }
+  };
+
   // 이미지 삭제
   const handleRemoveImage = (indexToRemove) => {
     // images state에서 제거
@@ -99,6 +162,7 @@ export default function PostUpload() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log('선택된 책 정보 확인:', selectedBook);
     console.log('handleSubmit 시작 - 현재 location state:', location);
 
     setError('');
@@ -110,29 +174,61 @@ export default function PostUpload() {
     setIsSubmitting(true);
 
     try {
-      // 책 등록
-      const bookData = {
-        title: selectedBook.title,
-        author: selectedBook.author,
-        publisher: selectedBook.publisher || '',
-        category: selectedBook.category || '',
-        isbn: selectedBook.isbn || '',
-        bookpoint: bookPoint,
-        condition: condition,
-        content: description,
-        locate: location,
-      };
-
       const formData = new FormData();
 
-      formData.append(
-        'book',
-        new Blob([JSON.stringify(bookData)], {
-          type: 'application/json',
-        })
-      );
+      const bookPostRequestDto = {
+        bookpoint: 1000,
+        locate: {
+          address: location.address,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          regionLevel1: location.regionLevel1 || '',
+          regionLevel2: location.regionLevel2 || '',
+          regionLevel3: location.regionLevel3 || '',
+        },
+        content: description,
+        title: selectedBook.title,
+        author: Array.isArray(selectedBook.authors)
+          ? selectedBook.authors.join(', ')
+          : selectedBook.authors,
+        cond: condition || 'GOOD',
+        publisher: selectedBook.publisher,
+        category: selectedBook?.category || '사회',
+        isbn: selectedBook.isbn,
+      };
+
+      const jsonBlob = new Blob([JSON.stringify(bookPostRequestDto)], {
+        type: 'application/json',
+      });
+
+      formData.append('book', jsonBlob);
 
       images.forEach((file) => formData.append('images', file));
+
+      // ==================================================================
+      console.group('🚀 [최종 전송 데이터 확인]');
+
+      for (let [key, value] of formData.entries()) {
+        // 1. JSON 데이터인 경우 (키 이름으로 확인)
+        if (key === 'book' || key === 'request' || key === 'dto') {
+          const text = await value.text(); // 내용을 강제로 읽음
+          console.log(`📄 JSON DATA [${key}]:`, JSON.parse(text));
+        }
+        // 2. 이미지 파일인 경우
+        else if (value instanceof File) {
+          console.log(
+            `📁 IMAGE [${key}]: ${value.name} (${(value.size / 1024).toFixed(
+              2
+            )} KB)`
+          );
+        }
+        // 3. 그 외
+        else {
+          console.log(`📝 TEXT [${key}]:`, value);
+        }
+      }
+      console.groupEnd();
+      // ==================================================================
 
       await registerBook(formData);
       alert('게시글 등록 완료');
@@ -194,8 +290,8 @@ export default function PostUpload() {
           </label>
           <select
             id="condition"
-            value={condition} 
-            onChange={(e) => setCondition(e.target.value)} 
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
             className="w-full p-2 border rounded"
           >
             <option value="GOOD">좋음</option>
@@ -214,58 +310,12 @@ export default function PostUpload() {
         <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
           <Autocomplete
             onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-            onPlaceChanged={() => {
-              if (autocompleteRef.current) {
-                const place = autocompleteRef.current.getPlace();
-                console.log('Google Maps API가 반환한 place 객체:', place);
-                
-                if (!place.geometry || !place.geometry.location) {
-                  console.error('선택한 장소에 유효한 위치 정보가 없습니다.');
-                  return;
-                }
-
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                const comps = place.address_components || [];
-
-                const region1 =
-                  comps.find((c) =>
-                    c.types.includes('administrative_area_level_1')
-                  )?.long_name || '';
-                const region2 =
-                  comps.find((c) =>
-                    c.types.includes('administrative_area_level_2')
-                  )?.long_name || '';
-                const region3 =
-                  comps.find(
-                    (c) =>
-                      c.types.includes('sublocality_level_1') ||
-                      c.types.includes('sublocality')
-                  )?.long_name || '';
-
-                const newLocation = {
-                  address: place.formatted_address || '',
-                  latitude: lat,
-                  longitude: lng,
-                  regionLevel1: region1,
-                  regionLevel2: region2,
-                  regionLevel3: region3,
-                };
-      
-                console.log('State에 저장될 location 객체:', newLocation);
-
-                setLocation(newLocation);
-              }
-            }}
+            onPlaceChanged={handlePlaceChanged}
           >
             <input
               type="text"
-              placeholder="위치 입력 (예: 서교동)"
-              value={location.address}
-              onChange={(e) =>
-                setLocation({ ...location, address: e.target.value })
-              }
-              className="w-full p-2 border rounded"
+              placeholder="거래 희망 장소를 검색하세요"
+              className="w-full border p-2 rounded mb-2"
             />
           </Autocomplete>
 

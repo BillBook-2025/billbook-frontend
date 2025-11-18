@@ -107,8 +107,8 @@ export default function Post() {
 
       const data = await createChatroom(bookId, buyerId);
 
-      if (data && data.chatroomId) {
-        navigate(`/chat/${data.chatroomId}`);
+      if (data && data.id) {
+        navigate(`/chatRoom/${data.id}`);
       } else {
         console.error('채팅방 ID를 받지 못했습니다.', data);
       }
@@ -135,7 +135,7 @@ export default function Post() {
         alt={`책 이미지: ${post.title}`}
         className="w-full h-60 object-cover rounded mb-2"
       />
-      <p className="mt-1"> 상태: {post.condition}</p>
+      <p className="mt-1"> 상태: {post.cond || post.condition}</p>
       <p className="mt-1">설명: {post.content}</p>
 
       <div className="flex items-center gap-4 mb-2">

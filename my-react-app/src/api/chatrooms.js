@@ -4,30 +4,10 @@ const API_BASE_URL = "/api";
 
 import {fetchWithAuth} from './books.js';
 
-// 채팅목록 불러오기
-export async function getChatrooms() {
-  return fetchWithAuth('/chatrooms', {});
-}
-
-// 채팅방 나가기
-export async function leaveChatroom(chatId) {
-  return fetchWithAuth(`/chatrooms/${chatId}`, { 
-    method: 'DELETE' });
-}
-
-// 채팅 상세 페이지 불러오기
-export async function getChatroomDetail(chatId) {
-  return fetchWithAuth(`/chatrooms/${chatId}`, {});
-}
-
-// 채팅 불러오기
-export async function getChats(chatId) {
-  return fetchWithAuth(`/chatrooms/${chatId}/chat`, {});
-}
-
 // 채팅 보내기
+/*
 export async function sendChat(chatId, data) {
-  return fetchWithAuth(`/chatrooms/${chatId}/chat`,
+  return fetchWithAuth(`/chatRoom/${chatId}/chat`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -35,15 +15,32 @@ export async function sendChat(chatId, data) {
     }
   );
 }
+  */
 
-// 사진 올리기 
-export async function getPictures(chatId) {
-  return fetchWithAuth(`/chatrooms/${chatId}/picture`, {});
+// 유저의 채팅목록 불러오기
+export async function getChatroom(userId) {
+  return fetchWithAuth(`/users/${userId}/chatRoom`, {});
+}
+
+// 채팅방 메시지 조회
+export async function getChats(chatId) {
+  return fetchWithAuth(`/chatRoom/${chatId}/messages`, {});
+}
+
+// 채팅 상세 정보 조회
+export async function getChatroomDetail(chatId) {
+  return fetchWithAuth(`/chatRoom/${chatId}`, {});
+}
+
+// 채팅방 나가기
+export async function leaveChatroom(chatId) {
+  return fetchWithAuth(`/chatRoom/${chatId}`, { 
+    method: 'DELETE' });
 }
 
 // 사진 보내기 
 export async function sendPicture(chatId, formData) {
-  return fetchWithAuth(`/chatrooms/${chatId}/picture`,
+  return fetchWithAuth(`/chatRoom/${chatId}/picture`,
     {
       method: 'POST',
       body: formData,
@@ -51,29 +48,29 @@ export async function sendPicture(chatId, formData) {
   );
 }
 
-// 송금하기
-export async function sendDeal(chatId, data) {
-  return fetchWithAuth(`/chatrooms/${chatId}/deal`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }
-  );
-}
-
 // 기한 확인
 export async function getDeadline(chatId) {
-  return fetchWithAuth(`/chatrooms/${chatId}/deadline`, {});
+  return fetchWithAuth(`/chatRoom/${chatId}/deadline`, {});
 }
 
 // 기한 설정
 export async function setDeadline(chatId, data) {
-  return fetchWithAuth(`/chatrooms/${chatId}/deadline`,
+  return fetchWithAuth(`/chatRoom/${chatId}/deadline`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data), 
+    }
+  );
+}
+
+// 송금하기
+export async function sendDeal(chatId, data) {
+  return fetchWithAuth(`/chatRoom/${chatId}/deal`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     }
   );
 }
