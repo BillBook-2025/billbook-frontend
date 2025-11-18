@@ -69,6 +69,7 @@ export function sendMessage(chatroomId, senderId, messageContent) {
 
   const payload = {
     senderId: senderId,
+    content: messageContent,
     message: messageContent,
     type: "CHAT"
   };

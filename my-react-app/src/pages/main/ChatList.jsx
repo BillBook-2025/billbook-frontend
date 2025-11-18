@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // API 함수
 import { getChatroom, leaveChatroom } from '../../api/chatrooms';
+import { bookDetail } from '../../api/books';
 
 export default function ChatList() {
   const [chatrooms, setChatrooms] = useState([]);
@@ -26,7 +27,25 @@ export default function ChatList() {
     }
 
     getChatroom(userId)
-      .then((data) => setChatrooms(data))
+      .then(async (data) => {
+        // 채팅방 목록을 먼저 가져온 뒤
+        // bookId를 이용해 책 제목을 추가로 조회 -> 방 이름
+        const roomsWithTitle = await Promise.all(
+          data.map(async (room) => {
+            if (!room.bookId) return room;
+
+            try {
+              const bookInfo = await bookDetail(room.bookId);
+              return { ...room, bookTitle: bookInfo.title };
+            }
+            catch (err) {
+              return room;
+            }
+          })
+        );
+
+        setChatrooms(roomsWithTitle);
+      })
       .catch((err) => console.error('채팅 목록 불러오기 실패', err));
   }, []);
 
@@ -104,7 +123,7 @@ export default function ChatList() {
                 />
               )}
               <div>
-                <p className="font-semibold">{room.partnerName}</p>
+                <p className="font-semibold">{room.bookTitle || room.partnerName}</p>
                 <p className="text-sm text-gray-500 truncate">
                   {room.lastMessage}
                 </p>

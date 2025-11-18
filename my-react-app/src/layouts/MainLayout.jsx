@@ -22,13 +22,8 @@ import {
 export default function MainLayout() {
   return (
     <div className="relative min-h-screen bg-gray-50">
-      {/* 상단 고정 헤더 */}
-      <header className="fixed top-0 left-0 w-full bg-white shadow z-20 h-16 flex items-center justify-center">
-        
-      </header>
-
-      {/* 메인 콘텐츠: 헤더, 하단바 공간만큼 */}
-      <main className="pt-16 pb-20">
+      {/* 메인 콘텐츠: 하단바 공간만큼 */}
+      <main className="pb-20">
         <Outlet />
       </main>
 
