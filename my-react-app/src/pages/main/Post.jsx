@@ -57,8 +57,10 @@ export default function Post() {
         }
 
         const likeData = await likeCount(bookId);
-        setLikesCount(Number(likeData.count) || 0);
-        setLiked(!!likeData.likedByMe);
+        // 좋아요 수
+        setLikesCount(Number(likeData.likeCount) || 0);
+        // 좋아요 눌렀는지
+        setLiked(!!likeData.isLiked);
       } catch (err) {
         console.error('게시글 로드 실패', err);
       }
@@ -88,9 +90,16 @@ export default function Post() {
 
   // 좋아요누르기
   const handleLike = async () => {
-    await likeBook(bookId);
-    setLiked((prev) => !prev);
-    setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
+    try {
+      const data = await likeBook(bookId);
+
+      setLiked(!!data.isLiked); 
+      setLikesCount(Number(data.likeCount) || 0);
+
+    } catch (err) {
+      console.error('좋아요 처리 실패', err);
+      alert('좋아요 처리에 실패했습니다.');
+    }
   };
 
   // 채팅 생성

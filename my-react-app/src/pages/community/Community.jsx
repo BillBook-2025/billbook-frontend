@@ -127,7 +127,7 @@ export default function Community() {
                   <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">{post.user?.nickname || '익명'}</p>
+                  <p className="font-semibold text-gray-800">{post.userId || '익명'}</p>
                   <p className="text-xs text-gray-400">
                     {new Date(post.createdAt).toLocaleDateString('ko-KR')}
                   </p>
