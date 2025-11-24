@@ -74,7 +74,7 @@ export default function MyPage() {
 
     // 내가 좋아요 누른 책
     myLikes(userId)
-      .then((data) => setLikedBooks(data.data?.books || []))
+      .then((data) => {setLikedBooks(data.books || []);})
       .catch((err) => console.error("myLikes 로드 실패", err));
 
     // 내가 올린 책
@@ -245,11 +245,37 @@ export default function MyPage() {
       {/* 내가 좋아요 누른 책 */}
       <section className="border p-4 rounded-lg bg-ivory">
         <h3 className="font-semibold mb-2">좋아요한 책</h3>
-        <ul className="space-y-1">
-          {likedBooks.map((b) => (
-            <li key={b.bookId}>{b.title}</li>
-          ))}
-        </ul>
+        <div className="flex gap-4 overflow-x-auto">
+          {likedBooks.map((b) => {
+            const thumbnail = b.bookPic?.length > 0 ? b.bookPic[0].url : null;
+
+            return (
+              <div
+                key={b.bookId}
+                className="min-w-[150px] border rounded-lg bg-white shadow p-2 flex flex-col justify-between cursor-pointer"
+                // 클릭 시 해당 게시글로
+                onClick={() => navigate(`/post/${b.bookId}`)} 
+              >
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={b.title}
+                    className="w-full h-32 object-cover rounded"
+                  />
+                ) : (
+                  <div className="w-full h-32 flex items-center justify-center bg-gray-200 text-darkbrown rounded">
+                    {b.title?.slice(0, 1) || '?'}
+                  </div>
+                )}
+
+                {/* 책 제목 */}
+                <p className="mt-2 font-medium text-darkbrown truncate">
+                  {b.title}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* 내가 올린 책 */}
