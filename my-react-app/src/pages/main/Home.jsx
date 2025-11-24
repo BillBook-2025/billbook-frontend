@@ -40,7 +40,11 @@ export default function Home() {
       try {
         // 현재 거래 가능한 글 불러오기
         const data = await bookList();
-        setBooks(data);
+        const availableBooks = Array.isArray(data) 
+          ? data.filter(book => book.status === 'PENDING')
+          : [];
+
+        setBooks(availableBooks);
 
         // 거래글에서 카테고리 추출 (중복 제거, null 제거)
         const uniqueCategories = Array.from(
