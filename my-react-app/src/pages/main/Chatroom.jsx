@@ -39,10 +39,19 @@
 returnBook 호출로 게시물 새로 등록
  */
 
+// src/pages/main/Chatroom.jsx
+
+// src/pages/main/Chatroom.jsx
+
 import { useRef, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 // API
-import { getChats, sendPicture, setDeadline } from '../../api/chatrooms';
+import {
+  getChats,
+  getChatroomDetail,
+  sendPicture,
+  setDeadline,
+} from '../../api/chatrooms';
 import { returnBook, borrowBook } from '../../api/books';
 // 아이콘
 import {
@@ -65,12 +74,15 @@ import {
 export default function Chatroom() {
   const { chatId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
   const userId = userInfo?.id;
+  const currentUserId = userId;
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [bookId, setBookId] = useState(location.state?.bookId || null);
   const [chatData, setChatData] = useState({
     id: null,
     partnerName: '상대방',
@@ -85,9 +97,10 @@ export default function Chatroom() {
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [deadline, setDeadlineState] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo && userInfo.id) {
@@ -98,27 +111,30 @@ export default function Chatroom() {
   // 데이터 불러오기
   useEffect(() => {
     if (!chatId) return;
-    async function fetchData() {
+
+    // 채팅방 상세 정보
+    /*
+    async function loadChatroomDetail() {
       try {
-        const res = await getChats(chatId);
-
-        console.log('📄 서버에서 받은 채팅 내역:', res);
-
-        if (res && Array.isArray(res.content)) {
-          setMessages(res.content);
-        } else if (Array.isArray(res)) {
-          setMessages(res);
-        } else if (res && Array.isArray(res.messages)) {
-          setMessages(res.messages);
-        } else {
-          console.warn('⚠️ 채팅 내역을 찾을 수 없거나 형식이 다릅니다.');
-          setMessages([]);
-        }
+        const detail = await getChatroomDetail(chatId);
+        setChatData(detail);
       } catch (err) {
-        console.error('데이터 로드 실패:', err);
+        console.error('채팅방 상세 정보 로드 실패:', err);
+      }
+    } 
+    */
+
+    // 채팅 메시지 목록
+    async function loadMessages() {
+      try {
+        const msgData = await getChats(chatId);
+        setMessages(msgData.content || []);
+      } catch (err) {
+        console.error('메시지 로드 실패:', err);
       }
     }
-    fetchData();
+
+    loadMessages();
   }, [chatId]);
 
   // 웹소켓 연결
@@ -141,7 +157,6 @@ export default function Chatroom() {
     }
   }, [messages]);
 
-  // 확장메뉴가 열리면 아래로 자동스크롤
   useEffect(() => {
     const timer = setTimeout(() => {
       if (scrollRef.current) {
@@ -153,62 +168,148 @@ export default function Chatroom() {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [showPlusMenu, showDatePicker, previewUrl]);
+  }, [showPlusMenu, showDatePicker, imagePreviewUrl]);
 
   const handleSend = async () => {
-    if (!message.trim() && !selectedFile) return;
+    if (selectedImage) {
+      await handleImageSend();
+      // return;
+    }
 
-    try {
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        await sendPicture(chatId, formData);
-
-        clearImage();
-      }
-
-      if (message.trim()) {
+    // 텍스트 메시지 전송
+    if (message.trim()) {
+      try {
         sendMessage(chatId, userId, message);
         setMessage('');
+      } catch (err) {
+        console.error('텍스트 전송 실패:', err);
+        alert('메시지 전송 중 오류가 발생했습니다.');
       }
-    } catch (err) {
-      console.error('전송 실패:', err);
-      alert('메시지 전송 중 오류가 발생했습니다.');
     }
   };
 
+  const handlePictureMenuClick = () => {
+    fileInputRef.current.click();
+    setShowPlusMenu(false); // 메뉴 닫기
+  };
+
+  // 이미지 선택
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    setSelectedFile(file);
-    const fileUrl = URL.createObjectURL(file);
-    setPreviewUrl(fileUrl);
-    setShowPlusMenu(false);
-  };
-
-  // 미리보기
-  const clearImage = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // input 초기화
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
+    e.target.value = null;
   };
 
-  const handleSetDeadline = async () => {
-    if (!deadline) return alert('날짜를 선택해주세요');
+  // 이미지 전송
+  const handleImageSend = async () => {
+    if (!selectedImage || !chatId) return;
+
+    const formData = new FormData();
+    formData.append('file', selectedImage);
+
     try {
-      await setDeadline(chatId, { deadline });
-      alert('반납 기한 설정 완료');
-      setShowDatePicker(false);
-      setShowPlusMenu(false);
-    } catch (err) {
-      console.error(err);
+      const response = await sendPicture(chatId, formData);
+
+      const newMessage = {
+        messageId: Date.now(),
+        senderId: currentUserId,
+        content: response.url,
+        time: new Date().toISOString(),
+        type: 'IMAGE',
+      };
+      setMessages((prev) => [...prev, newMessage]);
+
+      setSelectedImage(null);
+      setImagePreviewUrl(null);
+    } catch (error) {
+      console.error('사진 메시지 전송 실패:', error);
+      alert(`사진 전송에 실패했습니다. ${error.message}`);
     }
   };
 
+  const clearImage = () => {
+    setSelectedImage(null);
+    setImagePreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 날짜 ㅁㅁㅁㅁ년 ㅁ월 ㅁ일 형식으로 만들기
+  const formatDateDisplay = (dateString) => {
+    const date = new Date(dateString);
+    if (isNaN(date)) return '유효하지 않은 날짜';
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${year}년 ${month}월 ${day}일`;
+  };
+
+  // 시스템 메시지를 로컬 채팅에 추가
+  const sendSystemMessage = (text) => {
+    const newMessage = {
+      messageId: Date.now(),
+      senderId: 'system',
+      content: text,
+      time: new Date().toISOString(),
+      type: 'SYSTEM',
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
+  // 책 대출 처리
+  const handleBorrow = async () => {
+    if (!bookId) {
+      alert('책 정보가 없습니다.');
+      console.error('책 ID를 찾을 수 없음:', { bookId });
+      return;
+    }
+
+    if (!window.confirm('책 대출 처리를 하시겠습니까?')) return;
+
+    try {
+      await borrowBook(bookId, { status: 'ON_LOAN' });
+
+      alert(
+        '책 대출 처리가 완료되었습니다. 게시글 상태가 [대여 중]으로 변경됩니다.'
+      );
+    } catch (err) {
+      console.error('책 대출 처리 실패:', err);
+      alert('책 대출 처리에 실패했습니다. 권한을 확인해주세요.');
+    }
+  };
+
+  // 반납일자
+  const handleSetDeadline = async () => {
+    if (!deadline) {
+      alert('반납 일자를 선택해주세요.');
+      return;
+    }
+    const returnTimeISO = `${deadline}T00:00:00+09:00`;
+
+    try {
+      await setDeadline(chatId, { returnTime: returnTimeISO });
+
+      const formattedDate = formatDateDisplay(deadline);
+      const systemMessage = `반납 일자가 ${formattedDate}로 설정되었습니다!`;
+
+      sendSystemMessage(systemMessage);
+
+      setShowDatePicker(false);
+
+      console.log(`반납 기한 설정 완료: ${formattedDate}`);
+    } catch (error) {
+      console.error('반납 기한 설정 실패', error);
+      alert('반납 기한 설정에 실패했습니다. 다시 시도해 주세요.');
+    }
+  };
   const handleBorrowBook = () => alert('기능 준비 중입니다.');
   const handleCompleteDeal = () => alert('기능 준비 중입니다.');
   const handleSendDeal = () => alert('송금 기능 준비 중입니다.');
@@ -251,7 +352,7 @@ export default function Chatroom() {
         )}
       </div>
 
-      {/* 채팅 내역 (스크롤) */}
+      {/* 채팅 내역 */}
       <div
         className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f2f4f6]"
         ref={scrollRef}
@@ -264,7 +365,7 @@ export default function Chatroom() {
               key={idx}
               className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
             >
-              {/* 상대방 프사 (선택) */}
+              {/* 상대방 프사 */}
               {!isMe && (
                 <div className="w-10 h-10 bg-gray-300 rounded-full mr-3 flex-shrink-0" />
               )}
@@ -272,17 +373,17 @@ export default function Chatroom() {
               <div
                 className={`max-w-[60%] px-4 py-3 rounded-2xl text-base shadow-sm leading-relaxed break-words ${
                   msg.senderId === userId
-                    ? 'bg-pistachio text-white rounded-tr-none'
-                    : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                    ? 'bg-pistachio text-darkbrown rounded-tr-none'
+                    : 'bg-white border border-orange-500 text-gray-800 rounded-tl-none'
                 }`}
               >
-                {content && (content.startsWith('http') 
-                || content.startsWith('/')) ? (
+                {msg.type === 'IMAGE' ||
+                content?.startsWith('http') ||
+                content?.startsWith('/') ? (
                   <img
                     src={content}
                     alt="전송된 사진"
                     className="rounded-lg max-w-full h-auto mt-1"
-                    // 이미지 로드 에러 시 텍스트로 보여주기 (선택사항)
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
@@ -298,25 +399,37 @@ export default function Chatroom() {
 
       {/* 하단 입력창 */}
       <div className="flex-none bg-white border-t p-4 z-20 transition-all duration-300 ease-in-out">
-        {/* 이미지 미리보기 */}
-        {previewUrl && (
-          <div className="absolute bottom-full left-0 w-full p-3 bg-gray-50 border-t border-gray-200 flex items-start gap-2 z-10">
-            <div className="relative">
+        {/* 💡 *유지*: 이미지 미리보기 */}
+        {imagePreviewUrl && (
+          <div className="absolute bottom-full mb-4 left-4 bg-white p-2 rounded-lg shadow-xl border z-20">
+            <p className="font-semibold text-darkbrown mb-2 text-sm">
+              사진 미리보기
+            </p>
+            <div className="relative w-40 h-40">
               <img
-                src={previewUrl}
+                src={imagePreviewUrl}
                 alt="미리보기"
-                className="h-20 w-20 object-cover rounded-lg border shadow-sm"
+                className="w-full h-full object-cover rounded"
               />
-              {/* X 버튼 */}
+              {/* 취소 버튼 */}
               <button
                 onClick={clearImage}
-                className="absolute -top-2 -right-2 bg-gray-600 text-white rounded-full p-1 hover:bg-gray-800 transition"
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
               >
-                <X size={12} />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageSelect}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+
         {/* 입력 컨트롤러 */}
         <div className="flex items-center gap-3">
           <button
@@ -336,21 +449,31 @@ export default function Chatroom() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) =>
-              e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()
+              e.key === 'Enter' &&
+              !e.nativeEvent.isComposing &&
+              (message.trim() || selectedImage) &&
+              handleSend()
             }
-            placeholder="메시지를 입력하세요..."
+            placeholder={
+              selectedImage ? '사진 전송 준비 완료' : '메시지를 입력하세요...'
+            }
             className="flex-1 px-6 py-3 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-pistachio/50 text-base"
+            disabled={!!selectedImage}
           />
 
           <button
             onClick={handleSend}
-            disabled={!message.trim()}
+            disabled={!message.trim() && !selectedImage}
             className={`p-3 rounded-full transition-all shadow-md ${
-              message.trim()
+              message.trim() || selectedImage
                 ? 'bg-orange-300 text-white hover:opacity-90 hover:scale-105'
-                : 'bg-pistachio text-gray-400 cursor-not-allowed'
+                : 'bg-yellow-300 text-darkbrown cursor-not-allowed'
             }`}
-            style={message.trim() ? { backgroundColor: '#93C572' } : {}}
+            style={
+              message.trim() || selectedImage
+                ? { backgroundColor: '#ffb758ff' }
+                : {}
+            }
           >
             <Send className="w-5 h-5 ml-0.5" />
           </button>
@@ -363,14 +486,7 @@ export default function Chatroom() {
               icon={<ImageIcon size={28} className="text-blue-500" />}
               label="사진"
               color="bg-blue-100"
-              onClick={() => fileInputRef.current.click()}
-            />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageSelect}
-              className="hidden"
-              accept="image/*"
+              onClick={handlePictureMenuClick}
             />
 
             <MenuButton
@@ -396,7 +512,7 @@ export default function Chatroom() {
               }
               label="책 대출"
               color="bg-purple-100"
-              onClick={handleBorrowBook}
+              onClick={handleBorrow}
             />
           </div>
         )}
@@ -434,7 +550,7 @@ export default function Chatroom() {
   );
 }
 
-// 메뉴 버튼 컴포넌트 (코드 깔끔하게 분리)
+// 메뉴 버튼 컴포넌트
 function MenuButton({ icon, label, color, onClick }) {
   return (
     <button

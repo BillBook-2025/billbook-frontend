@@ -50,11 +50,15 @@ export default function ChatList() {
   }, []);
 
   // 채팅방 클릭 → Chatroom으로 이동
-  const handleClickChatroom = (id) => {
+  const handleClickChatroom = (roomId, bookId) => {
     if (editMode) {
       toggleSelect(id);
     } else {
-      navigate(`/chatRoom/${id}`);
+      console.log('--- navigating with ---');
+      console.log('roomId:', roomId);
+      console.log('bookId to pass:', bookId);
+
+      navigate(`/chatRoom/${roomId}`, { state: { bookId } });
     }
   };
 
@@ -105,7 +109,7 @@ export default function ChatList() {
           chatrooms.map((room) => (
             <div
               key={room.id}
-              onClick={() => handleClickChatroom(room.id)}
+              onClick={() => handleClickChatroom(room.id, room.bookId)}
               className={`flex items-center justify-between p-4 border-b cursor-pointer hover:bg-gray-100 ${
                 editMode ? 'pl-10' : ''
               }${

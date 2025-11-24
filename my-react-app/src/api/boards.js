@@ -48,8 +48,9 @@ export async function getBoardLike(boardId) {
 
 // 좋아요 누르기
 export async function likeBoard(boardId) {
-  return fetchWithAuth(`/boards/${boardId}/like`, { 
-    method: 'POST' });
+  return fetchWithAuth(`/boards/${boardId}/like`, {
+    method: 'POST',
+  });
 }
 
 // 댓글 목록 조회

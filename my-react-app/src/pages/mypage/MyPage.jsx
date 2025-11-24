@@ -43,7 +43,6 @@ export default function MyPage() {
 
   const [points, setPoints] = useState(0);
   const [likedBooks, setLikedBooks] = useState([]);
-  const [myBorrows, setMyBorrows] = useState([]);
   const [myRegisters, setMyRegisters] = useState([]);
   const [myBoardsList, setMyBoardsList] = useState([]);
   const [followers, setFollowers] = useState([]);
@@ -88,11 +87,17 @@ export default function MyPage() {
       .catch((err) => console.error("borrowedBooks 로드 실패", err));
 
     // 내가 쓴 커뮤니티 글
-    /*
     userBoards(userId)
-      .then((data) => setMyBoardsList(data.boards || [])) 
+      userBoards(userId)
+      .then((data) => {
+        const boards = Array.isArray(data) ? data : data.boards || [];
+
+        const sortedBoards = boards.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setMyBoardsList(sortedBoards);
+      })
       .catch((err) => console.error("userBoards 로드 실패", err));
-    */
 
     // 팔로워
     fetchFollowers(userId)
@@ -292,6 +297,7 @@ export default function MyPage() {
             return (
               <div
                 key={b.bookId}
+                onClick={() => navigate(`/post/${b.bookId}`)}
                 className="min-w-[150px] border rounded-lg bg-white shadow p-2 flex flex-col justify-between"
               >
                 {/* 책 썸네일 */}
@@ -332,31 +338,39 @@ export default function MyPage() {
 
       {/* 내가 쓴 커뮤니티 글 */}
       <section className="border p-4 rounded-lg bg-ivory">
-        <h3 className="font-semibold mb-2 text-darkbrown">내 커뮤니티 글</h3>
-        <div className="flex gap-4 overflow-x-auto">
-          {myBoardsList.slice(0, 3).map((b) => (
-            <div
-              key={b.boardId}
-              className="min-w-[150px] h-32 border rounded-lg bg-pistachio flex items-center justify-center p-2 cursor-pointer"
-              onClick={() => navigate(`/community/${b.boardId}`)} // CommunityPost 페이지로 이동
-            >
-              <p className="text-darkbrown font-medium text-center truncate">
-                {b.title}
-              </p>
-            </div>
-          ))}
+        <h3 className="font-semibold mb-2">내가 쓴 커뮤니티 글</h3>
+        <div className="flex flex-col gap-3">
+          {myBoardsList.length === 0 ? (
+            <p className="text-gray-500 text-sm">작성한 커뮤니티 글이 없습니다.</p>
+          ) : (
+            myBoardsList.slice(0, 3).map((board) => (
+              <div
+                key={board.boardId}
+                // 클릭 시 해당 게시글 상세 페이지로 이동
+                onClick={() => navigate(`/communityPost/${board.boardId}`)} 
+                className="p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors shadow-sm"
+              >
+                {/* 제목 */}
+                <p className="font-medium text-darkbrown truncate">
+                  {board.title}
+                </p>
+                {/* 작성일자 */}
+                <p className="text-xs text-gray-400 mt-1">
+                  {board.createdAt && new Date(board.createdAt).toLocaleDateString('ko-KR')}
+                </p>
+              </div>
+            ))
+          )}
 
-          {/* 더보기 버튼 */}
-          {myBoardsList.length > 3 && (
-            <button
-              onClick={() => navigate('/MyBoardPost')}
-              className="min-w-[100px] border rounded-lg bg-pistachio text-darkbrown flex items-center justify-center hover:bg-pistachio-dark transition-colors"
-            >
-              더보기
-            </button>
-          )}
-        </div>
-      </section>
+          {/* 모든 글 보기 */}
+          <button
+            onClick={() => navigate('/MyBoardPost')}
+            className="mt-2 w-full border rounded-lg bg-pistachio text-darkbrown py-2 text-sm hover:bg-pistachio-dark transition-colors"
+          >
+            모든 글 보기 ({myBoardsList.length}개)
+          </button>
+        </div>
+      </section>
 
       {/* 팔로워/팔로잉 */}
       <section className="border p-4 rounded-lg bg-ivory">

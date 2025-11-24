@@ -90,12 +90,18 @@ export default function Post() {
 
   // 좋아요누르기
   const handleLike = async () => {
+    const prevLiked = liked;
+    const prevLikesCount = likesCount;
+
+    // 좋아요 누른 거 즉시 반영하기
+    setLiked(!prevLiked);
+    setLikesCount(prevLiked ? prevLikesCount - 1 : prevLikesCount + 1);
+    
     try {
       const data = await likeBook(bookId);
 
       setLiked(!!data.isLiked); 
       setLikesCount(Number(data.likeCount) || 0);
-
     } catch (err) {
       console.error('좋아요 처리 실패', err);
       alert('좋아요 처리에 실패했습니다.');
@@ -117,7 +123,7 @@ export default function Post() {
       const data = await createChatroom(bookId, buyerId);
 
       if (data && data.id) {
-        navigate(`/chatRoom/${data.id}`);
+        navigate(`/chatRoom/${data.id}`, { state: { bookId } });
       } else {
         console.error('채팅방 ID를 받지 못했습니다.', data);
       }
