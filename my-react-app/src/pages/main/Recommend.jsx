@@ -21,12 +21,14 @@ export default function Recommend() {
         const res = await fetchRecommendedBooks();
         console.log("추천 도서 API 응답 확인:", res);
 
-        if (Array.isArray(res)) {
+        if (Array.isArray(res)) { 
           setBooks(res);
-        } else if (res && Array.isArray(res.data)) {
+        } else if (res && Array.isArray(res.results)) { 
+          setBooks(res.results);
+        } else if (res && Array.isArray(res.data)) { 
           setBooks(res.data);
         } else {
-          console.warn("API 응답이 배열 형식이 아닙니다:", res);
+          console.warn("API 응답이 예상한 배열/객체 형식이 아닙니다:", res);
           setBooks([]);
         }
       } 
@@ -49,7 +51,6 @@ export default function Recommend() {
         {books.map((book) => (
           <li
             key={book.bookId}
-            onClick={() => navigate(`/book/${book.bookId}`)}
             className="flex gap-4 items-center cursor-pointer border rounded p-3 hover:bg-gray-100"
           >
             {/* 왼쪽: 책 이미지 */}
@@ -74,21 +75,6 @@ export default function Recommend() {
               <p className="text-sm text-gray-600">
                 {book.author} | {book.publisher}
               </p>
-              
-              {/* 추가 정보 (상태, 가격 등) */}
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`text-xs px-2 py-1 rounded font-bold 
-                  ${book.cond === 'GOOD' ? 'bg-green-100 text-green-700' : 
-                    book.cond === 'FAIR' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
-                  {book.cond === 'GOOD' ? '좋음' : book.condition === 'FAIR' ? '보통' : '나쁨'}
-                </span>
-                {/* 지역 정보가 있다면 표시 */}
-                {book.locate && (
-                  <span className="text-xs text-gray-400">
-                     {book.locate.regionLevel2} {book.locate.regionLevel3}
-                  </span>
-                )}
-              </div>
             </div>
           </li>
         ))}

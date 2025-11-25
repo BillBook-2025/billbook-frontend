@@ -258,155 +258,223 @@ export default function PostEdit() {
     }
   };
 
+  // src/pages/main/PostEdit.jsx
+
+// ... (이전 코드 생략)
+
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">게시글 수정</h1>
-
-      {/* 책 검색 섹션 */}
-      <div className="mb-4">
-        <div className="flex gap-2">
-            <input
-            type="text"
-            placeholder="책 다시 검색 (변경 시)"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 border rounded"
-            />
-            <button
-            onClick={handleSearch}
-            type="button"
-            className="px-4 py-2 bg-pistachio rounded whitespace-nowrap"
-            >
-            검색
-            </button>
-        </div>
+    <div className="bg-gray-50 min-h-screen pb-10">
+      <div className="max-w-xl mx-auto p-4">
         
-        {searchResults.length > 0 && (
-          <ul className="border mt-2 max-h-40 overflow-auto">
-            {searchResults.map((book, index) => (
-              <li
-                key={book.id || index}
-                onClick={() => handleSelectBook(book)}
-                className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between"
-              >
-                <span>{book.title}</span>
-                <span className="text-gray-500 text-sm">{book.author}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        {/* Header (수정 페이지는 오렌지색 강조) */}
+        <h1 className="text-3xl font-extrabold text-darkbrown mb-6 border-b-4 border-orange-500 inline-block pb-1">
+          게시글 수정
+        </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* 책 상태 */}
-        <div className="mb-2">
-          <label htmlFor="condition" className="block text-sm font-medium text-gray-700">
-            책 상태
-          </label>
-          <select
-            id="condition"
-            value={condition}
-            onChange={(e) => setCondition(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            <option value="GOOD">좋음</option>
-            <option value="FAIR">보통</option>
-            <option value="POOR">나쁨</option>
-          </select>
-        </div>
-
-        <textarea
-          placeholder="상세 설명"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded min-h-[100px]"
-        />
-
-        {/* 구글맵 */}
-        <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
-          <Autocomplete
-            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-            onPlaceChanged={handlePlaceChanged}
-          >
-            <input
-              type="text"
-              placeholder="거래 희망 장소 변경"
-              className="w-full border p-2 rounded mb-2"
-            />
-          </Autocomplete>
-
-          <GoogleMap
-            center={{
-              lat: location.latitude || 37.5665,
-              lng: location.longitude || 126.978,
-            }}
-            zoom={14}
-            mapContainerStyle={{
-              width: '100%',
-              height: '200px',
-              borderRadius: '8px',
-            }}
-          >
-            <Marker
-              position={{
-                lat: location.latitude || 37.5665,
-                lng: location.longitude || 126.978,
-              }}
-            />
-          </GoogleMap>
-        </LoadScript>
-
-        {/* 이미지 관리 */}
-        <div className="flex flex-col gap-2">
-            <label className="font-medium">이미지 수정</label>
-            
-            {/* 기존 이미지 리스트 */}
-            <div className="flex flex-wrap gap-2">
-                {existingImages.map((img, idx) => (
-                    <div key={idx} className="relative w-24 h-24">
-                        <img 
-                            src={img.url} 
-                            alt="existing" 
-                            className="w-full h-full object-cover rounded border" 
-                        />
-                        <button
-                            type="button"
-                            onClick={() => handleRemoveExistingImage(idx, img.fileName)} 
-                            className="absolute -top-2 -right-2 bg-white rounded-full shadow"
-                        >
-                            <XCircle className="w-6 h-6 text-red-500" />
-                        </button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        
+            {/* 책 검색 */}
+            <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-3">
+                  책 정보 (변경 시 검색)
+                </h2>
+                <div className="flex gap-2">
+                    <input
+                    type="text"
+                    placeholder="책 다시 검색 (변경 시)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pistachio transition"
+                    />
+                    <button
+                    onClick={handleSearch}
+                    type="button"
+                    className="px-6 py-3 bg-pistachio text-white font-semibold rounded-lg hover:bg-darkbrown transition flex-shrink-0 whitespace-nowrap"
+                    >
+                    검색
+                    </button>
+                </div>
+                
+                {searchResults.length > 0 && (
+                    <ul className="border border-pistachio mt-3 rounded-lg max-h-48 overflow-auto shadow-inner">
+                        {searchResults.map((book, index) => (
+                          <li
+                            key={book.id || index}
+                            onClick={() => handleSelectBook(book)}
+                            className="p-3 hover:bg-pistachio hover:text-white text-gray-800 cursor-pointer border-b last:border-b-0 transition flex justify-between items-center"
+                          >
+                            <span className="font-medium truncate">{book.title}</span>
+                            <span className="text-sm opacity-80 ml-4">{book.author}</span>
+                          </li>
+                        ))}
+                    </ul>
+                )}
+                
+                {/* 현재/선택된 책 정보 표시 */}
+                {selectedBook && (
+                    <div className="mt-4 p-3 bg-pistachio bg-opacity-10 border-l-4 border-pistachio rounded-r-lg">
+                        <p className="font-bold text-darkbrown">현재 책:</p>
+                        <p className="text-gray-800 text-sm">{selectedBook.title} - {selectedBook.author}</p>
                     </div>
-                ))}
-
-                {/* 새 이미지 프리뷰 */}
-                {newImagePreviews.map((url, idx) => (
-                    <div key={`new-${idx}`} className="relative w-24 h-24">
-                        <img src={url} alt="new" className="w-full h-full object-cover rounded border border-blue-400" />
-                        <button
-                            type="button"
-                            onClick={() => handleRemoveNewImage(idx)}
-                            className="absolute -top-2 -right-2 bg-white rounded-full shadow"
-                        >
-                            <XCircle className="w-6 h-6 text-blue-500" />
-                        </button>
-                    </div>
-                ))}
+                )}
             </div>
             
-            <input type="file" multiple onChange={handleImageChange} className="text-sm" />
-        </div>
+            {/* 상태 */}
+            <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-3">
+                  책 상태 및 상세 설명
+                </h2>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 rounded text-black font-semibold mt-4"
-        >
-          {isSubmitting ? '수정 중...' : '수정 완료'}
-        </button>
-        
-        {error && <p className="text-red-500 text-center">{error}</p>}
-      </form>
+                {/* 책 상태 */}
+                <div className="mb-4">
+                  <label htmlFor="condition" className="block text-sm font-semibold text-gray-700 mb-1">
+                    책 상태
+                  </label>
+                  <select
+                    id="condition"
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-pistachio appearance-none"
+                  >
+                    <option value="GOOD">좋음 (Good)</option>
+                    <option value="FAIR">보통 (Fair)</option>
+                    <option value="POOR">나쁨 (Poor)</option>
+                  </select>
+                </div>
+
+                {/* 상세 설명 */}
+                <div className="mb-2">
+                    <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+                        상세 설명
+                    </label>
+                    <textarea
+                      id="description"
+                      placeholder="책의 상태, 거래 방식 등 상세 설명을 입력해주세요."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg min-h-[150px] focus:ring-2 focus:ring-pistachio"
+                    />
+                </div>
+            </div>
+
+            {/*위치 설정 */}
+            <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  거래 희망 위치 변경
+                </h2>
+                
+                {/* 구글맵 자동완성 + 지도 */}
+                <LoadScript googleMapsApiKey={apiKey} libraries={['places']}>
+                  <Autocomplete
+                    onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                    onPlaceChanged={handlePlaceChanged}
+                  >
+                    <input
+                      type="text"
+                      placeholder="거래 희망 장소 변경"
+                      className="w-full border border-gray-300 p-3 rounded-lg mb-4 focus:ring-2 focus:ring-pistachio"
+                    />
+                  </Autocomplete>
+
+                  {/* 지도 표시 */}
+                  <div className="text-sm text-gray-600 mb-3">현재 주소: {location.address || '장소를 검색해주세요.'}</div>
+                  <GoogleMap
+                    center={{
+                      lat: location.latitude || 37.5665,
+                      lng: location.longitude || 126.978,
+                    }}
+                    zoom={14}
+                    mapContainerStyle={{
+                      width: '100%',
+                      height: '200px',
+                      borderRadius: '8px',
+                      border: '1px solid #ddd'
+                    }}
+                  >
+                    <Marker
+                      position={{
+                        lat: location.latitude || 37.5665,
+                        lng: location.longitude || 126.978,
+                      }}
+                    />
+                  </GoogleMap>
+                </LoadScript>
+            </div>
+            
+            {/* 이미지 */}
+            <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-800 mb-3">
+                  이미지 수정 (삭제/추가)
+                </h2>
+                
+                {/* 기존 이미지 리스트 (빨간색 X: 삭제 버튼) */}
+                <div className="mb-4 p-3 border-b pb-4">
+                    <p className="font-semibold text-gray-700 mb-2">기존 이미지 ({existingImages.length}개) - <span className="text-red-500">클릭 시 즉시 삭제</span></p>
+                    <div className="flex flex-wrap gap-3">
+                        {existingImages.map((img, idx) => (
+                            <div key={idx} className="relative w-24 h-24 shadow-md">
+                                <img 
+                                    src={img.url} 
+                                    alt="기존 이미지" 
+                                    className="w-full h-full object-cover rounded border-2 border-red-400 opacity-80" 
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveExistingImage(idx, img.fileName)} 
+                                    className="absolute -top-2 -right-2 bg-white rounded-full shadow-lg p-[2px] transition hover:scale-110"
+                                    aria-label="기존 이미지 삭제"
+                                >
+                                    <XCircle className="w-6 h-6 text-red-500" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 새 이미지 프리뷰 (파란색 X: 로컬 삭제 버튼) */}
+                <div className="mb-4">
+                    <p className="font-semibold text-gray-700 mb-2">새로 추가된 이미지 ({newImages.length}개)</p>
+                    <div className="flex flex-wrap gap-3">
+                        {newImagePreviews.map((url, idx) => (
+                            <div key={`new-${idx}`} className="relative w-24 h-24 shadow-md">
+                                <img 
+                                    src={url} 
+                                    alt="새 이미지" 
+                                    className="w-full h-full object-cover rounded border-2 border-blue-400" 
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveNewImage(idx)}
+                                    className="absolute -top-2 -right-2 bg-white rounded-full shadow-lg p-[2px] transition hover:scale-110"
+                                    aria-label="새 이미지 삭제"
+                                >
+                                    <XCircle className="w-6 h-6 text-blue-500" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 파일 선택 버튼 */}
+                <input 
+                    type="file" 
+                    multiple 
+                    onChange={handleImageChange} 
+                    className="text-sm block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pistachio file:text-white hover:file:bg-darkbrown" 
+                />
+            </div>
+            
+            {/* 완료 */}
+            {error && <p className="text-red-500 text-center font-medium mt-2">{error}</p>}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 rounded-lg text-darkbrown font-extrabold text-lg mt-4 shadow-xl transition disabled:bg-gray-300 disabled:text-gray-500"
+            >
+              {isSubmitting ? '수정 중...' : '게시글 수정 완료'}
+            </button>
+        </form>
+      </div>
     </div>
   );
 }

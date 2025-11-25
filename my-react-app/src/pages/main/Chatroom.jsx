@@ -39,10 +39,6 @@
 returnBook 호출로 게시물 새로 등록
  */
 
-// src/pages/main/Chatroom.jsx
-
-// src/pages/main/Chatroom.jsx
-
 import { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 // API
@@ -128,12 +124,14 @@ export default function Chatroom() {
     async function loadMessages() {
       try {
         const msgData = await getChats(chatId);
-        setMessages(msgData.content || []);
+        let loadedMessages = msgData.content || [];
+        loadedMessages = loadedMessages.reverse();
+
+        setMessages(loadedMessages);
       } catch (err) {
         console.error('메시지 로드 실패:', err);
       }
     }
-
     loadMessages();
   }, [chatId]);
 
@@ -221,7 +219,7 @@ export default function Chatroom() {
         messageId: Date.now(),
         senderId: currentUserId,
         content: response.url,
-        time: new Date().toISOString(),
+        sendAt: new Date().toISOString(),
         type: 'IMAGE',
       };
       setMessages((prev) => [...prev, newMessage]);
@@ -258,7 +256,7 @@ export default function Chatroom() {
       messageId: Date.now(),
       senderId: 'system',
       content: text,
-      time: new Date().toISOString(),
+      sendAt: new Date().toISOString(),
       type: 'SYSTEM',
     };
     setMessages((prev) => [...prev, newMessage]);
@@ -292,7 +290,7 @@ export default function Chatroom() {
       alert('반납 일자를 선택해주세요.');
       return;
     }
-    const returnTimeISO = `${deadline}T00:00:00+09:00`;
+    const returnTimeISO = `${deadline}T00:00:00`;
 
     try {
       await setDeadline(chatId, { returnTime: returnTimeISO });
@@ -317,35 +315,34 @@ export default function Chatroom() {
   return (
     <div className="flex flex-col h-[100dvh] pb-16 bg-gray-100 w-full max-w-5xl mx-auto border-x shadow-2xl relative overflow-hidden">
       {/* 상단 헤더 */}
-      <div className="flex-none flex items-center justify-between py-3 px-4 bg-white border-b shadow-sm ">
-        <div className="flex items-center">
+      <div className="flex-none flex items-center justify-between py-3 px-4 bg-white border-b-4 border-pistachio shadow-xl z-30">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-pistachio/20 rounded-full transition-colors"
           >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
+            <ArrowLeft className="w-6 h-6 text-darkbrown" />
           </button>
           <div>
-            <h2 className="font-bold text-xl text-gray-900">
+            <h2 className="font-extrabold text-xl text-darkbrown">
               {chatData.partnerName}
             </h2>
-            {/* 필요시 여기에 책 제목 등 추가 정보 표시 */}
           </div>
         </div>
         <button
           onClick={() => setShowMenu(!showMenu)}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <MoreVertical className="w-6 h-6 text-gray-600" />
+          <MoreVertical className="w-6 h-6 text-gray-700" />
         </button>
 
         {/* 우측 상단 메뉴 드롭다운 */}
         {showMenu && (
-          <div className="absolute right-4 top-16 w-48 bg-white border rounded-lg shadow-xl z-30 overflow-hidden">
-            <button className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium">
+          <div className="absolute right-4 top-16 w-48 bg-white border border-gray-200 rounded-lg shadow-2xl z-40 overflow-hidden">
+            <button className="w-full text-left px-4 py-3 hover:bg-pistachio/50 text-sm font-medium text-darkbrown transition">
               거래 관리
             </button>
-            <button className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm text-red-500 font-medium border-t">
+            <button className="w-full text-left px-4 py-3 hover:bg-red-50 text-sm text-red-500 font-medium border-t transition">
               나가기
             </button>
           </div>
@@ -354,7 +351,7 @@ export default function Chatroom() {
 
       {/* 채팅 내역 */}
       <div
-        className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f2f4f6]"
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#fcfcfc] transition-all duration-300 ease-in-out"
         ref={scrollRef}
       >
         {messages.map((msg, idx) => {
@@ -367,14 +364,14 @@ export default function Chatroom() {
             >
               {/* 상대방 프사 */}
               {!isMe && (
-                <div className="w-10 h-10 bg-gray-300 rounded-full mr-3 flex-shrink-0" />
+                <div className="w-8 h-8 bg-pistachio rounded-full mr-2 flex-shrink-0 border-2 border-darkbrown" />
               )}
 
               <div
-                className={`max-w-[60%] px-4 py-3 rounded-2xl text-base shadow-sm leading-relaxed break-words ${
-                  msg.senderId === userId
-                    ? 'bg-pistachio text-darkbrown rounded-tr-none'
-                    : 'bg-white border border-orange-500 text-gray-800 rounded-tl-none'
+                className={`max-w-[70%] px-4 py-3 text-base shadow-md break-words transition-all duration-300 ${
+                  isMe
+                    ? 'bg-pistachio text-darkbrown rounded-t-xl rounded-bl-xl'
+                    : 'bg-white border border-gray-200 text-gray-800 rounded-t-xl rounded-br-xl'
                 }`}
               >
                 {msg.type === 'IMAGE' ||
@@ -383,7 +380,7 @@ export default function Chatroom() {
                   <img
                     src={content}
                     alt="전송된 사진"
-                    className="rounded-lg max-w-full h-auto mt-1"
+                    className="rounded-lg max-w-full h-auto mt-1 cursor-pointer"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
@@ -398,23 +395,23 @@ export default function Chatroom() {
       </div>
 
       {/* 하단 입력창 */}
-      <div className="flex-none bg-white border-t p-4 z-20 transition-all duration-300 ease-in-out">
-        {/* 💡 *유지*: 이미지 미리보기 */}
+      <div className="flex-none bg-white border-t p-4 z-50 transition-all duration-300 ease-in-out">
+        {/* 이미지 미리보기 */}
         {imagePreviewUrl && (
-          <div className="absolute bottom-full mb-4 left-4 bg-white p-2 rounded-lg shadow-xl border z-20">
+          <div className="mb-4 p-3 bg-gray-50 rounded-xl shadow-inner border">
             <p className="font-semibold text-darkbrown mb-2 text-sm">
-              사진 미리보기
+              사진 전송 준비 완료
             </p>
             <div className="relative w-40 h-40">
               <img
                 src={imagePreviewUrl}
                 alt="미리보기"
-                className="w-full h-full object-cover rounded"
+                className="w-full h-full object-cover rounded-lg border-2 border-orange-400"
               />
               {/* 취소 버튼 */}
               <button
                 onClick={clearImage}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
+                className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full w-7 h-7 flex items-center justify-center text-sm shadow-lg border border-red-500 hover:scale-110 transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -437,11 +434,13 @@ export default function Chatroom() {
               setShowPlusMenu(!showPlusMenu);
               setShowDatePicker(false);
             }}
-            className={`p-3 rounded-full transition-all duration-200 ${
-              showPlusMenu ? 'bg-gray-200 rotate-45' : 'hover:bg-gray-100'
+            className={`p-3 rounded-full transition-all shadow-md ${
+              showPlusMenu
+                ? 'bg-pistachio rotate-45 text-darkbrown'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
             }`}
           >
-            <Plus className="w-6 h-6 text-gray-500" />
+            <Plus className="w-6 h-6" />
           </button>
 
           <input
@@ -455,9 +454,11 @@ export default function Chatroom() {
               handleSend()
             }
             placeholder={
-              selectedImage ? '사진 전송 준비 완료' : '메시지를 입력하세요...'
+              selectedImage
+                ? '사진 전송을 위해 전송 버튼을 누르세요.'
+                : '메시지를 입력하세요...'
             }
-            className="flex-1 px-6 py-3 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-pistachio/50 text-base"
+            className="flex-1 px-5 py-3 bg-gray-100 rounded-full text-base focus:outline-none focus:ring-2 focus:ring-pistachio transition"
             disabled={!!selectedImage}
           />
 
@@ -466,14 +467,9 @@ export default function Chatroom() {
             disabled={!message.trim() && !selectedImage}
             className={`p-3 rounded-full transition-all shadow-md ${
               message.trim() || selectedImage
-                ? 'bg-orange-300 text-white hover:opacity-90 hover:scale-105'
-                : 'bg-yellow-300 text-darkbrown cursor-not-allowed'
+                ? 'bg-orange-400 text-white hover:bg-orange-500 hover:scale-105'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
-            style={
-              message.trim() || selectedImage
-                ? { backgroundColor: '#ffb758ff' }
-                : {}
-            }
           >
             <Send className="w-5 h-5 ml-0.5" />
           </button>
@@ -519,8 +515,8 @@ export default function Chatroom() {
 
         {/* 날짜 설정창 */}
         {showDatePicker && (
-          <div className="mt-4 p-6 bg-white rounded-2xl border shadow-lg animate-fade-in-up">
-            <p className="text-lg font-bold mb-4 text-gray-800">
+          <div className="mt-4 p-5 bg-white rounded-2xl border border-gray-200 shadow-xl animate-fade-in-up">
+            <p className="text-lg font-bold mb-4 text-darkbrown">
               반납 기한 설정
             </p>
             <div className="flex gap-3">
@@ -528,17 +524,17 @@ export default function Chatroom() {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadlineState(e.target.value)}
-                className="border p-3 rounded-lg flex-1 text-base bg-gray-50"
+                className="border border-gray-300 p-3 rounded-lg flex-1 text-base bg-gray-50 focus:ring-pistachio focus:border-pistachio transition"
               />
               <button
                 onClick={handleSetDeadline}
-                className="bg-darkbrown text-white px-6 py-3 rounded-lg font-bold hover:bg-opacity-90"
+                className="bg-darkbrown text-white px-6 py-3 rounded-lg font-bold hover:bg-pistachio hover:text-darkbrown transition shadow-md"
               >
                 확인
               </button>
               <button
                 onClick={() => setShowDatePicker(false)}
-                className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-bold hover:bg-gray-300"
+                className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-bold hover:bg-gray-300 transition shadow-md"
               >
                 취소
               </button>
@@ -549,7 +545,6 @@ export default function Chatroom() {
     </div>
   );
 }
-
 // 메뉴 버튼 컴포넌트
 function MenuButton({ icon, label, color, onClick }) {
   return (
@@ -558,11 +553,11 @@ function MenuButton({ icon, label, color, onClick }) {
       className="flex flex-col items-center gap-2 group"
     >
       <div
-        className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm`}
+        className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-md`}
       >
         {icon}
       </div>
-      <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900">
+      <span className="text-sm font-medium text-gray-700 group-hover:text-darkbrown transition">
         {label}
       </span>
     </button>

@@ -93,65 +93,74 @@ export default function CommunityPost() {
   if (!board) return <div className="p-4">로딩 중...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      {/* 게시글 정보 */}
-      <div className="border rounded-lg bg-ivory p-4">
-        <h2 className="text-xl font-bold mb-2">{board.title}</h2>
-        <p className="text-sm text-gray-700 mb-2">{board.content}</p>
-        <p className="text-xs text-gray-500">
-          작성자: {board.userId} | 작성일:{' '}
-          {new Date(board.createdAt).toLocaleDateString()}
-        </p>
+    <div className="max-w-3xl mx-auto p-4 md:p-8 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 space-y-8">
+        
+        {/* 게시글 정보 */}
+        <div className="border-b-2 border-pistachio pb-5 space-y-4">
+          <h1 className="text-3xl font-extrabold text-gray-900 leading-snug">{board.title}</h1>
+          
+          <p className="text-base text-gray-700 whitespace-pre-wrap leading-relaxed bg-indigo-50/50 p-4 rounded-lg border border-indigo-100 shadow-inner">{board.content}</p>
 
-        {/* 좋아요 버튼 */}
-        <button
-          className="mt-3 flex items-center gap-2 text-darkbrown"
-          onClick={handleLike}
-        >
-          {/* 하트 누르기전 회색->누르면 레드 */}
-          <Heart
-            className={`w-5 h-5 ${
-              liked ? 'fill-red-500 text-red-500' : 'text-gray-400'
-            }`}
-          />
-          <span>{likeCount}</span>
-        </button>
-      </div>
+          <div className="flex justify-end text-sm text-gray-500 pt-2">
+            <p className="text-xs font-medium text-gray-600">
+              작성자: <span className="text-orange-500">{board.userId}</span> | 작성일:{' '}
+              {new Date(board.createdAt).toLocaleDateString()}
+            </p>
+          </div>
 
-      {/* 댓글 영역 */}
-      <div className="border rounded-lg bg-white p-4 space-y-4">
-        <h3 className="font-semibold mb-2">댓글</h3>
-        {Array.isArray(comments) &&
-          comments.map((c) => (
-            <div key={c.commentId} className="mb-3">
-              {/* 댓글 */}
-              <div className="border-b pb-2 last:border-b-0">
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">{c.userId}</span>: {c.content}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {new Date(c.createdAt).toLocaleDateString('ko-KR')}
-                </p>
+          {/* 좋아요 버튼 */}
+          <div className="pt-2 flex justify-end">
+            <button
+              className="flex items-center gap-2 text-gray-600 transition duration-300 transform hover:scale-105 hover:text-red-600"
+              onClick={handleLike}
+            >
+              <Heart
+                className={`w-6 h-6 transition-colors duration-300 ${
+                  liked ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                }`}
+              />
+              <span className="text-lg font-semibold">{likeCount}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 댓글 영역 */}
+        <div className="p-0 space-y-4">
+          <h3 className="text-xl font-bold text-gray-800 border-b pb-2">댓글</h3>
+          
+          {Array.isArray(comments) &&
+            comments.map((c) => (
+              <div key={c.commentId} className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                
+                {/* 댓글 */}
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-800 font-medium">
+                    <span className="text-orange-500 font-bold">{c.userId}</span>: {c.content}
+                  </p>
+                  <p className="text-xs text-gray-400 flex justify-between items-center">
+                    {new Date(c.createdAt).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-        {/* 댓글 작성 */}
-        <div className="flex gap-2 mt-2">
-          <input
-            type="text"
-            placeholder="댓글 입력..."
-            className="flex-1 border rounded p-2"
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-          />
-          <button
-            className="px-4 bg-orange-400 text-white rounded hover:bg-pistachio-dark"
-            onClick={handleAddComment}
-          >
-            {/* 종이비행기 이모티콘 누르면 댓글전송 */}
-            <Send className="w-5 h-5" />
-          </button>
+          {/* 댓글 작성 */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <input
+              type="text"
+              placeholder="댓글 입력..."
+              className="flex-1 border-2 border-gray-300 rounded-full p-3 focus:border-pistachio focus:ring-0 transition duration-150"
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+            />
+            <button
+              className="w-12 h-12 flex items-center justify-center bg-pistachio text-white rounded-full hover:bg-orange-500 shadow-lg transition duration-150 transform hover:scale-105"
+              onClick={handleAddComment}
+            >
+              <Send className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
