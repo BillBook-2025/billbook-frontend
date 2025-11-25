@@ -63,13 +63,27 @@ export function sendMessage(chatroomId, senderId, messageContent) {
   }
 
   const destination = `/app/chatroom/${chatroomId}/chat`;
+  let payload;
 
-  const payload = {
-    senderId: senderId,
-    content: messageContent,
-    message: messageContent,
-    type: 'CHAT',
-  };
+  if (
+    typeof messageContent === 'object' &&
+    messageContent !== null &&
+    messageContent.type
+  ) {
+    payload = {
+      senderId: senderId,
+      message: messageContent.message || '',
+      type: messageContent.type,
+      content: messageContent.message || '',
+    };
+  } else {
+    payload = {
+      senderId: senderId,
+      message: messageContent,
+      type: 'CHAT',
+      content: messageContent,
+    };
+  }
 
   stompClient.publish({
     destination: destination,

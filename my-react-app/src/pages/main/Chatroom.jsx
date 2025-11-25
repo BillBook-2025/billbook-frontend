@@ -44,6 +44,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 // API
 import {
   getChats,
+  sendChat,
   getChatroomDetail,
   sendPicture,
   setDeadline,
@@ -288,6 +289,15 @@ export default function Chatroom() {
     try {
       await borrowBook(bookId, { status: 'ON_LOAN' });
 
+      // 공지 메시지 전송
+      const user = JSON.parse(localStorage.getItem('userInfo'));
+      const notificationMessageObject = {
+          message: `📢 ${user.userName} 님이 책 대출을 완료했습니다.`,
+          type: 'NOTICE',
+          senderId: currentUserId,
+      };
+      sendMessage(chatId, currentUserId, notificationMessageObject);
+
       alert(
         '책 대출 처리가 완료되었습니다. 게시글 상태가 [대여 중]으로 변경됩니다.'
       );
@@ -312,13 +322,22 @@ export default function Chatroom() {
     try {
       await returnBook(bookId);
 
-      alert(
-        '책 반납 처리가 완료되었습니다. 게시글 상태가 [거래 가능]으로 변경되고, 매너 평가를 할 수 있습니다.'
-      );
+      // 공지 메시지 전송
+      const notificationMessageObject = {
+          message: `✅ 책 반납 등록이 완료되어 게시물이 [거래 가능] 상태로 재등록되었습니다.`,
+          type: 'NOTICE', 
+          senderId: currentUserId,
+      };
+
+      sendMessage(chatId, currentUserId, notificationMessageObject);
+
+      alert('책 반납 처리가 완료되었습니다.');
       window.location.reload();
     } catch (err) {
       console.error('책 반납 처리 실패:', err);
-      alert(`책 반납 처리에 실패했습니다. ${err.message || '다시 시도해주세요.'}`);
+      alert(
+        `책 반납 처리에 실패했습니다. ${err.message || '다시 시도해주세요.'}`
+      );
     }
   };
 
@@ -333,14 +352,18 @@ export default function Chatroom() {
     try {
       await setDeadline(chatId, { returnTime: returnTimeISO });
 
-      const formattedDate = formatDateDisplay(deadline);
-      const systemMessage = `반납 일자가 ${formattedDate}로 설정되었습니다!`;
-
-      sendSystemMessage(systemMessage);
+      // 공지 메시지
+      const notificationMessageObject = {
+          message: `⏰ 반납 기한이 ${deadline}로 설정되었습니다.`,
+          type: 'NOTICE', 
+          senderId: currentUserId,
+      };
+      
+      sendMessage(chatId, currentUserId, notificationMessageObject);
 
       setShowDatePicker(false);
 
-      console.log(`반납 기한 설정 완료: ${formattedDate}`);
+      console.log(`반납 기한 설정 완료`);
     } catch (error) {
       console.error('반납 기한 설정 실패', error);
       alert('반납 기한 설정에 실패했습니다. 다시 시도해 주세요.');
@@ -364,35 +387,35 @@ export default function Chatroom() {
   const isMyBorrowedBook =
     isBorrowing && String(bookBuyerId) === String(currentUserId);
   // 아니면 현재유저가 sellerId랑 같을때
-  const isMyBookSeller = 
+  const isMyBookSeller =
     isBorrowing && String(bookSellerId) === String(currentUserId);
 
   let buttonLabel = '책 대출';
-  let buttonAction = handleBorrow; 
+  let buttonAction = handleBorrow;
   let isBookButtonVisible = false; // Book 버튼 표시 여부
-  
+
   if (isMyBookSeller) {
-      // 판매자: 책이 대여 중일 때
-      buttonLabel = '반납 완료';
-      buttonAction = handleReturn;
-      isBookButtonVisible = true;
+    // 판매자: 책이 대여 중일 때
+    buttonLabel = '반납 완료';
+    buttonAction = handleReturn;
+    isBookButtonVisible = true;
   } else if (isAvailableForBorrow) {
-      // 대출 가능 상태일 때: '책 대출' 버튼
-      buttonLabel = '책 대출';
-      buttonAction = handleBorrow;
-      isBookButtonVisible = true;
+    // 대출 가능 상태일 때: '책 대출' 버튼
+    buttonLabel = '책 대출';
+    buttonAction = handleBorrow;
+    isBookButtonVisible = true;
   }
 
   console.log('--- 반납 버튼 디버깅 ---');
-  console.log('bookStatus:', bookStatus); 
-  console.log('bookBuyerId (응답):', bookBuyerId); 
-  console.log('bookSellerId (응답):', bookSellerId); 
-  console.log('currentUserId (현재 유저):', currentUserId); 
+  console.log('bookStatus:', bookStatus);
+  console.log('bookBuyerId (응답):', bookBuyerId);
+  console.log('bookSellerId (응답):', bookSellerId);
+  console.log('currentUserId (현재 유저):', currentUserId);
   console.log('isBorrowing:', isBorrowing);
   console.log('isMyBorrowedBook (구매자 조건):', isMyBorrowedBook);
-  console.log('isMyBookSeller (판매자 조건):', isMyBookSeller); 
-  console.log('isAvailableForBorrow (대출 가능):', isAvailableForBorrow); 
-  console.log('isBookButtonVisible (최종 결과):', isBookButtonVisible); 
+  console.log('isMyBookSeller (판매자 조건):', isMyBookSeller);
+  console.log('isAvailableForBorrow (대출 가능):', isAvailableForBorrow);
+  console.log('isBookButtonVisible (최종 결과):', isBookButtonVisible);
   console.log('--------------------------');
 
   return (
@@ -440,6 +463,20 @@ export default function Chatroom() {
         {messages.map((msg, idx) => {
           const isMe = String(msg.senderId) === String(chatData.myId);
           const content = msg.content || msg.message;
+          // 공지 메시지인지 확인
+          const isNotification = msg.type === 'NOTICE' || content?.includes('[공지]');
+
+          // 공지 메시지인 경우 주황색
+          if (isNotification) {
+            return (
+              <div key={idx} className="flex justify-center my-3">
+                <div className="text-sm px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-medium shadow-sm">
+                  {content}
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={idx}
@@ -586,14 +623,16 @@ export default function Chatroom() {
             />
 
             {isBookButtonVisible && (
-                <MenuButton
-                  icon={
-                    <span className="text-purple-600 font-bold text-lg">Book</span>
-                  }
-                  label={buttonLabel}
-                  color="bg-purple-100"
-                  onClick={buttonAction}
-                />
+              <MenuButton
+                icon={
+                  <span className="text-purple-600 font-bold text-lg">
+                    Book
+                  </span>
+                }
+                label={buttonLabel}
+                color="bg-purple-100"
+                onClick={buttonAction}
+              />
             )}
           </div>
         )}

@@ -5,7 +5,6 @@ const API_BASE_URL = "/api";
 import {fetchWithAuth} from './books.js';
 
 // 채팅 보내기
-/*
 export async function sendChat(chatId, data) {
   return fetchWithAuth(`/chatRoom/${chatId}/chat`,
     {
@@ -15,7 +14,6 @@ export async function sendChat(chatId, data) {
     }
   );
 }
-  */
 
 // 유저의 채팅목록 불러오기
 export async function getChatroom(userId) {
