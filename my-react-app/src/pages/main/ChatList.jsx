@@ -24,7 +24,7 @@ export default function ChatList() {
   // 채팅 목록 불러오기
   useEffect(() => {
     if (!userId) {
-      console.error("로그인된 유저 ID가 없습니다.");
+      console.error('로그인된 유저 ID가 없습니다.');
       return;
     }
 
@@ -39,8 +39,7 @@ export default function ChatList() {
             try {
               const bookInfo = await bookDetail(room.bookId);
               return { ...room, bookTitle: bookInfo.title };
-            }
-            catch (err) {
+            } catch (err) {
               return room;
             }
           })
@@ -54,7 +53,7 @@ export default function ChatList() {
   // 채팅방 클릭 → Chatroom으로 이동
   const handleClickChatroom = (roomId, bookId) => {
     if (editMode) {
-      toggleSelect(id);
+      toggleSelect(roomId);
     } else {
       console.log('--- navigating with ---');
       console.log('roomId:', roomId);
@@ -79,34 +78,66 @@ export default function ChatList() {
 
   // 선택한 채팅방 삭제
   const handleDelete = async () => {
-    for (const id of selectedRooms) {
-      try {
-        await leaveChatroom(id);
-      } catch (err) {
-        console.error(`채팅방 ${id} 삭제 실패`, err);
-      }
+    if (selectedRooms.length === 0) {
+      alert('삭제할 채팅방을 선택해주세요.');
+      return;
     }
-    setChatrooms((prev) =>
-      prev.filter((room) => !selectedRooms.includes(room.id))
-    );
-    setSelectedRooms([]);
-    setEditMode(false);
+
+    if (
+      !window.confirm(
+        `${selectedRooms.length}개의 채팅방을 정말 삭제하시겠습니까? (삭제된 대화 내용은 복구할 수 없습니다.)`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const deletePromises = selectedRooms.map((chatId) =>
+        leaveChatroom(chatId)
+      );
+      await Promise.all(deletePromises);
+
+      setChatrooms((prev) =>
+        prev.filter((room) => !selectedRooms.includes(room.id))
+      );
+
+      setSelectedRooms([]);
+      setEditMode(false);
+      alert('선택된 채팅방이 삭제되었습니다.');
+    } catch (err) {
+      console.error('채팅방 삭제 실패:', err);
+      alert('채팅방 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto h-[100dvh] flex flex-col bg-white border-x shadow-2xl">
-      <div className="flex-none flex justify-between items-center p-5 bg-white border-b-4 shadow-lg">
-        <h1 className="text-3xl font-extrabold text-darkbrown">채팅 목록</h1>
-        <button
-          onClick={toggleEditMode}
-          className={`px-4 py-2 rounded-xl font-bold transition-all shadow-md ${
-            editMode
-              ? 'bg-darkbrown text-white hover:bg-darkbrown/90'
-              : 'text-darkbrown border border-pistachio/50 hover:bg-pistachio/20 bg-pistachio/10'
-          }`}
-        >
-          {editMode ? '완료' : '편집'}
-        </button>
+      <div className="flex justify-between items-center p-4 border-b">
+        <h1 className="text-2xl font-bold text-gray-900">채팅 목록</h1>
+        <div className="flex items-center gap-2">
+          {editMode && (
+            <button
+              onClick={handleDelete}
+              className={`text-base font-bold px-3 py-1 rounded transition ${
+                selectedRooms.length > 0
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              disabled={selectedRooms.length === 0}
+            >
+              삭제 ({selectedRooms.length})
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setEditMode((prev) => !prev);
+              setSelectedRooms([]);
+            }}
+            className="text-darkbrown text-base font-bold hover:text-pistachio transition"
+          >
+            {editMode ? '취소' : '편집'}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-white divide-y divide-gray-200">

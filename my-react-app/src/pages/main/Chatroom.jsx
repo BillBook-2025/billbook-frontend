@@ -48,6 +48,7 @@ import {
   getChatroomDetail,
   sendPicture,
   setDeadline,
+  leaveChatroom,
 } from '../../api/chatrooms';
 import { returnBook, borrowBook, bookDetail } from '../../api/books';
 // 아이콘
@@ -292,9 +293,9 @@ export default function Chatroom() {
       // 공지 메시지 전송
       const user = JSON.parse(localStorage.getItem('userInfo'));
       const notificationMessageObject = {
-          message: `📢 ${user.userName} 님이 책 대출을 완료했습니다.`,
-          type: 'NOTICE',
-          senderId: currentUserId,
+        message: `📢 ${user.userName} 님이 책 대출을 완료했습니다.`,
+        type: 'NOTICE',
+        senderId: currentUserId,
       };
       sendMessage(chatId, currentUserId, notificationMessageObject);
 
@@ -324,9 +325,9 @@ export default function Chatroom() {
 
       // 공지 메시지 전송
       const notificationMessageObject = {
-          message: `✅ 책 반납 등록이 완료되어 게시물이 [거래 가능] 상태로 재등록되었습니다.`,
-          type: 'NOTICE', 
-          senderId: currentUserId,
+        message: `✅ 책 반납 등록이 완료되어 게시물이 [거래 가능] 상태로 재등록되었습니다.`,
+        type: 'NOTICE',
+        senderId: currentUserId,
       };
 
       sendMessage(chatId, currentUserId, notificationMessageObject);
@@ -354,11 +355,11 @@ export default function Chatroom() {
 
       // 공지 메시지
       const notificationMessageObject = {
-          message: `⏰ 반납 기한이 ${deadline}로 설정되었습니다.`,
-          type: 'NOTICE', 
-          senderId: currentUserId,
+        message: `⏰ 반납 기한이 ${deadline}로 설정되었습니다.`,
+        type: 'NOTICE',
+        senderId: currentUserId,
       };
-      
+
       sendMessage(chatId, currentUserId, notificationMessageObject);
 
       setShowDatePicker(false);
@@ -369,6 +370,37 @@ export default function Chatroom() {
       alert('반납 기한 설정에 실패했습니다. 다시 시도해 주세요.');
     }
   };
+
+  // 채팅방 나가기
+  const handleLeaveChat = async () => {
+    if (
+      !window.confirm(
+        '정말 채팅방을 나가시겠습니까? 나가면 대화 내용은 복구할 수 없습니다.'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await leaveChatroom(chatId);
+
+      const user = JSON.parse(localStorage.getItem('userInfo'));
+      const notificationMessageObject = {
+        message: `❌ ${user.userName} 님이 채팅방을 나갔습니다.`,
+        type: 'NOTICE',
+        senderId: currentUserId,
+      };
+      sendMessage(chatId, currentUserId, notificationMessageObject);
+
+      alert('채팅방에서 나갔습니다.');
+      navigate('/chat');
+    } catch (error) {
+      console.error('채팅방 나가기 실패:', error);
+      alert('채팅방 나가기에 실패했습니다. 다시 시도해 주세요.');
+      setShowMenu(false);
+    }
+  };
+
   const handleBorrowBook = () => alert('기능 준비 중입니다.');
   const handleCompleteDeal = () => alert('기능 준비 중입니다.');
   const handleSendDeal = () => alert('송금 기능 준비 중입니다.');
@@ -445,10 +477,10 @@ export default function Chatroom() {
         {/* 우측 상단 메뉴 드롭다운 */}
         {showMenu && (
           <div className="absolute right-4 top-16 w-48 bg-white border border-gray-200 rounded-lg shadow-2xl z-40 overflow-hidden">
-            <button className="w-full text-left px-4 py-3 hover:bg-pistachio/50 text-sm font-medium text-darkbrown transition">
-              거래 관리
-            </button>
-            <button className="w-full text-left px-4 py-3 hover:bg-red-50 text-sm text-red-500 font-medium border-t transition">
+            <button
+              onClick={handleLeaveChat}
+              className="w-full text-left px-4 py-3 hover:bg-red-50 text-sm text-red-500 font-medium border-t transition"
+            >
               나가기
             </button>
           </div>
@@ -464,7 +496,8 @@ export default function Chatroom() {
           const isMe = String(msg.senderId) === String(chatData.myId);
           const content = msg.content || msg.message;
           // 공지 메시지인지 확인
-          const isNotification = msg.type === 'NOTICE' || content?.includes('[공지]');
+          const isNotification =
+            msg.type === 'NOTICE' || content?.includes('[공지]');
 
           // 공지 메시지인 경우 주황색
           if (isNotification) {

@@ -78,7 +78,7 @@ export default function Router() {
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPage />} />
-          <Route path="/manner" element={<Manner />} />
+          <Route path="/manner/:userId" element={<Manner />} />
           <Route path="/myCommunityPost" element={<MyCommunityPost />} />
           <Route path="/myBookPost" element={<MyBookPost />} />
           <Route path="/follow" element={<Follow />} />

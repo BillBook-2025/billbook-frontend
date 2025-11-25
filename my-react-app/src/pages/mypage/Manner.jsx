@@ -22,7 +22,7 @@ export default function Manner() {
 
     setLoading(true);
     try {
-      await changeTemperature(partnerId, { feedback });
+      await changeTemperature(partnerId, { feedback, bookId });
       alert('매너평가가 완료되었습니다!');
       navigate(-1); // 이전 페이지로 이동
     } catch (err) {

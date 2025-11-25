@@ -87,6 +87,7 @@ export async function uploadProfileImage(userId, formData) {
   return fetchWithAuth(`/profile/${userId}/image`, 
     {
       method: 'POST',
+      headers: {},
       body: formData,
     }
   );
