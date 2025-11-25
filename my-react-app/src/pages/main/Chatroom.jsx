@@ -48,7 +48,7 @@ import {
   sendPicture,
   setDeadline,
 } from '../../api/chatrooms';
-import { returnBook, borrowBook } from '../../api/books';
+import { returnBook, borrowBook, bookDetail } from '../../api/books';
 // 아이콘
 import {
   ArrowLeft,
@@ -79,6 +79,8 @@ export default function Chatroom() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [bookId, setBookId] = useState(location.state?.bookId || null);
+  const [bookDetailData, setBookDetailData] = useState(null);
+
   const [chatData, setChatData] = useState({
     id: null,
     partnerName: '상대방',
@@ -106,7 +108,7 @@ export default function Chatroom() {
 
   // 데이터 불러오기
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || !bookId) return;
 
     // 채팅방 상세 정보
     /*
@@ -120,6 +122,16 @@ export default function Chatroom() {
     } 
     */
 
+    // 책 상세 정보
+    async function loadBookDetail() {
+      try {
+        const detail = await bookDetail(bookId);
+        setBookDetailData(detail);
+      } catch (err) {
+        console.error('책 상세 정보 로드 실패:', err);
+      }
+    }
+
     // 채팅 메시지 목록
     async function loadMessages() {
       try {
@@ -132,8 +144,9 @@ export default function Chatroom() {
         console.error('메시지 로드 실패:', err);
       }
     }
+    loadBookDetail();
     loadMessages();
-  }, [chatId]);
+  }, [chatId, bookId]);
 
   // 웹소켓 연결
   useEffect(() => {
@@ -278,9 +291,34 @@ export default function Chatroom() {
       alert(
         '책 대출 처리가 완료되었습니다. 게시글 상태가 [대여 중]으로 변경됩니다.'
       );
+      // 페이지 새로고침
+      window.location.reload();
     } catch (err) {
       console.error('책 대출 처리 실패:', err);
+      // 내가 올린 책이면 실패함
       alert('책 대출 처리에 실패했습니다. 권한을 확인해주세요.');
+    }
+  };
+
+  // 책반납
+  const handleReturn = async () => {
+    if (!bookId) {
+      alert('책 정보가 없습니다.');
+      return;
+    }
+
+    if (!window.confirm('책 반납 처리를 하시겠습니까?')) return;
+
+    try {
+      await returnBook(bookId);
+
+      alert(
+        '책 반납 처리가 완료되었습니다. 게시글 상태가 [거래 가능]으로 변경되고, 매너 평가를 할 수 있습니다.'
+      );
+      window.location.reload();
+    } catch (err) {
+      console.error('책 반납 처리 실패:', err);
+      alert(`책 반납 처리에 실패했습니다. ${err.message || '다시 시도해주세요.'}`);
     }
   };
 
@@ -311,6 +349,51 @@ export default function Chatroom() {
   const handleBorrowBook = () => alert('기능 준비 중입니다.');
   const handleCompleteDeal = () => alert('기능 준비 중입니다.');
   const handleSendDeal = () => alert('송금 기능 준비 중입니다.');
+
+  // 책상태
+  const bookStatus = bookDetailData?.status;
+  // 구매자
+  const bookBuyerId = bookDetailData?.buyerId;
+  // 판매자
+  const bookSellerId = bookDetailData?.sellerId;
+
+  // 책을 빌린상태인지 확인
+  const isBorrowing = bookStatus === 'BORROWING';
+  const isAvailableForBorrow = bookStatus === 'PENDING';
+  // 구매자 조건
+  const isMyBorrowedBook =
+    isBorrowing && String(bookBuyerId) === String(currentUserId);
+  // 아니면 현재유저가 sellerId랑 같을때
+  const isMyBookSeller = 
+    isBorrowing && String(bookSellerId) === String(currentUserId);
+
+  let buttonLabel = '책 대출';
+  let buttonAction = handleBorrow; 
+  let isBookButtonVisible = false; // Book 버튼 표시 여부
+  
+  if (isMyBookSeller) {
+      // 판매자: 책이 대여 중일 때
+      buttonLabel = '반납 완료';
+      buttonAction = handleReturn;
+      isBookButtonVisible = true;
+  } else if (isAvailableForBorrow) {
+      // 대출 가능 상태일 때: '책 대출' 버튼
+      buttonLabel = '책 대출';
+      buttonAction = handleBorrow;
+      isBookButtonVisible = true;
+  }
+
+  console.log('--- 반납 버튼 디버깅 ---');
+  console.log('bookStatus:', bookStatus); 
+  console.log('bookBuyerId (응답):', bookBuyerId); 
+  console.log('bookSellerId (응답):', bookSellerId); 
+  console.log('currentUserId (현재 유저):', currentUserId); 
+  console.log('isBorrowing:', isBorrowing);
+  console.log('isMyBorrowedBook (구매자 조건):', isMyBorrowedBook);
+  console.log('isMyBookSeller (판매자 조건):', isMyBookSeller); 
+  console.log('isAvailableForBorrow (대출 가능):', isAvailableForBorrow); 
+  console.log('isBookButtonVisible (최종 결과):', isBookButtonVisible); 
+  console.log('--------------------------');
 
   return (
     <div className="flex flex-col h-[100dvh] pb-16 bg-gray-100 w-full max-w-5xl mx-auto border-x shadow-2xl relative overflow-hidden">
@@ -502,14 +585,16 @@ export default function Chatroom() {
               onClick={handleSendDeal}
             />
 
-            <MenuButton
-              icon={
-                <span className="text-purple-600 font-bold text-lg">Book</span>
-              }
-              label="책 대출"
-              color="bg-purple-100"
-              onClick={handleBorrow}
-            />
+            {isBookButtonVisible && (
+                <MenuButton
+                  icon={
+                    <span className="text-purple-600 font-bold text-lg">Book</span>
+                  }
+                  label={buttonLabel}
+                  color="bg-purple-100"
+                  onClick={buttonAction}
+                />
+            )}
           </div>
         )}
 
