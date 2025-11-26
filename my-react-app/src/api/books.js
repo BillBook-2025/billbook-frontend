@@ -143,9 +143,36 @@ export async function returnBook(bookId) {
 }
 
 // 거래글 검색
-export async function searchBook(params) {
-  const queryString = new URLSearchParams(params).toString();
-  return fetchWithAuth(`/books/search?${queryString}`, {});
+export async function searchBook(params = {}) {
+  const searchParams = new URLSearchParams();
+  
+  if (params.query) {
+    searchParams.append("keyword", params.query);
+  }
+  
+  if (params.region && params.region !== "전체") {
+    searchParams.append("region", params.region);
+  }
+  
+  const queryString = searchParams.toString();
+  const url = `/api/books/search?${queryString}`;
+
+  console.log("검색 요청 URL (POST/Cookie):", url);
+
+  const response = await fetch(url, {
+    method: 'POST', 
+    headers: {
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error("검색 API 에러상세:", errorData);
+    throw new Error(errorData.message || '검색 요청 실패');
+  }
+
+  return response.json();
 }
 
 // 새 책 거래 게시물 등록
